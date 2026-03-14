@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String   @id @default(uuid())
+  twitchId              String   @unique
+  displayName           String
+  avatarUrl             String   @default("")
+  email                 String   @default("")
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String
+  isAdmin               Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  channels              Channel[]
+}
+
+model Channel {
+  id            String   @id @default(uuid())
+  twitchId      String   @unique
+  displayName   String
+  botJoined     Boolean  @default(false)
+  commandPrefix String   @default("!")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  ownerId       String
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  commands      Command[]
+  timers        Timer[]
+  moderationSettings ModerationSettings?
+  moderationActions  ModerationAction[]
+}
+
+model Command {
+  id              String   @id @default(uuid())
+  trigger         String
+  response        String
+  cooldownSeconds Int      @default(5)
+  userLevel       String   @default("everyone")
+  enabled         Boolean  @default(true)
+  useCount        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, trigger])
+}
+
+model Timer {
+  id              String    @id @default(uuid())
+  name            String
+  message         String
+  intervalMinutes Int       @default(15)
+  minChatLines    Int       @default(5)
+  enabled         Boolean   @default(true)
+  lastFiredAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  channelId       String
+  channel         Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, name])
+}
+
+model ModerationSettings {
+  id                    String  @id @default(uuid())
+  linksEnabled          Boolean @default(false)
+  linksTimeoutDuration  Int     @default(10)
+  capsEnabled           Boolean @default(false)
+  capsMinLength         Int     @default(15)
+  capsThreshold         Int     @default(70)
+  capsTimeoutDuration   Int     @default(10)
+  symbolsEnabled        Boolean @default(false)
+  symbolsThreshold      Int     @default(50)
+  symbolsTimeoutDuration Int    @default(10)
+  emotesEnabled         Boolean @default(false)
+  emotesMaxCount        Int     @default(15)
+  emotesTimeoutDuration Int     @default(10)
+  channelId             String  @unique
+  channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model ModerationAction {
+  id         String   @id @default(uuid())
+  targetUser String
+  filterName String
+  action     String
+  duration   Int      @default(0)
+  message    String   @default("")
+  createdAt  DateTime @default(now())
+  channelId  String
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}

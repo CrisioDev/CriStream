@@ -1,0 +1,10 @@
+{$DOMAIN} {
+  reverse_proxy app:3000
+
+  @websocket {
+    path /ws/*
+    header Connection *Upgrade*
+    header Upgrade websocket
+  }
+  reverse_proxy @websocket app:3000
+}

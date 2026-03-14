@@ -1,0 +1,15 @@
+node_modules/
+.vs/
+dist/
+.env
+*.log
+.DS_Store
+coverage/
+.turbo/
+packages/backend/prisma/*.db
+twitchdevdata.txt
+proxmoxapitokens.md
+*.tsbuildinfo
+packages/frontend/src/**/*.js
+packages/frontend/vite.config.js
+packages/frontend/vite.config.d.ts

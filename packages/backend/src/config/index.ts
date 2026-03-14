@@ -1,0 +1,33 @@
+function env(key: string, fallback?: string): string {
+  const val = process.env[key] ?? fallback;
+  if (val === undefined) throw new Error(`Missing env var: ${key}`);
+  return val;
+}
+
+export const config = {
+  nodeEnv: env("NODE_ENV", "development"),
+  port: parseInt(env("PORT", "3000"), 10),
+  logLevel: env("LOG_LEVEL", "info"),
+
+  // Twitch
+  twitchClientId: env("TWITCH_CLIENT_ID", ""),
+  twitchClientSecret: env("TWITCH_CLIENT_SECRET", ""),
+  twitchRedirectUri: env("TWITCH_REDIRECT_URI", "http://localhost:3000/api/auth/twitch/callback"),
+  twitchBotUsername: env("TWITCH_BOT_USERNAME", ""),
+
+  // JWT
+  jwtSecret: env("JWT_SECRET", "dev-secret-change-me"),
+  jwtExpiresIn: env("JWT_EXPIRES_IN", "7d"),
+
+  // Encryption
+  encryptionKey: env("ENCRYPTION_KEY", "0".repeat(64)),
+
+  // Database
+  databaseUrl: env("DATABASE_URL", "postgresql://streamguard:streamguard@localhost:5432/streamguard"),
+
+  // Redis
+  redisUrl: env("REDIS_URL", "redis://localhost:6379"),
+
+  // CORS
+  corsOrigin: env("CORS_ORIGIN", "http://localhost:5173"),
+};

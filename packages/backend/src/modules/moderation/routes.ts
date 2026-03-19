@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { moderationService } from "./service.js";
-import type { UpdateModerationSettingsDto } from "@streamguard/shared";
+import type { UpdateModerationSettingsDto, CreateBannedWordDto } from "@streamguard/shared";
 
 export async function moderationRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);
@@ -25,6 +25,29 @@ export async function moderationRoutes(app: FastifyInstance) {
       const limit = parseInt(request.query.limit ?? "50", 10);
       const log = await moderationService.getLog(request.params.cid, limit);
       return { success: true, data: log };
+    }
+  );
+
+  // ── Banned Words ──
+
+  app.get<{ Params: { cid: string } }>("/:cid/moderation/banned-words", async (request) => {
+    const words = await moderationService.getBannedWords(request.params.cid);
+    return { success: true, data: words };
+  });
+
+  app.post<{ Params: { cid: string }; Body: CreateBannedWordDto }>(
+    "/:cid/moderation/banned-words",
+    async (request) => {
+      const word = await moderationService.createBannedWord(request.params.cid, request.body);
+      return { success: true, data: word };
+    }
+  );
+
+  app.delete<{ Params: { cid: string; id: string } }>(
+    "/:cid/moderation/banned-words/:id",
+    async (request) => {
+      await moderationService.deleteBannedWord(request.params.cid, request.params.id);
+      return { success: true };
     }
   );
 }

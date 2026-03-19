@@ -7,6 +7,7 @@ import { TWITCH_SCOPES } from "@streamguard/shared";
 import type { JwtPayload } from "../../middleware/jwt-auth.js";
 import type { AuthUser, AuthTokens } from "@streamguard/shared";
 import { addUserToAuthProvider } from "../../twitch/twitch-auth.js";
+import { getTwitchApi } from "../../twitch/twitch-api.js";
 
 class AuthService {
   getAuthUrl(): string {
@@ -115,7 +116,42 @@ class AuthService {
       logger.warn({ err }, "Could not update auth provider after login");
     }
 
+    // Sync moderated channels as editor access (non-blocking)
+    this.syncModeratorAccess(user.id, twitchUser.id).catch((err) => {
+      logger.warn({ err }, "Failed to sync moderator access");
+    });
+
     return this.issueTokens(user.id, twitchUser.id, twitchUser.display_name, user.isAdmin);
+  }
+
+  private async syncModeratorAccess(userId: string, twitchId: string): Promise<void> {
+    const api = getTwitchApi();
+    const modChannels = await api.moderation.getModeratedChannelsPaginated(twitchId).getAll();
+    if (modChannels.length === 0) return;
+
+    const moderatedTwitchIds = modChannels.map((c) => c.id);
+
+    const channels = await prisma.channel.findMany({
+      where: {
+        twitchId: { in: moderatedTwitchIds },
+        ownerId: { not: userId },
+      },
+    });
+
+    for (const channel of channels) {
+      await prisma.channelEditor.upsert({
+        where: { channelId_userId: { channelId: channel.id, userId } },
+        update: {},
+        create: { channelId: channel.id, userId, role: "editor" },
+      });
+    }
+
+    if (channels.length > 0) {
+      logger.info(
+        { userId, twitchId, count: channels.length },
+        "Synced moderator access for channels"
+      );
+    }
   }
 
   private issueTokens(

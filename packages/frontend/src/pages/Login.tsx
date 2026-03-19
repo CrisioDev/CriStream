@@ -6,7 +6,7 @@ export function LoginPage() {
   const { login } = useAuthStore();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background dark">
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground dark">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">

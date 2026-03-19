@@ -30,4 +30,16 @@ export const config = {
 
   // CORS
   corsOrigin: env("CORS_ORIGIN", "http://localhost:5173"),
+
+  // Uploads
+  uploadsDir: env("UPLOADS_DIR", "uploads"),
+  publicUrl: env("PUBLIC_URL", "http://localhost:3000"),
+
+  // Discord
+  discordBotToken: env("DISCORD_BOT_TOKEN", ""),
+  discordClientId: env("DISCORD_CLIENT_ID", ""),
+
+  // EventSub
+  eventsubSecret: env("EVENTSUB_SECRET", "streamguard-eventsub-secret"),
+  eventsubCallbackUrl: env("EVENTSUB_CALLBACK_URL", "http://localhost:3000/api/eventsub/webhook"),
 };

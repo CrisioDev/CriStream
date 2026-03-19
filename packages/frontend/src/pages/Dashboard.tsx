@@ -8,7 +8,7 @@ import { api } from "@/api/client";
 import type { BotStatusDto, WsEvents } from "@streamguard/shared";
 
 export function DashboardPage() {
-  const { channel } = useAuthStore();
+  const { activeChannel: channel } = useAuthStore();
   const { on } = useSocket();
   const [botStatus, setBotStatus] = useState<BotStatusDto | null>(null);
   const [chatMessages, setChatMessages] = useState<WsEvents["chat:message"][]>([]);

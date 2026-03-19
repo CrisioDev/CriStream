@@ -5,7 +5,11 @@ import { prisma } from "./lib/prisma.js";
 import { redis } from "./lib/redis.js";
 import { initSocket } from "./lib/socket.js";
 import { initTwitchClient } from "./twitch/twitch-client.js";
+import { initDiscordClient } from "./discord/discord-client.js";
 import { initTimerScheduler } from "./modules/timers/timer-scheduler.js";
+import { initSummaryScheduler } from "./modules/summaries/summary-scheduler.js";
+import { chatLogService } from "./modules/chatlogs/service.js";
+import { pointsService } from "./modules/points/service.js";
 
 async function start() {
   const app = await buildApp();
@@ -34,8 +38,25 @@ async function start() {
     logger.warn(err, "Twitch client initialization failed - will retry on first auth");
   }
 
+  // Initialize Discord client
+  try {
+    await initDiscordClient();
+    logger.info("Discord client initialized");
+  } catch (err) {
+    logger.warn(err, "Discord client initialization failed — Discord features disabled");
+  }
+
   // Start timer scheduler
   initTimerScheduler();
+
+  // Start summary scheduler
+  initSummaryScheduler();
+
+  // Start chat log flusher
+  chatLogService.initFlusher();
+
+  // Start points scheduler
+  pointsService.initPointsScheduler();
 
   // Graceful shutdown
   const shutdown = async () => {

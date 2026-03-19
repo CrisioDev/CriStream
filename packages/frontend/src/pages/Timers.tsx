@@ -11,7 +11,7 @@ import { api } from "@/api/client";
 import type { TimerDto, CreateTimerDto, UpdateTimerDto } from "@streamguard/shared";
 
 export function TimersPage() {
-  const { channel } = useAuthStore();
+  const { activeChannel: channel } = useAuthStore();
   const [timers, setTimers] = useState<TimerDto[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);

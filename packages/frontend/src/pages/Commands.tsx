@@ -13,34 +13,54 @@ import type { CommandDto, CreateCommandDto, UpdateCommandDto } from "@streamguar
 import { USER_LEVELS } from "@streamguard/shared";
 
 export function CommandsPage() {
-  const { channel } = useAuthStore();
+  const { activeChannel } = useAuthStore();
   const [commands, setCommands] = useState<CommandDto[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState<CreateCommandDto>({
+  const [form, setForm] = useState<CreateCommandDto & { aliasesStr: string; chainStr: string }>({
     trigger: "",
     response: "",
     cooldownSeconds: 5,
+    perUserCooldown: false,
     userLevel: "everyone",
     enabled: true,
+    aliases: [],
+    chain: [],
+    aliasesStr: "",
+    chainStr: "",
   });
-  const [editForm, setEditForm] = useState<UpdateCommandDto>({});
+  const [editForm, setEditForm] = useState<UpdateCommandDto & { aliasesStr: string; chainStr: string }>({
+    aliasesStr: "",
+    chainStr: "",
+  });
 
   useEffect(() => {
-    if (channel) loadCommands();
-  }, [channel]);
+    if (activeChannel) loadCommands();
+  }, [activeChannel]);
 
   const loadCommands = async () => {
-    if (!channel) return;
-    const res = await api.get<CommandDto[]>(`/channels/${channel.id}/commands`);
+    if (!activeChannel) return;
+    const res = await api.get<CommandDto[]>(`/channels/${activeChannel.id}/commands`);
     if (res.data) setCommands(res.data);
   };
 
+  const parseList = (str: string): string[] =>
+    str.split(",").map((s) => s.trim()).filter(Boolean);
+
   const handleCreate = async () => {
-    if (!channel) return;
-    await api.post(`/channels/${channel.id}/commands`, form);
+    if (!activeChannel) return;
+    await api.post(`/channels/${activeChannel.id}/commands`, {
+      trigger: form.trigger,
+      response: form.response,
+      cooldownSeconds: form.cooldownSeconds,
+      perUserCooldown: form.perUserCooldown,
+      userLevel: form.userLevel,
+      enabled: form.enabled,
+      aliases: parseList(form.aliasesStr),
+      chain: parseList(form.chainStr),
+    });
     setShowCreate(false);
-    setForm({ trigger: "", response: "", cooldownSeconds: 5, userLevel: "everyone", enabled: true });
+    setForm({ trigger: "", response: "", cooldownSeconds: 5, perUserCooldown: false, userLevel: "everyone", enabled: true, aliases: [], chain: [], aliasesStr: "", chainStr: "" });
     loadCommands();
   };
 
@@ -50,21 +70,36 @@ export function CommandsPage() {
       trigger: cmd.trigger,
       response: cmd.response,
       cooldownSeconds: cmd.cooldownSeconds,
+      perUserCooldown: cmd.perUserCooldown,
       userLevel: cmd.userLevel,
       enabled: cmd.enabled,
+      aliases: cmd.aliases,
+      chain: cmd.chain,
+      aliasesStr: cmd.aliases.join(", "),
+      chainStr: cmd.chain.join(", "),
     });
   };
 
   const handleUpdate = async (id: string, data?: UpdateCommandDto) => {
-    if (!channel) return;
-    await api.patch(`/channels/${channel.id}/commands/${id}`, data ?? editForm);
+    if (!activeChannel) return;
+    const payload = data ?? {
+      trigger: editForm.trigger,
+      response: editForm.response,
+      cooldownSeconds: editForm.cooldownSeconds,
+      perUserCooldown: editForm.perUserCooldown,
+      userLevel: editForm.userLevel,
+      enabled: editForm.enabled,
+      aliases: parseList(editForm.aliasesStr),
+      chain: parseList(editForm.chainStr),
+    };
+    await api.patch(`/channels/${activeChannel.id}/commands/${id}`, payload);
     setEditing(null);
     loadCommands();
   };
 
   const handleDelete = async (id: string) => {
-    if (!channel) return;
-    await api.delete(`/channels/${channel.id}/commands/${id}`);
+    if (!activeChannel) return;
+    await api.delete(`/channels/${activeChannel.id}/commands/${id}`);
     loadCommands();
   };
 
@@ -102,6 +137,21 @@ export function CommandsPage() {
                     <option key={level} value={level}>{level}</option>
                   ))}
                 </Select>
+              </div>
+              <div>
+                <Label>Aliases (comma-separated)</Label>
+                <Input value={form.aliasesStr} onChange={(e) => setForm({ ...form, aliasesStr: e.target.value })} placeholder="hi, hey, greet" />
+              </div>
+              <div>
+                <Label>Chain (comma-separated triggers)</Label>
+                <Input value={form.chainStr} onChange={(e) => setForm({ ...form, chainStr: e.target.value })} placeholder="discord, twitter" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.perUserCooldown ?? false}
+                  onCheckedChange={(checked) => setForm({ ...form, perUserCooldown: checked })}
+                />
+                <Label>Per-User Cooldown</Label>
               </div>
             </div>
             <Button onClick={handleCreate}>Create Command</Button>
@@ -149,6 +199,29 @@ export function CommandsPage() {
                         ))}
                       </Select>
                     </div>
+                    <div>
+                      <Label>Aliases (comma-separated)</Label>
+                      <Input
+                        value={editForm.aliasesStr}
+                        onChange={(e) => setEditForm({ ...editForm, aliasesStr: e.target.value })}
+                        placeholder="hi, hey"
+                      />
+                    </div>
+                    <div>
+                      <Label>Chain (comma-separated triggers)</Label>
+                      <Input
+                        value={editForm.chainStr}
+                        onChange={(e) => setEditForm({ ...editForm, chainStr: e.target.value })}
+                        placeholder="discord, twitter"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={editForm.perUserCooldown ?? false}
+                        onCheckedChange={(checked) => setEditForm({ ...editForm, perUserCooldown: checked })}
+                      />
+                      <Label>Per-User Cooldown</Label>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => handleUpdate(cmd.id)}>
@@ -162,13 +235,22 @@ export function CommandsPage() {
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <code className="font-mono text-primary font-semibold">!{cmd.trigger}</code>
                       <Badge variant="secondary">{cmd.userLevel}</Badge>
                       <Badge variant={cmd.enabled ? "default" : "outline"}>
                         {cmd.enabled ? "Enabled" : "Disabled"}
                       </Badge>
                       <span className="text-xs text-muted-foreground">{cmd.useCount} uses</span>
+                      {cmd.perUserCooldown && (
+                        <Badge variant="outline">Per-User CD</Badge>
+                      )}
+                      {cmd.aliases.length > 0 && (
+                        <Badge variant="outline">Aliases: {cmd.aliases.join(", ")}</Badge>
+                      )}
+                      {cmd.chain.length > 0 && (
+                        <Badge variant="outline">Chain: {cmd.chain.join(" → ")}</Badge>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{cmd.response}</p>
                   </div>

@@ -5,11 +5,27 @@ import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import { emitEvent } from "../lib/socket.js";
 
-// Import handlers to register them
+// Import handlers to register them (priority order: spam=5, moderation=10, soundalerts=43, songrequests=45, commands=50, points=90, chatlog=99)
+import "../modules/moderation/spam-handler.js";
 import "../modules/moderation/handler.js";
+import "../modules/alerts/sound-handler.js";
+import "../modules/songrequests/handler.js";
+import "../modules/requests/handler.js";
 import "../modules/commands/handler.js";
+import "../modules/points/handler.js";
+import "../modules/chatlogs/handler.js";
 
 let chatClient: ChatClient | null = null;
+let lastActivityTime = Date.now();
+let watchdogInterval: ReturnType<typeof setInterval> | null = null;
+
+// How long without activity before we consider the connection dead
+const WATCHDOG_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const WATCHDOG_CHECK_INTERVAL_MS = 60 * 1000; // check every minute
+
+function markActivity() {
+  lastActivityTime = Date.now();
+}
 
 export interface TwitchClientInfo {
   isConnected: boolean;
@@ -43,10 +59,12 @@ export async function initTwitchClient(): Promise<void> {
   });
 
   chatClient.onMessage(async (channel, user, message, msg) => {
+    markActivity();
     await handleMessage(channel, user, message, msg);
   });
 
   chatClient.onConnect(() => {
+    markActivity();
     logger.info("Twitch chat connected");
     emitEvent("bot:status", {
       connected: true,
@@ -60,6 +78,9 @@ export async function initTwitchClient(): Promise<void> {
   });
 
   chatClient.connect();
+
+  // Start connection watchdog
+  startWatchdog();
 
   // Join channels that have botJoined = true
   const channels = await prisma.channel.findMany({ where: { botJoined: true } });
@@ -86,4 +107,35 @@ export async function leaveChannel(channelName: string): Promise<void> {
 export function sayInChannel(channel: string, message: string): void {
   if (!chatClient) throw new Error("Chat client not initialized");
   chatClient.say(channel.toLowerCase(), message);
+}
+
+function startWatchdog() {
+  if (watchdogInterval) clearInterval(watchdogInterval);
+
+  watchdogInterval = setInterval(async () => {
+    if (!chatClient) return;
+
+    const silentMs = Date.now() - lastActivityTime;
+
+    if (silentMs > WATCHDOG_TIMEOUT_MS) {
+      logger.warn(
+        { silentMs, isConnected: chatClient.isConnected },
+        "Twitch chat watchdog: no activity detected, forcing reconnect"
+      );
+
+      try {
+        chatClient.reconnect();
+        markActivity();
+      } catch (err) {
+        logger.error({ err }, "Watchdog: reconnect() failed, trying quit+connect");
+        try {
+          chatClient.quit();
+          chatClient.connect();
+          markActivity();
+        } catch (err2) {
+          logger.error({ err: err2 }, "Watchdog: full reconnect failed");
+        }
+      }
+    }
+  }, WATCHDOG_CHECK_INTERVAL_MS);
 }

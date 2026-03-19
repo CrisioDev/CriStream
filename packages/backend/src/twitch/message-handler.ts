@@ -1,11 +1,12 @@
 import type { ChatMessage } from "@twurple/chat";
 import { logger } from "../lib/logger.js";
-import { emitEvent } from "../lib/socket.js";
+import { emitEvent, emitToChannel } from "../lib/socket.js";
 import { incrementChatLines } from "../modules/timers/timer-scheduler.js";
 import { prisma } from "../lib/prisma.js";
 
 export interface MessageContext {
   channel: string;
+  channelId: string | null;
   user: string;
   message: string;
   msg: ChatMessage;
@@ -39,8 +40,18 @@ export async function handleMessage(
   message: string,
   msg: ChatMessage
 ) {
+  const channelName = channel.replace("#", "");
+
+  // Resolve DB channel early so handlers can use ctx.channelId
+  const dbChannel = msg.channelId
+    ? await prisma.channel.findUnique({ where: { twitchId: msg.channelId } })
+    : await prisma.channel.findFirst({
+        where: { displayName: { equals: channelName, mode: "insensitive" } },
+      });
+
   const ctx: MessageContext = {
-    channel: channel.replace("#", ""),
+    channel: channelName,
+    channelId: dbChannel?.id ?? null,
     user,
     message,
     msg,
@@ -53,22 +64,26 @@ export async function handleMessage(
   };
 
   // Increment chat line counter for timers
-  const dbChannel = await prisma.channel.findFirst({
-    where: { displayName: { equals: ctx.channel, mode: "insensitive" } },
-  });
   if (dbChannel) {
     incrementChatLines(dbChannel.id).catch(() => {});
   }
 
   // Emit chat message to WebSocket clients
-  emitEvent("chat:message", {
+  const chatPayload = {
+    channelId: dbChannel?.id ?? "",
     channel: ctx.channel,
     user: ctx.user,
     message: ctx.message,
     badges: Object.fromEntries(ctx.badges),
     color: msg.userInfo.color ?? undefined,
     timestamp: Date.now(),
-  });
+  };
+
+  if (dbChannel) {
+    emitToChannel(dbChannel.id, "chat:message", chatPayload);
+  } else {
+    emitEvent("chat:message", chatPayload);
+  }
 
   // Run pipeline
   for (const entry of pipeline) {

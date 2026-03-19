@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
+import fastifyMultipart from "@fastify/multipart";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
@@ -13,6 +14,18 @@ import { channelRoutes } from "./modules/channels/routes.js";
 import { commandRoutes } from "./modules/commands/routes.js";
 import { timerRoutes } from "./modules/timers/routes.js";
 import { moderationRoutes } from "./modules/moderation/routes.js";
+import { chatLogRoutes } from "./modules/chatlogs/routes.js";
+import { pointsRoutes } from "./modules/points/routes.js";
+import { songRequestRoutes } from "./modules/songrequests/routes.js";
+import { uploadRoutes } from "./modules/uploads/routes.js";
+import { editorRoutes } from "./modules/editors/routes.js";
+import { eventsubRoutes } from "./modules/eventsub/routes.js";
+import { alertRoutes } from "./modules/alerts/routes.js";
+import { channelPointRoutes } from "./modules/channelpoints/routes.js";
+import { overlayRoutes } from "./modules/overlay/routes.js";
+import { eventsubWebhookRoute } from "./modules/eventsub/listener.js";
+import { requestRoutes, publicRequestRoutes } from "./modules/requests/routes.js";
+import { discordRoutes } from "./modules/discord/routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,7 +42,18 @@ export async function buildApp() {
     timeWindow: "1 minute",
   });
 
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB max
+    },
+  });
+
   app.setErrorHandler(errorHandler);
+
+  // Public routes (no JWT)
+  await app.register(overlayRoutes);
+  await app.register(eventsubWebhookRoute);
+  await app.register(publicRequestRoutes);
 
   // API routes
   await app.register(authRoutes, { prefix: "/api/auth" });
@@ -37,12 +61,35 @@ export async function buildApp() {
   await app.register(commandRoutes, { prefix: "/api/channels" });
   await app.register(timerRoutes, { prefix: "/api/channels" });
   await app.register(moderationRoutes, { prefix: "/api/channels" });
+  await app.register(chatLogRoutes, { prefix: "/api/channels" });
+  await app.register(pointsRoutes, { prefix: "/api/channels" });
+  await app.register(songRequestRoutes, { prefix: "/api/channels" });
+  await app.register(uploadRoutes, { prefix: "/api/channels" });
+  await app.register(editorRoutes, { prefix: "/api/channels" });
+  await app.register(eventsubRoutes, { prefix: "/api/channels" });
+  await app.register(alertRoutes, { prefix: "/api/channels" });
+  await app.register(channelPointRoutes, { prefix: "/api/channels" });
+  await app.register(requestRoutes, { prefix: "/api/channels" });
+  await app.register(discordRoutes, { prefix: "/api/channels" });
 
-  // Health check
-  app.get("/api/health", async () => ({
-    success: true,
-    data: { status: "ok", timestamp: new Date().toISOString() },
-  }));
+  // Health check (used by Docker healthcheck)
+  app.get("/api/health", async () => {
+    const { getTwitchClient } = await import("./twitch/twitch-client.js");
+    const { getDiscordClient } = await import("./discord/discord-client.js");
+    const client = getTwitchClient();
+    const discord = getDiscordClient();
+    return {
+      success: true,
+      data: {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        twitchConnected: client.isConnected,
+        channels: client.currentChannels,
+        discordReady: discord.isReady,
+        discordGuilds: discord.guildCount,
+      },
+    };
+  });
 
   // Bot status
   app.get("/api/bot/status", async () => {
@@ -58,7 +105,7 @@ export async function buildApp() {
     };
   });
 
-  // Serve frontend static files in production
+  // Serve frontend static files in production (first registration decorates reply)
   const frontendDist = join(__dirname, "../../frontend/dist");
   if (existsSync(frontendDist)) {
     await app.register(fastifyStatic, {
@@ -66,9 +113,29 @@ export async function buildApp() {
       prefix: "/",
       wildcard: false,
     });
+  }
+
+  // Serve uploaded files (second registration, no decorate)
+  const uploadsDir = config.uploadsDir.startsWith("/")
+    ? config.uploadsDir
+    : join(process.cwd(), config.uploadsDir);
+  await app.register(fastifyStatic, {
+    root: uploadsDir,
+    prefix: "/uploads/",
+    decorateReply: false,
+  });
+
+  // SPA fallback
+  if (existsSync(frontendDist)) {
 
     app.setNotFoundHandler((request, reply) => {
-      if (request.url.startsWith("/api/") || request.url.startsWith("/ws")) {
+      if (
+        request.url.startsWith("/api/") ||
+        request.url.startsWith("/ws") ||
+        request.url.startsWith("/overlay/") ||
+        request.url.startsWith("/uploads/") ||
+        request.url.startsWith("/requests/")
+      ) {
         return reply.status(404).send({ success: false, error: "Not found" });
       }
       return reply.sendFile("index.html");

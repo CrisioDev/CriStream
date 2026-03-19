@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SoundAlert" ADD COLUMN "volume" INTEGER NOT NULL DEFAULT 80;

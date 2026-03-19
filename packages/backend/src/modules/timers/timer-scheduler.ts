@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { prisma } from "../../lib/prisma.js";
 import { redis } from "../../lib/redis.js";
 import { sayInChannel } from "../../twitch/twitch-client.js";
+import { sendToDiscordChannel } from "../../discord/discord-client.js";
 import { logger } from "../../lib/logger.js";
 
 const CHAT_LINES_KEY_PREFIX = "timer:lines:";
@@ -40,8 +41,21 @@ async function checkTimers() {
     const lines = parseInt((await redis.get(linesKey)) ?? "0", 10);
     if (lines < timer.minChatLines) continue;
 
-    // Fire the timer
+    // Fire the timer (Twitch)
     sayInChannel(timer.channel.displayName, timer.message);
+
+    // Fire the timer (Discord)
+    try {
+      const discordSettings = await prisma.discordSettings.findUnique({
+        where: { channelId: timer.channelId },
+      });
+      if (discordSettings?.timersEnabled && discordSettings.timerChannelId) {
+        sendToDiscordChannel(discordSettings.timerChannelId, timer.message).catch(() => {});
+      }
+    } catch {
+      // Discord send is fire-and-forget
+    }
+
     await prisma.timer.update({
       where: { id: timer.id },
       data: { lastFiredAt: now },

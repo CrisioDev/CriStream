@@ -4,18 +4,22 @@ import { api } from "@/api/client";
 
 interface AuthState {
   user: AuthUser | null;
-  channel: ChannelDto | null;
+  channels: ChannelDto[];
+  activeChannel: ChannelDto | null;
   token: string | null;
   isLoading: boolean;
   login: () => void;
   logout: () => void;
   loadFromUrl: () => Promise<void>;
   fetchUser: () => Promise<void>;
+  setActiveChannel: (channel: ChannelDto) => void;
+  refreshChannels: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  channel: null,
+  channels: [],
+  activeChannel: null,
   token: localStorage.getItem("token"),
   isLoading: true,
 
@@ -26,7 +30,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
-    set({ user: null, channel: null, token: null });
+    localStorage.removeItem("activeChannelId");
+    set({ user: null, channels: [], activeChannel: null, token: null });
   },
 
   loadFromUrl: async () => {
@@ -52,14 +57,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const res = await api.get("/auth/me");
       const user = res.data as AuthUser;
 
-      // Fetch channel
+      // Fetch channels
       const channelsRes = await api.get("/channels");
       const channels = channelsRes.data as ChannelDto[];
 
-      set({ user, channel: channels[0] ?? null, isLoading: false });
+      // Restore active channel from localStorage or use first
+      const savedId = localStorage.getItem("activeChannelId");
+      let activeChannel = channels.find((c) => c.id === savedId) ?? channels[0] ?? null;
+
+      set({ user, channels, activeChannel, isLoading: false });
     } catch {
       localStorage.removeItem("token");
-      set({ user: null, channel: null, token: null, isLoading: false });
+      set({ user: null, channels: [], activeChannel: null, token: null, isLoading: false });
+    }
+  },
+
+  setActiveChannel: (channel: ChannelDto) => {
+    localStorage.setItem("activeChannelId", channel.id);
+    set({ activeChannel: channel });
+  },
+
+  refreshChannels: async () => {
+    try {
+      const channelsRes = await api.get("/channels");
+      const channels = channelsRes.data as ChannelDto[];
+      const current = get().activeChannel;
+      const activeChannel = channels.find((c) => c.id === current?.id) ?? channels[0] ?? null;
+      set({ channels, activeChannel });
+    } catch {
+      // ignore
     }
   },
 }));
+
+// Backwards compatibility alias
+export { useAuthStore as default };

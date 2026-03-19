@@ -19,6 +19,7 @@ model User {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   channels              Channel[]
+  editorOf              ChannelEditor[]
 }
 
 model Channel {
@@ -27,14 +28,27 @@ model Channel {
   displayName   String
   botJoined     Boolean  @default(false)
   commandPrefix String   @default("!")
+  overlayToken  String   @unique @default(uuid())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   ownerId       String
   owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  commands      Command[]
-  timers        Timer[]
-  moderationSettings ModerationSettings?
-  moderationActions  ModerationAction[]
+  commands            Command[]
+  timers              Timer[]
+  moderationSettings  ModerationSettings?
+  moderationActions   ModerationAction[]
+  chatLogs            ChatLog[]
+  bannedWords         BannedWord[]
+  channelUsers        ChannelUser[]
+  pointsSettings      PointsSettings?
+  songRequestSettings SongRequestSettings?
+  alertSettings        AlertSettings[]
+  soundAlerts          SoundAlert[]
+  eventLogs            EventLog[]
+  editors              ChannelEditor[]
+  channelPointRewards  ChannelPointReward[]
+  viewerRequests       ViewerRequest[]
+  discordSettings      DiscordSettings?
 }
 
 model Command {
@@ -42,9 +56,12 @@ model Command {
   trigger         String
   response        String
   cooldownSeconds Int      @default(5)
+  perUserCooldown Boolean  @default(false)
   userLevel       String   @default("everyone")
   enabled         Boolean  @default(true)
   useCount        Int      @default(0)
+  aliases         String[] @default([])
+  chain           String[] @default([])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   channelId       String
@@ -70,21 +87,27 @@ model Timer {
 }
 
 model ModerationSettings {
-  id                    String  @id @default(uuid())
-  linksEnabled          Boolean @default(false)
-  linksTimeoutDuration  Int     @default(10)
-  capsEnabled           Boolean @default(false)
-  capsMinLength         Int     @default(15)
-  capsThreshold         Int     @default(70)
-  capsTimeoutDuration   Int     @default(10)
-  symbolsEnabled        Boolean @default(false)
-  symbolsThreshold      Int     @default(50)
-  symbolsTimeoutDuration Int    @default(10)
-  emotesEnabled         Boolean @default(false)
-  emotesMaxCount        Int     @default(15)
-  emotesTimeoutDuration Int     @default(10)
-  channelId             String  @unique
-  channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  id                       String  @id @default(uuid())
+  linksEnabled             Boolean @default(false)
+  linksTimeoutDuration     Int     @default(10)
+  capsEnabled              Boolean @default(false)
+  capsMinLength            Int     @default(15)
+  capsThreshold            Int     @default(70)
+  capsTimeoutDuration      Int     @default(10)
+  symbolsEnabled           Boolean @default(false)
+  symbolsThreshold         Int     @default(50)
+  symbolsTimeoutDuration   Int     @default(10)
+  emotesEnabled            Boolean @default(false)
+  emotesMaxCount           Int     @default(15)
+  emotesTimeoutDuration    Int     @default(10)
+  spamEnabled              Boolean @default(false)
+  spamMaxRepeat            Int     @default(3)
+  spamWindowSeconds        Int     @default(60)
+  spamTimeoutDuration      Int     @default(30)
+  bannedWordsEnabled       Boolean @default(false)
+  bannedWordsTimeoutDuration Int   @default(30)
+  channelId                String  @unique
+  channel                  Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 }
 
 model ModerationAction {
@@ -97,4 +120,164 @@ model ModerationAction {
   createdAt  DateTime @default(now())
   channelId  String
   channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model ChatLog {
+  id          String   @id @default(uuid())
+  twitchUserId String
+  displayName String
+  message     String
+  createdAt   DateTime @default(now())
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, createdAt])
+  @@index([channelId, twitchUserId])
+}
+
+model BannedWord {
+  id        String  @id @default(uuid())
+  pattern   String
+  isRegex   Boolean @default(false)
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, pattern])
+}
+
+model ChannelUser {
+  id           String   @id @default(uuid())
+  twitchUserId String
+  displayName  String
+  points       Int      @default(0)
+  watchMinutes Int      @default(0)
+  lastSeen     DateTime @default(now())
+  channelId    String
+  channel      Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, twitchUserId])
+  @@index([channelId, points(sort: Desc)])
+}
+
+model PointsSettings {
+  id               String  @id @default(uuid())
+  enabled          Boolean @default(false)
+  pointsPerMessage Int     @default(1)
+  pointsPerInterval Int    @default(5)
+  intervalMinutes  Int     @default(5)
+  channelId        String  @unique
+  channel          Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model SongRequestSettings {
+  id                  String  @id @default(uuid())
+  enabled             Boolean @default(false)
+  maxQueueSize        Int     @default(50)
+  maxDurationSeconds  Int     @default(600)
+  userCooldownSeconds Int     @default(30)
+  channelId           String  @unique
+  channel             Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model ChannelEditor {
+  id        String   @id @default(uuid())
+  role      String   @default("editor")
+  createdAt DateTime @default(now())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+}
+
+model AlertSettings {
+  id            String  @id @default(uuid())
+  alertType     String
+  enabled       Boolean @default(true)
+  textTemplate  String  @default("")
+  duration      Int     @default(5)
+  animationType String  @default("fade")
+  soundFileUrl  String  @default("")
+  imageFileUrl  String  @default("")
+  volume        Int     @default(80)
+  minAmount     Int     @default(0)
+  layoutConfig  Json?
+  ttsEnabled    Boolean @default(false)
+  ttsVoice      String  @default("")
+  ttsRate       Float   @default(1.0)
+  ttsVolume     Int     @default(80)
+  channelId     String
+  channel       Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, alertType])
+}
+
+model SoundAlert {
+  id              String  @id @default(uuid())
+  name            String
+  fileUrl         String
+  pointsCost      Int     @default(0)
+  cooldownSeconds Int     @default(30)
+  volume          Int     @default(80)
+  enabled         Boolean @default(true)
+  channelId       String
+  channel         Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, name])
+}
+
+model ChannelPointReward {
+  id           String   @id @default(uuid())
+  rewardId     String   @default("")
+  rewardTitle  String
+  enabled      Boolean  @default(true)
+  actionConfig Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  channelId    String
+  channel      Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, rewardTitle])
+  @@index([channelId, rewardId])
+}
+
+model ViewerRequest {
+  id          String   @id @default(uuid())
+  displayName String
+  message     String
+  status      String   @default("open")
+  createdAt   DateTime @default(now())
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, status])
+  @@index([channelId, createdAt])
+}
+
+model DiscordSettings {
+  id                    String  @id @default(uuid())
+  guildId               String  @default("")
+  commandChannelId      String  @default("")
+  timerChannelId        String  @default("")
+  summaryChannelId      String  @default("")
+  notifyChannelId       String  @default("")
+  commandsEnabled       Boolean @default(false)
+  timersEnabled         Boolean @default(false)
+  summariesEnabled      Boolean @default(false)
+  notificationsEnabled  Boolean @default(false)
+  channelId             String  @unique
+  channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model EventLog {
+  id        String   @id @default(uuid())
+  eventType String
+  data      Json
+  createdAt DateTime @default(now())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, createdAt])
+  @@index([channelId, eventType])
 }

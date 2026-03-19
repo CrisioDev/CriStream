@@ -24,8 +24,11 @@ class CommandService {
         trigger: data.trigger.toLowerCase(),
         response: data.response,
         cooldownSeconds: data.cooldownSeconds ?? 5,
+        perUserCooldown: data.perUserCooldown ?? false,
         userLevel: data.userLevel ?? "everyone",
         enabled: data.enabled ?? true,
+        aliases: data.aliases?.map((a) => a.toLowerCase()) ?? [],
+        chain: data.chain?.map((c) => c.toLowerCase()) ?? [],
       },
     });
     return this.toDto(command);
@@ -36,12 +39,20 @@ class CommandService {
     commandId: string,
     data: UpdateCommandDto
   ): Promise<CommandDto> {
+    const updateData: any = { ...data };
+    if (data.trigger !== undefined) {
+      updateData.trigger = data.trigger.toLowerCase();
+    }
+    if (data.aliases !== undefined) {
+      updateData.aliases = data.aliases.map((a) => a.toLowerCase());
+    }
+    if (data.chain !== undefined) {
+      updateData.chain = data.chain.map((c) => c.toLowerCase());
+    }
+
     const command = await prisma.command.update({
       where: { id: commandId, channelId },
-      data: {
-        ...(data.trigger !== undefined && { trigger: data.trigger.toLowerCase() }),
-        ...data,
-      },
+      data: updateData,
     });
     return this.toDto(command);
   }
@@ -57,9 +68,12 @@ class CommandService {
     trigger: string;
     response: string;
     cooldownSeconds: number;
+    perUserCooldown: boolean;
     userLevel: string;
     enabled: boolean;
     useCount: number;
+    aliases: string[];
+    chain: string[];
     channelId: string;
   }): CommandDto {
     return {
@@ -67,9 +81,12 @@ class CommandService {
       trigger: command.trigger,
       response: command.response,
       cooldownSeconds: command.cooldownSeconds,
+      perUserCooldown: command.perUserCooldown,
       userLevel: command.userLevel as CommandDto["userLevel"],
       enabled: command.enabled,
       useCount: command.useCount,
+      aliases: command.aliases,
+      chain: command.chain,
       channelId: command.channelId,
     };
   }

@@ -1,7 +1,7 @@
 import { registerHandler } from "../../twitch/message-handler.js";
 import { prisma } from "../../lib/prisma.js";
 import { logger } from "../../lib/logger.js";
-import { emitEvent } from "../../lib/socket.js";
+import { emitToChannel } from "../../lib/socket.js";
 import { getTwitchApi } from "../../twitch/twitch-api.js";
 import { checkLinks } from "./filters/links.js";
 import { checkCaps } from "./filters/caps.js";
@@ -67,7 +67,7 @@ registerHandler("moderation", 10, async (ctx) => {
     },
   });
 
-  emitEvent("moderation:action", {
+  emitToChannel(channel.id, "moderation:action", {
     id: action.id,
     channelId: channel.id,
     targetUser: ctx.user,

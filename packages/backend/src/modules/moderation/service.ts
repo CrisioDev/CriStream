@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
-import type { ModerationSettingsDto, UpdateModerationSettingsDto, ModerationActionDto } from "@streamguard/shared";
+import { invalidateBannedWordsCache } from "./filters/banned-words.js";
+import type { ModerationSettingsDto, UpdateModerationSettingsDto, ModerationActionDto, BannedWordDto, CreateBannedWordDto } from "@streamguard/shared";
 
 class ModerationService {
   async getSettings(channelId: string): Promise<ModerationSettingsDto> {
@@ -31,6 +32,35 @@ class ModerationService {
       action: a.action as ModerationActionDto["action"],
       createdAt: a.createdAt.toISOString(),
     }));
+  }
+
+  // ── Banned Words ──
+
+  async getBannedWords(channelId: string): Promise<BannedWordDto[]> {
+    const words = await prisma.bannedWord.findMany({
+      where: { channelId },
+      orderBy: { pattern: "asc" },
+    });
+    return words;
+  }
+
+  async createBannedWord(channelId: string, data: CreateBannedWordDto): Promise<BannedWordDto> {
+    const word = await prisma.bannedWord.create({
+      data: {
+        channelId,
+        pattern: data.pattern,
+        isRegex: data.isRegex ?? false,
+      },
+    });
+    await invalidateBannedWordsCache(channelId);
+    return word;
+  }
+
+  async deleteBannedWord(channelId: string, wordId: string): Promise<void> {
+    await prisma.bannedWord.delete({
+      where: { id: wordId, channelId },
+    });
+    await invalidateBannedWordsCache(channelId);
   }
 }
 

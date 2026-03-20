@@ -45,7 +45,7 @@ export async function buildApp() {
 
   await app.register(fastifyMultipart, {
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB max (videos)
+      fileSize: 100 * 1024 * 1024, // 100MB max (videos)
     },
   });
 

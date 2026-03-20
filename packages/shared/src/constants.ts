@@ -140,7 +140,7 @@ export const UPLOAD_LIMITS = {
     allowedMimeTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
   },
   video: {
-    maxSizeBytes: 10 * 1024 * 1024, // 10MB
+    maxSizeBytes: 100 * 1024 * 1024, // 100MB
     allowedExtensions: [".webm", ".mp4"],
     allowedMimeTypes: ["video/webm", "video/mp4"],
   },

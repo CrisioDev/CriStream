@@ -6,6 +6,7 @@ import { sayInChannel } from "../../twitch/twitch-client.js";
 import { logger } from "../../lib/logger.js";
 import { pointsService } from "../points/service.js";
 import type { MessageContext } from "../../twitch/message-handler.js";
+import { pickRandomSound } from "../channelpoints/action-executor.js";
 import type { OverlayAlertPayload } from "@streamguard/shared";
 
 registerHandler("soundalerts", 43, async (ctx: MessageContext) => {
@@ -80,7 +81,7 @@ registerHandler("soundalerts", 43, async (ctx: MessageContext) => {
       .replace(/\{sound\}/g, sound.name),
     duration: alertSettings?.duration ?? 5,
     animationType: (alertSettings?.animationType ?? "fade") as any,
-    soundUrl: sound.fileUrl,
+    soundUrl: pickRandomSound(sound.fileUrl),
     imageUrl: alertSettings?.imageFileUrl ?? "",
     volume: soundVolume,
   };
@@ -88,7 +89,7 @@ registerHandler("soundalerts", 43, async (ctx: MessageContext) => {
   emitToChannel(channel.id, "alert:trigger", { channelId: channel.id, payload });
   emitToChannel(channel.id, "sound:play", {
     channelId: channel.id,
-    soundUrl: sound.fileUrl,
+    soundUrl: pickRandomSound(sound.fileUrl),
     volume: soundVolume,
   });
 

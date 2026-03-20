@@ -2,6 +2,7 @@ import type { Client, Message, PermissionsBitField } from "discord.js";
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import { handleCommand } from "../modules/commands/executor.js";
+import { viewerRequestService } from "../modules/requests/service.js";
 import type { CommandContext } from "../modules/commands/executor.js";
 
 export function setupDiscordMessageHandler(client: Client): void {
@@ -33,6 +34,25 @@ async function processDiscordMessage(message: Message): Promise<void> {
   if (settings.commandChannelId && message.channel.id !== settings.commandChannelId) return;
 
   const channel = settings.channel;
+  const prefix = channel.commandPrefix;
+
+  // Handle !gib requests
+  if (message.content.startsWith(`${prefix}gib `)) {
+    const requestMsg = message.content.slice(prefix.length + 4).trim();
+    if (!requestMsg) {
+      await message.reply(`Schreib deinen Wunsch nach ${prefix}gib`);
+      return;
+    }
+    if (requestMsg.length > 500) {
+      await message.reply("Zu lang! Max 500 Zeichen.");
+      return;
+    }
+    const displayName = message.author.displayName ?? message.author.username;
+    await viewerRequestService.create(channel.id, displayName, requestMsg);
+    await message.reply("Dein Wunsch wurde eingetragen!");
+    logger.info({ user: displayName, channel: channel.displayName, message: requestMsg }, "Viewer request via Discord");
+    return;
+  }
 
   // Determine user level from Discord permissions
   const member = message.member;

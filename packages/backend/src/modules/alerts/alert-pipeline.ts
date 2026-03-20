@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { emitToChannel } from "../../lib/socket.js";
 import { logger } from "../../lib/logger.js";
+import { pickRandomSound } from "../channelpoints/action-executor.js";
 import type { OverlayAlertPayload, AlertType, AnimationType } from "@streamguard/shared";
 
 const EVENT_TO_ALERT_TYPE: Record<string, AlertType> = {
@@ -37,7 +38,7 @@ export async function processAlertEvent(
     text,
     duration: settings.duration,
     animationType: settings.animationType as AnimationType,
-    soundUrl: settings.soundFileUrl,
+    soundUrl: pickRandomSound(settings.soundFileUrl),
     imageUrl: settings.imageFileUrl,
     volume: settings.volume,
     layoutConfig: (settings as any).layoutConfig ?? null,

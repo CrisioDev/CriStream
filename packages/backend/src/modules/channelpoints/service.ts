@@ -26,6 +26,13 @@ class ChannelPointService {
         rewardTitle: data.rewardTitle,
         enabled: data.enabled ?? true,
         actionConfig: data.actionConfig as any,
+        cost: data.cost ?? 100,
+        prompt: data.prompt ?? "",
+        isUserInputRequired: data.isUserInputRequired ?? false,
+        maxPerStream: data.maxPerStream ?? null,
+        maxPerUserPerStream: data.maxPerUserPerStream ?? null,
+        globalCooldown: data.globalCooldown ?? null,
+        backgroundColor: data.backgroundColor ?? "#9147FF",
       },
     });
     return this.toDto(reward);
@@ -40,6 +47,13 @@ class ChannelPointService {
     if (data.rewardTitle !== undefined) updateData.rewardTitle = data.rewardTitle;
     if (data.enabled !== undefined) updateData.enabled = data.enabled;
     if (data.actionConfig !== undefined) updateData.actionConfig = data.actionConfig as any;
+    if (data.cost !== undefined) updateData.cost = data.cost;
+    if (data.prompt !== undefined) updateData.prompt = data.prompt;
+    if (data.isUserInputRequired !== undefined) updateData.isUserInputRequired = data.isUserInputRequired;
+    if (data.maxPerStream !== undefined) updateData.maxPerStream = data.maxPerStream;
+    if (data.maxPerUserPerStream !== undefined) updateData.maxPerUserPerStream = data.maxPerUserPerStream;
+    if (data.globalCooldown !== undefined) updateData.globalCooldown = data.globalCooldown;
+    if (data.backgroundColor !== undefined) updateData.backgroundColor = data.backgroundColor;
 
     const reward = await prisma.channelPointReward.update({
       where: { id: rewardId, channelId },
@@ -59,7 +73,6 @@ class ChannelPointService {
     twitchRewardId: string,
     rewardTitle: string
   ): Promise<ChannelPointRewardDto | null> {
-    // Primary: match by Twitch reward ID
     if (twitchRewardId) {
       const byId = await prisma.channelPointReward.findFirst({
         where: { channelId, rewardId: twitchRewardId },
@@ -67,28 +80,39 @@ class ChannelPointService {
       if (byId) return this.toDto(byId);
     }
 
-    // Fallback: match by title
     if (rewardTitle) {
       const byTitle = await prisma.channelPointReward.findUnique({
         where: { channelId_rewardTitle: { channelId, rewardTitle } },
       });
       if (byTitle) {
-        // Auto-capture rewardId for future matches
         if (twitchRewardId && !byTitle.rewardId) {
           await prisma.channelPointReward.update({
             where: { id: byTitle.id },
             data: { rewardId: twitchRewardId },
           });
-          logger.info(
-            { channelId, rewardTitle, twitchRewardId },
-            "Auto-captured Twitch rewardId"
-          );
+          logger.info({ channelId, rewardTitle, twitchRewardId }, "Auto-captured Twitch rewardId");
         }
         return this.toDto(byTitle);
       }
     }
 
     return null;
+  }
+
+  async linkToTwitch(channelId: string, rewardId: string, twitchRewardId: string): Promise<ChannelPointRewardDto> {
+    const reward = await prisma.channelPointReward.update({
+      where: { id: rewardId, channelId },
+      data: { rewardId: twitchRewardId },
+    });
+    return this.toDto(reward);
+  }
+
+  async unlinkFromTwitch(channelId: string, rewardId: string): Promise<ChannelPointRewardDto> {
+    const reward = await prisma.channelPointReward.update({
+      where: { id: rewardId, channelId },
+      data: { rewardId: "" },
+    });
+    return this.toDto(reward);
   }
 
   private toDto(r: any): ChannelPointRewardDto {
@@ -98,6 +122,14 @@ class ChannelPointService {
       rewardTitle: r.rewardTitle,
       enabled: r.enabled,
       actionConfig: (r.actionConfig ?? []) as RewardAction[],
+      cost: r.cost,
+      prompt: r.prompt ?? "",
+      isUserInputRequired: r.isUserInputRequired ?? false,
+      maxPerStream: r.maxPerStream ?? null,
+      maxPerUserPerStream: r.maxPerUserPerStream ?? null,
+      globalCooldown: r.globalCooldown ?? null,
+      backgroundColor: r.backgroundColor ?? "#9147FF",
+      isSynced: !!r.rewardId,
       channelId: r.channelId,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),

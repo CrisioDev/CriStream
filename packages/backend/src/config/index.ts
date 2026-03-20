@@ -39,6 +39,9 @@ export const config = {
   discordBotToken: env("DISCORD_BOT_TOKEN", ""),
   discordClientId: env("DISCORD_CLIENT_ID", ""),
 
+  // Anthropic (for AI summaries)
+  anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
+
   // EventSub
   eventsubSecret: env("EVENTSUB_SECRET", "streamguard-eventsub-secret"),
   eventsubCallbackUrl: env("EVENTSUB_CALLBACK_URL", "http://localhost:3000/api/eventsub/webhook"),

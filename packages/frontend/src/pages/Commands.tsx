@@ -125,6 +125,9 @@ export function CommandsPage() {
               <div>
                 <Label>Response</Label>
                 <Input value={form.response} onChange={(e) => setForm({ ...form, response: e.target.value })} placeholder="Hello $(user)!" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  $(user) $(channel) $(query) $(touser) $(count) $(points) $(watchtime) $(rank) $(game) $(title) $(viewers) $(followers) $(time) $(date) $(random) $(1) $(2) $(uptime) $(customapi.URL)
+                </p>
               </div>
               <div>
                 <Label>Cooldown (seconds)</Label>

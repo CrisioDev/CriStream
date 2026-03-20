@@ -3,20 +3,21 @@ import { prisma } from "../../lib/prisma.js";
 import { redis } from "../../lib/redis.js";
 import { logger } from "../../lib/logger.js";
 import { buildStreamSummary, buildSummaryEmbed } from "./summary-service.js";
+import { summarizeDiscordChat } from "./discord-summary-service.js";
 import { sendEmbedToDiscordChannel } from "../../discord/discord-client.js";
 
 const STREAM_START_KEY_PREFIX = "stream:start:";
 
 export function initSummaryScheduler(): void {
-  // Daily summary at 00:00 UTC
-  cron.schedule("0 0 * * *", async () => {
+  // Daily summary at 22:00 UTC (00:00 CEST)
+  cron.schedule("0 22 * * *", async () => {
     try {
       await postDailySummaries();
     } catch (err) {
       logger.error({ err }, "Daily summary scheduler error");
     }
   });
-  logger.info("Summary scheduler started (daily at 00:00 UTC)");
+  logger.info("Summary scheduler started (daily at 22:00 UTC)");
 }
 
 export async function onStreamOnline(channelId: string): Promise<void> {
@@ -47,12 +48,23 @@ export async function onStreamOffline(channelId: string): Promise<void> {
   if (!settings?.summariesEnabled || !settings.summaryChannelId) return;
 
   try {
+    // Stream summary (Twitch stats)
     const summary = await buildStreamSummary(channelId, start, end);
-    if (!summary) return;
+    if (summary) {
+      const embed = buildSummaryEmbed(summary, "Stream Summary");
+      await sendEmbedToDiscordChannel(settings.summaryChannelId, embed);
+    }
 
-    const embed = buildSummaryEmbed(summary, "Stream Summary");
-    await sendEmbedToDiscordChannel(settings.summaryChannelId, embed);
-    logger.info({ channelId }, "Stream-end summary posted to Discord");
+    // Discord chat summary (AI)
+    if (settings.guildId) {
+      const streamHours = (end.getTime() - start.getTime()) / (60 * 60 * 1000);
+      const discordEmbed = await summarizeDiscordChat(settings.guildId, Math.ceil(streamHours));
+      if (discordEmbed) {
+        await sendEmbedToDiscordChannel(settings.summaryChannelId, discordEmbed);
+      }
+    }
+
+    logger.info({ channelId }, "Stream-end summaries posted to Discord");
   } catch (err) {
     logger.error({ err, channelId }, "Failed to post stream-end summary");
   }
@@ -63,19 +75,29 @@ async function postDailySummaries(): Promise<void> {
     where: { summariesEnabled: true },
   });
 
-  const end = new Date();
-  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
-
   for (const settings of allSettings) {
     if (!settings.summaryChannelId) continue;
 
     try {
-      const summary = await buildStreamSummary(settings.channelId, start, end);
-      if (!summary || summary.chatMessageCount === 0) continue;
+      // Twitch daily summary
+      const end = new Date();
+      const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
 
-      const embed = buildSummaryEmbed(summary, "Daily Summary (Last 24h)");
-      await sendEmbedToDiscordChannel(settings.summaryChannelId, embed);
-      logger.debug({ channelId: settings.channelId }, "Daily summary posted");
+      const summary = await buildStreamSummary(settings.channelId, start, end);
+      if (summary && summary.chatMessageCount > 0) {
+        const embed = buildSummaryEmbed(summary, "Twitch Daily Summary (24h)");
+        await sendEmbedToDiscordChannel(settings.summaryChannelId, embed);
+      }
+
+      // Discord chat AI summary
+      if (settings.guildId) {
+        const discordEmbed = await summarizeDiscordChat(settings.guildId, 24);
+        if (discordEmbed) {
+          await sendEmbedToDiscordChannel(settings.summaryChannelId, discordEmbed);
+        }
+      }
+
+      logger.debug({ channelId: settings.channelId }, "Daily summaries posted");
     } catch (err) {
       logger.error({ err, channelId: settings.channelId }, "Failed to post daily summary");
     }

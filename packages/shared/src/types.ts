@@ -345,6 +345,14 @@ export interface ChannelPointRewardDto {
   rewardTitle: string;
   enabled: boolean;
   actionConfig: RewardAction[];
+  cost: number;
+  prompt: string;
+  isUserInputRequired: boolean;
+  maxPerStream: number | null;
+  maxPerUserPerStream: number | null;
+  globalCooldown: number | null;
+  backgroundColor: string;
+  isSynced: boolean;
   channelId: string;
   createdAt: string;
   updatedAt: string;
@@ -354,12 +362,26 @@ export interface CreateChannelPointRewardDto {
   rewardTitle: string;
   enabled?: boolean;
   actionConfig: RewardAction[];
+  cost?: number;
+  prompt?: string;
+  isUserInputRequired?: boolean;
+  maxPerStream?: number | null;
+  maxPerUserPerStream?: number | null;
+  globalCooldown?: number | null;
+  backgroundColor?: string;
 }
 
 export interface UpdateChannelPointRewardDto {
   rewardTitle?: string;
   enabled?: boolean;
   actionConfig?: RewardAction[];
+  cost?: number;
+  prompt?: string;
+  isUserInputRequired?: boolean;
+  maxPerStream?: number | null;
+  maxPerUserPerStream?: number | null;
+  globalCooldown?: number | null;
+  backgroundColor?: string;
 }
 
 export type AnimationType = "slide" | "fade" | "bounce" | "zoom";
@@ -623,6 +645,47 @@ export interface WsEvents {
     rewardTitle: string;
     userInput: string;
   };
+}
+
+// ── Twitch Channel Point Rewards (from Twitch API) ──
+export interface TwitchRewardDto {
+  id: string;
+  title: string;
+  cost: number;
+  prompt: string;
+  isEnabled: boolean;
+  isPaused: boolean;
+  isUserInputRequired: boolean;
+  maxPerStream: number | null;
+  maxPerUserPerStream: number | null;
+  globalCooldown: number | null;
+  backgroundColor: string;
+  isManaged: boolean;
+}
+
+export interface CreateTwitchRewardDto {
+  title: string;
+  cost: number;
+  prompt?: string;
+  isEnabled?: boolean;
+  isUserInputRequired?: boolean;
+  maxPerStream?: number | null;
+  maxPerUserPerStream?: number | null;
+  globalCooldown?: number | null;
+  backgroundColor?: string;
+}
+
+export interface UpdateTwitchRewardDto {
+  title?: string;
+  cost?: number;
+  prompt?: string;
+  isEnabled?: boolean;
+  isPaused?: boolean;
+  isUserInputRequired?: boolean;
+  maxPerStream?: number | null;
+  maxPerUserPerStream?: number | null;
+  globalCooldown?: number | null;
+  backgroundColor?: string;
 }
 
 // ── Discord Settings ──

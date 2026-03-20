@@ -228,15 +228,22 @@ model SoundAlert {
 }
 
 model ChannelPointReward {
-  id           String   @id @default(uuid())
-  rewardId     String   @default("")
-  rewardTitle  String
-  enabled      Boolean  @default(true)
-  actionConfig Json
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  channelId    String
-  channel      Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  id                    String   @id @default(uuid())
+  rewardId              String   @default("")
+  rewardTitle           String
+  enabled               Boolean  @default(true)
+  actionConfig          Json
+  cost                  Int      @default(100)
+  prompt                String   @default("")
+  isUserInputRequired   Boolean  @default(false)
+  maxPerStream          Int?
+  maxPerUserPerStream   Int?
+  globalCooldown        Int?
+  backgroundColor       String   @default("#9147FF")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  channelId             String
+  channel               Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   @@unique([channelId, rewardTitle])
   @@index([channelId, rewardId])

@@ -24,6 +24,7 @@ export const TWITCH_SCOPES = [
   "channel:read:subscriptions",
   "channel:read:hype_train",
   "channel:read:redemptions",
+  "channel:manage:redemptions",
   "user:manage:whispers",
   "user:read:moderated_channels",
 ];

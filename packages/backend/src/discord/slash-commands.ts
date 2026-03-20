@@ -138,12 +138,13 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
     await interaction.deferReply();
     try {
       // Pull latest code and rebuild
+      const appDir = process.env.DEPLOY_APP_DIR || "/app";
+      const gitDir = process.env.DEPLOY_GIT_DIR || "";
+      const gitArgs = gitDir
+        ? `git --work-tree=${appDir} --git-dir=${gitDir} fetch origin main 2>&1 && git --work-tree=${appDir} --git-dir=${gitDir} checkout -f main 2>&1 && `
+        : "";
       const { stdout, stderr } = await execFileAsync("bash", ["-c",
-        "cd /home/crisio/streamguard && " +
-        "git --work-tree=/home/crisio/streamguard --git-dir=/home/crisio/streamguard.git fetch origin main 2>&1 && " +
-        "git --work-tree=/home/crisio/streamguard --git-dir=/home/crisio/streamguard.git checkout -f main 2>&1 && " +
-        "docker compose build 2>&1 && " +
-        "docker compose up -d 2>&1"
+        `cd ${appDir} && ${gitArgs}docker compose build 2>&1 && docker compose up -d 2>&1`
       ], { timeout: 300_000 });
       // Wait for health
       await new Promise(r => setTimeout(r, 10_000));
@@ -170,7 +171,7 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
       const m = Math.floor((uptime % 3600) / 60);
       await interaction.reply({
         content: [
-          `**StreamGuard Status**`,
+          `**CriStream Status**`,
           `Twitch: ${d.twitchConnected ? "Connected" : "Disconnected"} (${d.channels?.join(", ") || "none"})`,
           `Discord: ${d.discordReady ? "Ready" : "Offline"} (${d.discordGuilds} guild${d.discordGuilds !== 1 ? "s" : ""})`,
           `Uptime: ${h}h ${m}m`,

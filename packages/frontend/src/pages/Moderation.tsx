@@ -9,7 +9,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { api } from "@/api/client";
-import type { ModerationSettingsDto, ModerationActionDto, UpdateModerationSettingsDto, BannedWordDto } from "@streamguard/shared";
+import type { ModerationSettingsDto, ModerationActionDto, UpdateModerationSettingsDto, BannedWordDto } from "@cristream/shared";
 
 export function ModerationPage() {
   const { activeChannel: channel } = useAuthStore();

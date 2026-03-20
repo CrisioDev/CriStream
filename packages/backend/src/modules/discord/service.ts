@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
-import type { DiscordSettingsDto, UpdateDiscordSettingsDto } from "@streamguard/shared";
+import type { DiscordSettingsDto, UpdateDiscordSettingsDto } from "@cristream/shared";
 import { config } from "../../config/index.js";
 
 class DiscordService {

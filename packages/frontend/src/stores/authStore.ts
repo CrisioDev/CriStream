@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { AuthUser, ChannelDto } from "@streamguard/shared";
+import type { AuthUser, ChannelDto } from "@cristream/shared";
 import { api } from "@/api/client";
 
 interface AuthState {

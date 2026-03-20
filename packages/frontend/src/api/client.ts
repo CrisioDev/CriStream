@@ -1,4 +1,4 @@
-import type { ApiResponse } from "@streamguard/shared";
+import type { ApiResponse } from "@cristream/shared";
 
 const BASE_URL = "/api";
 

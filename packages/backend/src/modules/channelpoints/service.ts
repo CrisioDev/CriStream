@@ -5,7 +5,7 @@ import type {
   CreateChannelPointRewardDto,
   UpdateChannelPointRewardDto,
   RewardAction,
-} from "@streamguard/shared";
+} from "@cristream/shared";
 
 class ChannelPointService {
   async list(channelId: string): Promise<ChannelPointRewardDto[]> {

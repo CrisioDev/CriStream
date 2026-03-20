@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { Prisma } from "@prisma/client";
-import { ALERT_TYPES } from "@streamguard/shared";
-import type { AlertSettingsDto, UpdateAlertSettingsDto, SoundAlertDto, CreateSoundAlertDto, UpdateSoundAlertDto, AlertType } from "@streamguard/shared";
+import { ALERT_TYPES } from "@cristream/shared";
+import type { AlertSettingsDto, UpdateAlertSettingsDto, SoundAlertDto, CreateSoundAlertDto, UpdateSoundAlertDto, AlertType } from "@cristream/shared";
 
 const DEFAULT_TEMPLATES: Record<string, string> = {
   follow: "{user} just followed!",

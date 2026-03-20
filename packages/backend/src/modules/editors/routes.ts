@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, isOwner } from "../../middleware/channel-access.js";
 import { editorService } from "./service.js";
-import type { EditorRole } from "@streamguard/shared";
+import type { EditorRole } from "@cristream/shared";
 
 export async function editorRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

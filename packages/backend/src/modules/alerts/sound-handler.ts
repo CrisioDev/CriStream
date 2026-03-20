@@ -7,7 +7,7 @@ import { logger } from "../../lib/logger.js";
 import { pointsService } from "../points/service.js";
 import type { MessageContext } from "../../twitch/message-handler.js";
 import { pickRandomSound } from "../channelpoints/action-executor.js";
-import type { OverlayAlertPayload } from "@streamguard/shared";
+import type { OverlayAlertPayload } from "@cristream/shared";
 
 registerHandler("soundalerts", 43, async (ctx: MessageContext) => {
   const channel = ctx.channelId

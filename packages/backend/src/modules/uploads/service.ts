@@ -5,7 +5,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { config } from "../../config/index.js";
-import { UPLOAD_LIMITS } from "@streamguard/shared";
+import { UPLOAD_LIMITS } from "@cristream/shared";
 import { logger } from "../../lib/logger.js";
 import type { MultipartFile } from "@fastify/multipart";
 

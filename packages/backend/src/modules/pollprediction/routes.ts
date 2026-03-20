@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
 import { prisma } from "../../lib/prisma.js";
-import type { UpdatePollPredictionSettingsDto } from "@streamguard/shared";
+import type { UpdatePollPredictionSettingsDto } from "@cristream/shared";
 
 async function getOrCreateSettings(channelId: string) {
   return prisma.pollPredictionSettings.upsert({

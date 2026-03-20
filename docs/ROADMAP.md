@@ -1,4 +1,4 @@
-# StreamGuard Roadmap
+# CriStream Roadmap
 
 ## Phase 1 - MVP (Current)
 - [x] Custom Commands with variables

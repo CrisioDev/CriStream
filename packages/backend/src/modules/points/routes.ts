@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { pointsService } from "./service.js";
-import type { UpdatePointsSettingsDto } from "@streamguard/shared";
+import type { UpdatePointsSettingsDto } from "@cristream/shared";
 
 export async function pointsRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

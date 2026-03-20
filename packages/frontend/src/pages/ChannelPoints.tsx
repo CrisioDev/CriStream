@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
-import { ANIMATION_TYPES, REWARD_ACTION_TYPES_AVAILABLE } from "@streamguard/shared";
+import { ANIMATION_TYPES, REWARD_ACTION_TYPES_AVAILABLE } from "@cristream/shared";
 import type {
   ChannelPointRewardDto,
   RewardAction, RewardActionSound, RewardActionAlert, RewardActionCommand, RewardActionChatMessage,
   CommandDto, OverlayLayoutConfig, TwitchRewardDto,
-} from "@streamguard/shared";
+} from "@cristream/shared";
 
 export function ChannelPointsPage() {
   const { activeChannel: channel } = useAuthStore();

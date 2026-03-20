@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import type { OverlayLayoutConfig, OverlayElement } from "@streamguard/shared";
-import { DEFAULT_LAYOUT_CONFIG } from "@streamguard/shared";
+import type { OverlayLayoutConfig, OverlayElement } from "@cristream/shared";
+import { DEFAULT_LAYOUT_CONFIG } from "@cristream/shared";
 
 const MAX_UNDO = 20;
 

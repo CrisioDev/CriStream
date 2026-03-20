@@ -1,6 +1,6 @@
 import { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
-import type { WsEvents } from "@streamguard/shared";
+import type { WsEvents } from "@cristream/shared";
 import { logger } from "./logger.js";
 import { prisma } from "./prisma.js";
 import { songRequestService } from "../modules/songrequests/service.js";

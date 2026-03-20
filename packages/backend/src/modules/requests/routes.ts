@@ -3,7 +3,7 @@ import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
 import { prisma } from "../../lib/prisma.js";
 import { viewerRequestService } from "./service.js";
-import type { RequestStatus } from "@streamguard/shared";
+import type { RequestStatus } from "@cristream/shared";
 
 export async function requestRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

@@ -1,4 +1,4 @@
-# StreamGuard Setup Guide
+# CriStream Setup Guide
 
 ## Prerequisites
 - Docker & Docker Compose
@@ -9,7 +9,7 @@
 
 1. Go to [Twitch Developer Console](https://dev.twitch.tv/console/apps)
 2. Click "Register Your Application"
-3. Set name to "StreamGuard" (or similar)
+3. Set name to "CriStream" (or similar)
 4. Set OAuth Redirect URL to `https://your-domain.com/api/auth/twitch/callback`
 5. Set Category to "Chat Bot"
 6. Note the **Client ID** and generate a **Client Secret**
@@ -30,7 +30,7 @@ Edit `.env` with your values:
 | `TWITCH_BOT_USERNAME` | Your bot's Twitch username |
 | `JWT_SECRET` | Random 64-char string (`openssl rand -hex 32`) |
 | `ENCRYPTION_KEY` | Random 64-hex string (`openssl rand -hex 32`) |
-| `DATABASE_URL` | `postgresql://streamguard:streamguard@postgres:5432/streamguard` |
+| `DATABASE_URL` | `postgresql://cristream:cristream@postgres:5432/cristream` |
 | `REDIS_URL` | `redis://redis:6379` |
 | `DOMAIN` | Your domain (e.g., `bot.example.com`) |
 | `CORS_ORIGIN` | `https://your-domain.com` |
@@ -42,7 +42,7 @@ docker compose up -d
 ```
 
 This starts 4 services:
-- **app** - StreamGuard backend + frontend
+- **app** - CriStream backend + frontend
 - **postgres** - PostgreSQL database
 - **redis** - Redis for caching/cooldowns
 - **caddy** - Reverse proxy with auto-HTTPS

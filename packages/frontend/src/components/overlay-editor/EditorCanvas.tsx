@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import type { OverlayLayoutConfig, OverlayElement } from "@streamguard/shared";
+import type { OverlayLayoutConfig, OverlayElement } from "@cristream/shared";
 import { EditorElement } from "./EditorElement";
 
 interface EditorCanvasProps {

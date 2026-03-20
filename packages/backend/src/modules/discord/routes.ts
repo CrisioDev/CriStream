@@ -5,7 +5,7 @@ import { discordService } from "./service.js";
 import { registerCommandsForChannel } from "../../discord/slash-commands.js";
 import { summarizeDiscordChat } from "../summaries/discord-summary-service.js";
 import { sendEmbedToDiscordChannel } from "../../discord/discord-client.js";
-import type { UpdateDiscordSettingsDto } from "@streamguard/shared";
+import type { UpdateDiscordSettingsDto } from "@cristream/shared";
 
 export async function discordRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

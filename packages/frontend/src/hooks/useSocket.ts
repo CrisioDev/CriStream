@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import type { WsEvents } from "@streamguard/shared";
+import type { WsEvents } from "@cristream/shared";
 
 export function useSocket(channelId?: string) {
   const socketRef = useRef<Socket | null>(null);

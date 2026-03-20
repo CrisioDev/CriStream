@@ -3,9 +3,9 @@ import { config } from "../../config/index.js";
 import { prisma } from "../../lib/prisma.js";
 import { encrypt, decrypt } from "../../lib/crypto.js";
 import { logger } from "../../lib/logger.js";
-import { TWITCH_SCOPES } from "@streamguard/shared";
+import { TWITCH_SCOPES } from "@cristream/shared";
 import type { JwtPayload } from "../../middleware/jwt-auth.js";
-import type { AuthUser, AuthTokens } from "@streamguard/shared";
+import type { AuthUser, AuthTokens } from "@cristream/shared";
 import { addUserToAuthProvider } from "../../twitch/twitch-auth.js";
 import { getTwitchApi } from "../../twitch/twitch-api.js";
 

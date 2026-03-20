@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { timerService } from "./service.js";
-import type { CreateTimerDto, UpdateTimerDto } from "@streamguard/shared";
+import type { CreateTimerDto, UpdateTimerDto } from "@cristream/shared";
 
 export async function timerRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

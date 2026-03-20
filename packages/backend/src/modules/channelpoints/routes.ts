@@ -3,7 +3,7 @@ import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
 import { channelPointService } from "./service.js";
 import { executeRewardActions } from "./action-executor.js";
-import type { CreateChannelPointRewardDto, UpdateChannelPointRewardDto, CreateTwitchRewardDto, UpdateTwitchRewardDto } from "@streamguard/shared";
+import type { CreateChannelPointRewardDto, UpdateChannelPointRewardDto, CreateTwitchRewardDto, UpdateTwitchRewardDto } from "@cristream/shared";
 import { prisma } from "../../lib/prisma.js";
 import {
   getTwitchRewards,

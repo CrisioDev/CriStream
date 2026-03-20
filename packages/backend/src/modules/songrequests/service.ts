@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import { redis } from "../../lib/redis.js";
 import { emitToChannel } from "../../lib/socket.js";
 import { logger } from "../../lib/logger.js";
-import type { SongRequestDto, SongRequestSettingsDto, UpdateSongRequestSettingsDto } from "@streamguard/shared";
+import type { SongRequestDto, SongRequestSettingsDto, UpdateSongRequestSettingsDto } from "@cristream/shared";
 
 class SongRequestService {
   // ── Settings ──

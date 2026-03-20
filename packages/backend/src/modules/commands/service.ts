@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
-import type { CommandDto, CreateCommandDto, UpdateCommandDto } from "@streamguard/shared";
+import type { CommandDto, CreateCommandDto, UpdateCommandDto } from "@cristream/shared";
 
 class CommandService {
   async getCommands(channelId: string): Promise<CommandDto[]> {

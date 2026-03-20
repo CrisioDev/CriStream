@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import { emitToChannel } from "../../lib/socket.js";
 import { logger } from "../../lib/logger.js";
 import { pickRandomSound } from "../channelpoints/action-executor.js";
-import type { OverlayAlertPayload, AlertType, AnimationType } from "@streamguard/shared";
+import type { OverlayAlertPayload, AlertType, AnimationType } from "@cristream/shared";
 
 const EVENT_TO_ALERT_TYPE: Record<string, AlertType> = {
   "channel.follow": "follow",

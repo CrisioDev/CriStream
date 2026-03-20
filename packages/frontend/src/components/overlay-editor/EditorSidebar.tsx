@@ -1,5 +1,5 @@
-import type { OverlayLayoutConfig, OverlayElement, OverlayTextElement, OverlayImageElement } from "@streamguard/shared";
-import { OVERLAY_FONTS } from "@streamguard/shared";
+import type { OverlayLayoutConfig, OverlayElement, OverlayTextElement, OverlayImageElement } from "@cristream/shared";
+import { OVERLAY_FONTS } from "@cristream/shared";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";

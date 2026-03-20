@@ -9,7 +9,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { Trash2, Plus } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
-import type { ChannelEditorDto } from "@streamguard/shared";
+import type { ChannelEditorDto } from "@cristream/shared";
 
 export function SettingsPage() {
   const { activeChannel: channel, user } = useAuthStore();

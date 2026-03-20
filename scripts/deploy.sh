@@ -1,11 +1,12 @@
 #!/bin/bash
 set -e
 
-VM_HOST="crisio@your-server-ip"
-REMOTE="production"
-BRANCH="main"
+# Configure these for your setup
+VM_HOST="${DEPLOY_HOST:-user@your-server}"
+REMOTE="${DEPLOY_REMOTE:-production}"
+BRANCH="${DEPLOY_BRANCH:-main}"
 
-echo "=== StreamGuard Deploy ==="
+echo "=== CriStream Deploy ==="
 
 # 1. Check for uncommitted changes
 if [ -n "$(git status --porcelain)" ]; then
@@ -25,4 +26,4 @@ git push $REMOTE $BRANCH 2>&1
 # - health check
 
 echo ""
-echo "Deploy triggered. Check logs with: ssh $VM_HOST tail -30 /home/crisio/deploy.log"
+echo "Deploy triggered. Check your server logs for status."

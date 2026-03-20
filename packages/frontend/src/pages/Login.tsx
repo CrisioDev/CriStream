@@ -10,9 +10,9 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-2xl">
-            SG
+            CS
           </div>
-          <CardTitle className="text-2xl">StreamGuard</CardTitle>
+          <CardTitle className="text-2xl">CriStream</CardTitle>
           <CardDescription>
             Self-hosted Twitch Bot Platform
           </CardDescription>

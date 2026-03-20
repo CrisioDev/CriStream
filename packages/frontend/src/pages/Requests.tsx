@@ -6,7 +6,7 @@ import { Copy, Check, X, Trash2, ExternalLink } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { api } from "@/api/client";
-import type { ViewerRequestDto } from "@streamguard/shared";
+import type { ViewerRequestDto } from "@cristream/shared";
 
 export function RequestsPage() {
   const { activeChannel: channel } = useAuthStore();

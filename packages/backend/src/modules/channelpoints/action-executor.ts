@@ -7,7 +7,7 @@ import type {
   OverlayAlertPayload,
   AlertType,
   AnimationType,
-} from "@streamguard/shared";
+} from "@cristream/shared";
 
 export async function executeRewardActions(
   channelId: string,

@@ -1,6 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { getTwitchApi } from "../../twitch/twitch-api.js";
-import type { ChannelEditorDto, EditorRole } from "@streamguard/shared";
+import type { ChannelEditorDto, EditorRole } from "@cristream/shared";
 
 class EditorService {
   async list(channelId: string): Promise<ChannelEditorDto[]> {
@@ -31,7 +31,7 @@ class EditorService {
 
     const user = await prisma.user.findUnique({ where: { twitchId: twitchUser.id } });
     if (!user) {
-      throw new Error(`User "${twitchUsername}" has not logged into StreamGuard yet.`);
+      throw new Error(`User "${twitchUsername}" has not logged into CriStream yet.`);
     }
 
     // Check if already owner

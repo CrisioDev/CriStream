@@ -3,7 +3,7 @@ import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
 import { alertService } from "./service.js";
 import { emitToChannel } from "../../lib/socket.js";
-import type { UpdateAlertSettingsDto, CreateSoundAlertDto, UpdateSoundAlertDto, OverlayAlertPayload, AlertType, AnimationType } from "@streamguard/shared";
+import type { UpdateAlertSettingsDto, CreateSoundAlertDto, UpdateSoundAlertDto, OverlayAlertPayload, AlertType, AnimationType } from "@cristream/shared";
 
 export async function alertRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

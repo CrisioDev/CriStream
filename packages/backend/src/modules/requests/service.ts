@@ -1,6 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { emitToChannel } from "../../lib/socket.js";
-import type { ViewerRequestDto, RequestStatus } from "@streamguard/shared";
+import type { ViewerRequestDto, RequestStatus } from "@cristream/shared";
 
 // Cast for new model not yet in local Prisma client
 const db = prisma as any;

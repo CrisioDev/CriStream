@@ -1,6 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { invalidateBannedWordsCache } from "./filters/banned-words.js";
-import type { ModerationSettingsDto, UpdateModerationSettingsDto, ModerationActionDto, BannedWordDto, CreateBannedWordDto } from "@streamguard/shared";
+import type { ModerationSettingsDto, UpdateModerationSettingsDto, ModerationActionDto, BannedWordDto, CreateBannedWordDto } from "@cristream/shared";
 
 class ModerationService {
   async getSettings(channelId: string): Promise<ModerationSettingsDto> {

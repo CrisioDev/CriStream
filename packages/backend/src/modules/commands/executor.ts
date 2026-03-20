@@ -4,7 +4,7 @@ import { parseVariables } from "./variable-parser.js";
 import { sayInChannel } from "../../twitch/twitch-client.js";
 import { emitToChannel } from "../../lib/socket.js";
 import { logger } from "../../lib/logger.js";
-import { USER_LEVEL_HIERARCHY } from "@streamguard/shared";
+import { USER_LEVEL_HIERARCHY } from "@cristream/shared";
 
 export interface CommandContext {
   channelId: string;

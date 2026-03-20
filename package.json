@@ -1,5 +1,5 @@
 {
-  "name": "streamguard",
+  "name": "cristream",
   "private": true,
   "scripts": {
     "dev": "pnpm --filter backend dev",

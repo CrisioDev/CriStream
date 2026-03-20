@@ -3,7 +3,7 @@ import { config } from "../config/index.js";
 import { prisma } from "../lib/prisma.js";
 import { encrypt, decrypt } from "../lib/crypto.js";
 import { logger } from "../lib/logger.js";
-import { TWITCH_SCOPES } from "@streamguard/shared";
+import { TWITCH_SCOPES } from "@cristream/shared";
 
 let authProvider: RefreshingAuthProvider | null = null;
 

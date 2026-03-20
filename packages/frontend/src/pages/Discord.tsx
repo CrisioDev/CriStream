@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 import { Input } from "@/components/ui/input";
-import type { DiscordSettingsDto, UpdateDiscordSettingsDto } from "@streamguard/shared";
+import type { DiscordSettingsDto, UpdateDiscordSettingsDto } from "@cristream/shared";
 
 export function DiscordPage() {
   const { activeChannel } = useAuthStore();

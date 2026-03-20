@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { songRequestService } from "./service.js";
-import type { UpdateSongRequestSettingsDto } from "@streamguard/shared";
+import type { UpdateSongRequestSettingsDto } from "@cristream/shared";
 
 export async function songRequestRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

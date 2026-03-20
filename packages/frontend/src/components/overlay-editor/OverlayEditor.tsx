@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { OverlayLayoutConfig, AlertSettingsDto } from "@streamguard/shared";
-import { ANIMATION_TYPES } from "@streamguard/shared";
+import type { OverlayLayoutConfig, AlertSettingsDto } from "@cristream/shared";
+import { ANIMATION_TYPES } from "@cristream/shared";
 import { Button } from "@/components/ui/button";
 import { useEditorState } from "./useEditorState";
 import { EditorCanvas } from "./EditorCanvas";

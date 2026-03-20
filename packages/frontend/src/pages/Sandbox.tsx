@@ -28,8 +28,8 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { api } from "@/api/client";
-import { OVERLAY_FONTS } from "@streamguard/shared";
-import type { SandboxElement } from "@streamguard/shared";
+import { OVERLAY_FONTS } from "@cristream/shared";
+import type { SandboxElement } from "@cristream/shared";
 
 let idCounter = 0;
 function makeId() {

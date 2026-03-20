@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { redis } from "../../lib/redis.js";
 import { logger } from "../../lib/logger.js";
-import type { PointsSettingsDto, UpdatePointsSettingsDto, ChannelUserDto, LeaderboardEntry } from "@streamguard/shared";
+import type { PointsSettingsDto, UpdatePointsSettingsDto, ChannelUserDto, LeaderboardEntry } from "@cristream/shared";
 
 class PointsService {
   private flushInterval: ReturnType<typeof setInterval> | null = null;

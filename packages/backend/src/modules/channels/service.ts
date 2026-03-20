@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { joinChannel, leaveChannel } from "../../twitch/twitch-client.js";
 import { getTwitchApi } from "../../twitch/twitch-api.js";
-import type { ChannelDto } from "@streamguard/shared";
+import type { ChannelDto } from "@cristream/shared";
 
 class ChannelService {
   async getChannelsForUser(userId: string): Promise<ChannelDto[]> {

@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma.js";
 import { emitToChannel } from "../../lib/socket.js";
 import { logger } from "../../lib/logger.js";
-import type { ChatLogDto, ChatLogSearchParams, PaginatedResponse } from "@streamguard/shared";
+import type { ChatLogDto, ChatLogSearchParams, PaginatedResponse } from "@cristream/shared";
 
 interface BufferEntry {
   twitchUserId: string;

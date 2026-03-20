@@ -20,10 +20,10 @@ COPY packages/frontend/src/ packages/frontend/src/
 COPY packages/frontend/tsconfig.json packages/frontend/tsconfig.node.json packages/frontend/
 COPY packages/frontend/vite.config.ts packages/frontend/tailwind.config.ts packages/frontend/postcss.config.js packages/frontend/index.html packages/frontend/
 
-RUN pnpm --filter @streamguard/shared build
-RUN pnpm --filter @streamguard/backend exec prisma generate
-RUN pnpm --filter @streamguard/backend build
-RUN pnpm --filter @streamguard/frontend build
+RUN pnpm --filter @cristream/shared build
+RUN pnpm --filter @cristream/backend exec prisma generate
+RUN pnpm --filter @cristream/backend build
+RUN pnpm --filter @cristream/frontend build
 
 # ── Production Stage ──
 FROM node:20-alpine AS production

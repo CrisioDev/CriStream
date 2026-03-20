@@ -12,7 +12,7 @@ import { FileUpload } from "@/components/FileUpload";
 import { Trash2, Plus, Play, ChevronLeft, ChevronRight, Paintbrush } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
-import { ALERT_TYPES, ANIMATION_TYPES } from "@streamguard/shared";
+import { ALERT_TYPES, ANIMATION_TYPES } from "@cristream/shared";
 import { OverlayEditor } from "@/components/overlay-editor/OverlayEditor";
 import type {
   AlertSettingsDto,
@@ -20,7 +20,7 @@ import type {
   EventLogDto,
   PaginatedResponse,
   OverlayLayoutConfig,
-} from "@streamguard/shared";
+} from "@cristream/shared";
 
 export function AlertsPage() {
   const { activeChannel: channel } = useAuthStore();

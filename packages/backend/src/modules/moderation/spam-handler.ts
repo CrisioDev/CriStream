@@ -54,7 +54,7 @@ registerHandler("spam", 5, async (ctx) => {
     if (botUser) {
       await api.moderation.banUser(botUser.id, {
         user: ctx.msg.userInfo.userId,
-        reason: `StreamGuard: ${filterName} filter`,
+        reason: `CriStream: ${filterName} filter`,
         duration,
       });
     }

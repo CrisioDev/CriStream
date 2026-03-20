@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { prisma } from "../../lib/prisma.js";
 import { redis } from "../../lib/redis.js";
 import { logger } from "../../lib/logger.js";
-import { CUSTOM_API_TIMEOUT_MS, CUSTOM_API_CACHE_TTL, CUSTOM_API_MAX_RESPONSE_LENGTH } from "@streamguard/shared";
+import { CUSTOM_API_TIMEOUT_MS, CUSTOM_API_CACHE_TTL, CUSTOM_API_MAX_RESPONSE_LENGTH } from "@cristream/shared";
 
 export interface BaseContext {
   channel: string;
@@ -219,7 +219,7 @@ async function fetchCustomApi(url: string): Promise<string> {
 
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "StreamGuard Bot/2.0" },
+      headers: { "User-Agent": "CriStream Bot/2.0" },
     });
     clearTimeout(timeout);
 

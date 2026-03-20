@@ -11,7 +11,7 @@ import { Copy, ExternalLink, Save } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { useEffect, useState } from "react";
 import { api } from "@/api/client";
-import type { PollPredictionSettingsDto, UpdatePollPredictionSettingsDto } from "@streamguard/shared";
+import type { PollPredictionSettingsDto, UpdatePollPredictionSettingsDto } from "@cristream/shared";
 
 export function OverlayPage() {
   const { activeChannel: channel } = useAuthStore();

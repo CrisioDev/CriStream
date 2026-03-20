@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { chatLogService } from "./service.js";
-import type { ChatLogSearchParams } from "@streamguard/shared";
+import type { ChatLogSearchParams } from "@cristream/shared";
 
 export async function chatLogRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

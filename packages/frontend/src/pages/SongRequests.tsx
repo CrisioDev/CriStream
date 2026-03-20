@@ -10,7 +10,7 @@ import { Copy, ExternalLink, SkipForward, Trash2, Volume2, X } from "lucide-reac
 import { useAuthStore } from "@/stores/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { api } from "@/api/client";
-import type { SongRequestDto, SongRequestSettingsDto, UpdateSongRequestSettingsDto } from "@streamguard/shared";
+import type { SongRequestDto, SongRequestSettingsDto, UpdateSongRequestSettingsDto } from "@cristream/shared";
 
 export function SongRequestsPage() {
   const { activeChannel: channel } = useAuthStore();

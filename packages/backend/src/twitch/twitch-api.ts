@@ -1,7 +1,7 @@
 import { ApiClient } from "@twurple/api";
 import { getAuthProvider } from "./twitch-auth.js";
 import { logger } from "../lib/logger.js";
-import type { TwitchRewardDto, CreateTwitchRewardDto, UpdateTwitchRewardDto } from "@streamguard/shared";
+import type { TwitchRewardDto, CreateTwitchRewardDto, UpdateTwitchRewardDto } from "@cristream/shared";
 
 let apiClient: ApiClient | null = null;
 

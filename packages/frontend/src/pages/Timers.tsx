@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Pencil, X, Check } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
-import type { TimerDto, CreateTimerDto, UpdateTimerDto } from "@streamguard/shared";
+import type { TimerDto, CreateTimerDto, UpdateTimerDto } from "@cristream/shared";
 
 export function TimersPage() {
   const { activeChannel: channel } = useAuthStore();

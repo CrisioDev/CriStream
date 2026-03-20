@@ -23,7 +23,7 @@ export const config = {
   encryptionKey: env("ENCRYPTION_KEY", "0".repeat(64)),
 
   // Database
-  databaseUrl: env("DATABASE_URL", "postgresql://streamguard:streamguard@localhost:5432/streamguard"),
+  databaseUrl: env("DATABASE_URL", "postgresql://cristream:cristream@localhost:5432/cristream"),
 
   // Redis
   redisUrl: env("REDIS_URL", "redis://localhost:6379"),
@@ -43,6 +43,6 @@ export const config = {
   anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
 
   // EventSub
-  eventsubSecret: env("EVENTSUB_SECRET", "streamguard-eventsub-secret"),
+  eventsubSecret: env("EVENTSUB_SECRET", "cristream-eventsub-secret"),
   eventsubCallbackUrl: env("EVENTSUB_CALLBACK_URL", "http://localhost:3000/api/eventsub/webhook"),
 };

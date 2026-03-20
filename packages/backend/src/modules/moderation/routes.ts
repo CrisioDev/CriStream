@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { moderationService } from "./service.js";
-import type { UpdateModerationSettingsDto, CreateBannedWordDto } from "@streamguard/shared";
+import type { UpdateModerationSettingsDto, CreateBannedWordDto } from "@cristream/shared";
 
 export async function moderationRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

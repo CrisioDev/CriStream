@@ -1,5 +1,5 @@
 import { useRef, useCallback } from "react";
-import type { OverlayElement } from "@streamguard/shared";
+import type { OverlayElement } from "@cristream/shared";
 
 interface EditorElementProps {
   element: OverlayElement;

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
-import type { PointsSettingsDto, UpdatePointsSettingsDto, LeaderboardEntry } from "@streamguard/shared";
+import type { PointsSettingsDto, UpdatePointsSettingsDto, LeaderboardEntry } from "@cristream/shared";
 
 export function PointsPage() {
   const { activeChannel: channel } = useAuthStore();

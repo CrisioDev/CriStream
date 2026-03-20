@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { api } from "@/api/client";
-import type { BotStatusDto, WsEvents } from "@streamguard/shared";
+import type { BotStatusDto, WsEvents } from "@cristream/shared";
 
 export function DashboardPage() {
   const { activeChannel: channel } = useAuthStore();

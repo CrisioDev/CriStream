@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { commandService } from "./service.js";
-import type { CreateCommandDto, UpdateCommandDto } from "@streamguard/shared";
+import type { CreateCommandDto, UpdateCommandDto } from "@cristream/shared";
 
 export async function commandRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

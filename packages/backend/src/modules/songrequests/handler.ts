@@ -3,7 +3,7 @@ import { registerHandler } from "../../twitch/message-handler.js";
 import { prisma } from "../../lib/prisma.js";
 import { sayInChannel } from "../../twitch/twitch-client.js";
 import { songRequestService } from "./service.js";
-import type { SongRequestDto } from "@streamguard/shared";
+import type { SongRequestDto } from "@cristream/shared";
 
 registerHandler("songrequests", 45, async (ctx) => {
   const channel = ctx.msg.channelId

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
-import type { ChatLogDto, PaginatedResponse } from "@streamguard/shared";
+import type { ChatLogDto, PaginatedResponse } from "@cristream/shared";
 
 export function ChatLogsPage() {
   const { activeChannel: channel } = useAuthStore();

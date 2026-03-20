@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
-import type { TimerDto, CreateTimerDto, UpdateTimerDto } from "@streamguard/shared";
+import type { TimerDto, CreateTimerDto, UpdateTimerDto } from "@cristream/shared";
 
 class TimerService {
   async getTimers(channelId: string): Promise<TimerDto[]> {

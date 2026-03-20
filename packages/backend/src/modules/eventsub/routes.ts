@@ -3,7 +3,7 @@ import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
 import { prisma } from "../../lib/prisma.js";
 import { subscribeToEvents } from "./subscriptions.js";
-import type { EventLogDto, PaginatedResponse } from "@streamguard/shared";
+import type { EventLogDto, PaginatedResponse } from "@cristream/shared";
 
 export async function eventsubRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);

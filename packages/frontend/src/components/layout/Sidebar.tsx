@@ -62,9 +62,9 @@ export function Sidebar() {
     <aside className="flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
       <div className="flex items-center gap-3 border-b p-4">
         <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-          SG
+          CS
         </div>
-        <span className="font-semibold text-lg">StreamGuard</span>
+        <span className="font-semibold text-lg">CriStream</span>
       </div>
 
       {/* Channel Switcher */}

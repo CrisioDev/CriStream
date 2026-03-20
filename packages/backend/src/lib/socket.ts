@@ -46,6 +46,15 @@ export function initSocket(httpServer: HttpServer): Server {
       }
     });
 
+    // Sandbox relay: dashboard → overlay
+    socket.on("sandbox:update", (data: { channelId: string; elements: unknown[] }) => {
+      io!.to(`channel:${data.channelId}`).emit("sandbox:update", data);
+    });
+
+    socket.on("sandbox:clear", (data: { channelId: string }) => {
+      io!.to(`channel:${data.channelId}`).emit("sandbox:clear", data);
+    });
+
     // Dashboard client joining a channel room
     socket.on("join:channel", (channelId: string) => {
       socket.join(`channel:${channelId}`);

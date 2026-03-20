@@ -17,11 +17,13 @@ export function OverlayPage() {
   const { activeChannel: channel } = useAuthStore();
   const [copied, setCopied] = useState(false);
   const [copiedPlayer, setCopiedPlayer] = useState(false);
+  const [copiedSandbox, setCopiedSandbox] = useState(false);
 
   if (!channel) return null;
 
   const overlayUrl = `${window.location.origin}/overlay/${channel.overlayToken}`;
   const playerUrl = `${window.location.origin}/overlay/${channel.overlayToken}/player`;
+  const sandboxUrl = `${window.location.origin}/overlay/${channel.overlayToken}/sandbox`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(overlayUrl);
@@ -33,6 +35,12 @@ export function OverlayPage() {
     navigator.clipboard.writeText(playerUrl);
     setCopiedPlayer(true);
     setTimeout(() => setCopiedPlayer(false), 2000);
+  };
+
+  const handleCopySandbox = () => {
+    navigator.clipboard.writeText(sandboxUrl);
+    setCopiedSandbox(true);
+    setTimeout(() => setCopiedSandbox(false), 2000);
   };
 
   return (
@@ -81,6 +89,31 @@ export function OverlayPage() {
               {copiedPlayer ? "Copied!" : "Copy"}
             </Button>
             <a href={playerUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="sm">
+                <ExternalLink className="mr-2 h-4 w-4" /> Preview
+              </Button>
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Live Sandbox Overlay</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Add this URL as a Browser Source in OBS for the live sandbox layer. Control it from the Sandbox page.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 rounded-md border bg-muted p-3 text-sm break-all">
+              {sandboxUrl}
+            </code>
+            <Button variant="outline" size="sm" onClick={handleCopySandbox}>
+              <Copy className="mr-2 h-4 w-4" />
+              {copiedSandbox ? "Copied!" : "Copy"}
+            </Button>
+            <a href={sandboxUrl} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" size="sm">
                 <ExternalLink className="mr-2 h-4 w-4" /> Preview
               </Button>

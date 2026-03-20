@@ -671,6 +671,13 @@ export interface WsEvents {
     endsAt: string | null;
     endedAt: string | null;
   };
+  "sandbox:update": {
+    channelId: string;
+    elements: SandboxElement[];
+  };
+  "sandbox:clear": {
+    channelId: string;
+  };
   "prediction:update": {
     channelId: string;
     status: "active" | "locked" | "ended";
@@ -779,6 +786,37 @@ export interface UpdatePollPredictionSettingsDto {
   barHeight?: number;
   width?: number;
   fontSize?: number;
+}
+
+// ── Sandbox ──
+export interface SandboxElement {
+  id: string;
+  type: "text" | "image" | "video";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zIndex: number;
+  visible: boolean;
+  // Text-specific
+  content?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: "normal" | "bold";
+  fontStyle?: "normal" | "italic";
+  color?: string;
+  textAlign?: "left" | "center" | "right";
+  textShadow?: string;
+  backgroundColor?: string;
+  padding?: number;
+  borderRadius?: number;
+  // Image/Video-specific
+  src?: string;
+  objectFit?: "contain" | "cover" | "fill";
+  borderWidth?: number;
+  borderColor?: string;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
 }
 
 // ── Bot Status ──

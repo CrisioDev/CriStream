@@ -15,6 +15,7 @@ import {
   Monitor,
   ListTodo,
   Bot,
+  Layers,
   ChevronDown,
   Plus,
 } from "lucide-react";
@@ -34,6 +35,7 @@ const navItems = [
   { to: "/channelpoints", icon: Gift, label: "Channel Points" },
   { to: "/requests", icon: ListTodo, label: "Requests" },
   { to: "/overlay", icon: Monitor, label: "Overlay" },
+  { to: "/sandbox", icon: Layers, label: "Sandbox" },
   { to: "/discord", icon: Bot, label: "Discord" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];

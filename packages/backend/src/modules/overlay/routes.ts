@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { prisma } from "../../lib/prisma.js";
 import { generateOverlayHtml } from "./overlay-html.js";
 import { generatePlayerHtml } from "./player-html.js";
+import { generateSandboxHtml } from "./sandbox-html.js";
 
 export async function overlayRoutes(app: FastifyInstance) {
   // Public route - no JWT required, uses overlay token
@@ -39,6 +40,23 @@ export async function overlayRoutes(app: FastifyInstance) {
       }
 
       const html = generatePlayerHtml(request.params.overlayToken);
+      return reply.type("text/html").send(html);
+    }
+  );
+
+  // Sandbox Overlay
+  app.get<{ Params: { overlayToken: string } }>(
+    "/overlay/:overlayToken/sandbox",
+    async (request, reply) => {
+      const channel = await prisma.channel.findUnique({
+        where: { overlayToken: request.params.overlayToken },
+      });
+
+      if (!channel) {
+        return reply.status(404).send("Invalid overlay token");
+      }
+
+      const html = generateSandboxHtml(request.params.overlayToken);
       return reply.type("text/html").send(html);
     }
   );

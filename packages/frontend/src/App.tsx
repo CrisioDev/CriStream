@@ -16,6 +16,7 @@ import { ChannelPointsPage } from "@/pages/ChannelPoints";
 import { OverlayPage } from "@/pages/Overlay";
 import { RequestsPage } from "@/pages/Requests";
 import { DiscordPage } from "@/pages/Discord";
+import { SandboxPage } from "@/pages/Sandbox";
 
 export function App() {
   const { user, isLoading, loadFromUrl } = useAuthStore();
@@ -50,6 +51,7 @@ export function App() {
         <Route path="/channelpoints" element={<ChannelPointsPage />} />
         <Route path="/requests" element={<RequestsPage />} />
         <Route path="/overlay" element={<OverlayPage />} />
+        <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="/discord" element={<DiscordPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>

@@ -23,9 +23,11 @@ import {
   Copy,
   ChevronUp,
   ChevronDown,
+  Monitor,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { useSocket } from "@/hooks/useSocket";
+import { api } from "@/api/client";
 import { OVERLAY_FONTS } from "@streamguard/shared";
 import type { SandboxElement } from "@streamguard/shared";
 
@@ -51,6 +53,34 @@ export function SandboxPage() {
 
   const [elements, setElements] = useState<SandboxElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  // Fetch stream preview thumbnail
+  useEffect(() => {
+    if (!showPreview || !channel) {
+      setPreviewUrl(null);
+      return;
+    }
+    let cancelled = false;
+    const fetchPreview = async () => {
+      setPreviewLoading(true);
+      const res = await api.get<{ live: boolean; thumbnailUrl: string | null }>(
+        `/channels/${channel.id}/stream-preview`
+      );
+      if (cancelled) return;
+      setPreviewLoading(false);
+      if (res.data?.live && res.data.thumbnailUrl) {
+        setPreviewUrl(res.data.thumbnailUrl);
+      } else {
+        setPreviewUrl(null);
+      }
+    };
+    fetchPreview();
+    const interval = setInterval(fetchPreview, 15000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [showPreview, channel]);
 
   const emitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestElementsRef = useRef(elements);
@@ -205,6 +235,16 @@ export function SandboxPage() {
             <Video className="h-3 w-3 mr-1" /> Video
           </Button>
           <div className="w-px h-6 bg-border mx-1" />
+          <Button
+            size="sm"
+            variant={showPreview ? "default" : "outline"}
+            onClick={() => setShowPreview(!showPreview)}
+            title={showPreview ? "Hide stream preview" : "Show stream preview as background"}
+          >
+            <Monitor className="h-3 w-3 mr-1" />
+            {previewLoading ? "Loading..." : showPreview && previewUrl ? "Preview On" : showPreview && !previewUrl ? "Offline" : "Stream Preview"}
+          </Button>
+          <div className="w-px h-6 bg-border mx-1" />
           <Button size="sm" variant="destructive" onClick={clearAll} disabled={elements.length === 0}>
             <Trash2 className="h-3 w-3 mr-1" /> Clear All
           </Button>
@@ -216,6 +256,7 @@ export function SandboxPage() {
         <SandboxCanvas
           elements={elements}
           selectedId={selectedId}
+          previewUrl={previewUrl}
           onSelect={setSelectedId}
           onUpdateElement={updateElement}
         />
@@ -244,11 +285,13 @@ export function SandboxPage() {
 function SandboxCanvas({
   elements,
   selectedId,
+  previewUrl,
   onSelect,
   onUpdateElement,
 }: {
   elements: SandboxElement[];
   selectedId: string | null;
+  previewUrl: string | null;
   onSelect: (id: string | null) => void;
   onUpdateElement: (id: string, patch: Partial<SandboxElement>) => void;
 }) {
@@ -276,7 +319,9 @@ function SandboxCanvas({
             transform: `scale(${scale})`,
             transformOrigin: "top left",
             position: "relative",
-            background: "repeating-conic-gradient(#808080 0% 25%, #a0a0a0 0% 50%) 50% / 20px 20px",
+            background: previewUrl
+              ? `url(${previewUrl}) center/cover no-repeat`
+              : "repeating-conic-gradient(#808080 0% 25%, #a0a0a0 0% 50%) 50% / 20px 20px",
             borderRadius: 4,
             boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
             overflow: "hidden",

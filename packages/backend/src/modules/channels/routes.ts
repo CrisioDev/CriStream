@@ -1,6 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { channelService } from "./service.js";
+import { prisma } from "../../lib/prisma.js";
+import { getTwitchApi } from "../../twitch/twitch-api.js";
 
 export async function channelRoutes(app: FastifyInstance) {
   app.addHook("preHandler", jwtAuth);
@@ -63,5 +65,25 @@ export async function channelRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>("/:id/leave", async (request) => {
     await channelService.leaveBot(request.params.id, request.user!.sub);
     return { success: true };
+  });
+
+  // Get stream preview thumbnail (for sandbox editor background)
+  app.get<{ Params: { id: string } }>("/:id/stream-preview", async (request, reply) => {
+    const channel = await prisma.channel.findUnique({ where: { id: request.params.id } });
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+
+    try {
+      const api = getTwitchApi();
+      const stream = await api.streams.getStreamByUserId(channel.twitchId);
+      if (!stream) {
+        return { success: true, data: { live: false, thumbnailUrl: null } };
+      }
+      const url = stream.thumbnailUrl
+        .replace("{width}", "1920")
+        .replace("{height}", "1080");
+      return { success: true, data: { live: true, thumbnailUrl: url + "?t=" + Date.now() } };
+    } catch {
+      return { success: true, data: { live: false, thumbnailUrl: null } };
+    }
   });
 }

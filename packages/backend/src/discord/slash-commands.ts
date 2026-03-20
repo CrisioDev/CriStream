@@ -6,11 +6,15 @@ import {
   type ChatInputCommandInteraction,
   type PermissionsBitField,
 } from "discord.js";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { config } from "../config/index.js";
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import { executeCommand } from "../modules/commands/executor.js";
 import type { CommandContext } from "../modules/commands/executor.js";
+
+const execFileAsync = promisify(execFile);
 
 export async function registerSlashCommands(client: Client): Promise<void> {
   if (!config.discordClientId || !config.discordBotToken) return;
@@ -61,11 +65,25 @@ export async function registerGuildCommands(rest: REST, guildId: string): Promis
         .toJSON()
     );
 
-  // Add built-in help command
+  // Add built-in commands
   slashCommands.push(
     new SlashCommandBuilder()
       .setName("commands")
       .setDescription("List all available commands")
+      .toJSON()
+  );
+
+  slashCommands.push(
+    new SlashCommandBuilder()
+      .setName("deploy")
+      .setDescription("Deploy the latest version from git (Admin only)")
+      .toJSON()
+  );
+
+  slashCommands.push(
+    new SlashCommandBuilder()
+      .setName("status")
+      .setDescription("Show bot and system status")
       .toJSON()
   );
 
@@ -107,6 +125,63 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
 
   const channel = settings.channel;
   const trigger = interaction.commandName;
+
+  // Handle /deploy (Admin only)
+  if (trigger === "deploy") {
+    const member = interaction.member;
+    const perms = member?.permissions;
+    const isAdmin = typeof perms !== "string" && (perms as PermissionsBitField)?.has("Administrator");
+    if (!isAdmin) {
+      await interaction.reply({ content: "Only administrators can deploy.", ephemeral: true });
+      return;
+    }
+    await interaction.deferReply();
+    try {
+      // Pull latest code and rebuild
+      const { stdout, stderr } = await execFileAsync("bash", ["-c",
+        "cd /home/crisio/streamguard && " +
+        "git --work-tree=/home/crisio/streamguard --git-dir=/home/crisio/streamguard.git fetch origin main 2>&1 && " +
+        "git --work-tree=/home/crisio/streamguard --git-dir=/home/crisio/streamguard.git checkout -f main 2>&1 && " +
+        "docker compose build 2>&1 && " +
+        "docker compose up -d 2>&1"
+      ], { timeout: 300_000 });
+      // Wait for health
+      await new Promise(r => setTimeout(r, 10_000));
+      const health = await fetch("http://localhost:3000/api/health").then(r => r.json()).catch(() => null);
+      const ok = (health as any)?.data?.status === "ok";
+      await interaction.editReply(ok
+        ? "Deploy successful! App is healthy."
+        : "Deploy done but health check unclear. Check logs."
+      );
+    } catch (err: any) {
+      logger.error({ err }, "Deploy via Discord failed");
+      await interaction.editReply(`Deploy failed: ${err.message?.slice(0, 200)}`).catch(() => {});
+    }
+    return;
+  }
+
+  // Handle /status
+  if (trigger === "status") {
+    try {
+      const health = await fetch("http://localhost:3000/api/health").then(r => r.json()) as any;
+      const d = health.data;
+      const uptime = Math.floor(process.uptime());
+      const h = Math.floor(uptime / 3600);
+      const m = Math.floor((uptime % 3600) / 60);
+      await interaction.reply({
+        content: [
+          `**StreamGuard Status**`,
+          `Twitch: ${d.twitchConnected ? "Connected" : "Disconnected"} (${d.channels?.join(", ") || "none"})`,
+          `Discord: ${d.discordReady ? "Ready" : "Offline"} (${d.discordGuilds} guild${d.discordGuilds !== 1 ? "s" : ""})`,
+          `Uptime: ${h}h ${m}m`,
+        ].join("\n"),
+        ephemeral: true,
+      });
+    } catch {
+      await interaction.reply({ content: "Could not fetch status.", ephemeral: true });
+    }
+    return;
+  }
 
   // Handle built-in "commands" slash command
   if (trigger === "commands") {

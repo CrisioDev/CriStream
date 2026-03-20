@@ -1,9 +1,9 @@
 <p align="center">
   <h1 align="center">CriStream</h1>
   <p align="center">
-    Self-hosted Twitch Bot & Stream Management Platform
+    The self-hosted alternative to StreamElements, Streamlabs & Nightbot
     <br />
-    A fully Dockerized alternative to cloud-based Twitch bots — own your data, customize everything.
+    Twitch bot, OBS overlays, alerts, channel points, Discord integration — fully Dockerized, own your data.
   </p>
   <p align="center">
     <a href="#features">Features</a> &middot;
@@ -17,9 +17,9 @@
 
 ## What is CriStream?
 
-CriStream is a **self-hosted, open-source Twitch bot platform** you run in Docker on your own server. No monthly fees, no data shared with third parties, full control over every feature.
+CriStream is a **self-hosted, open-source alternative to StreamElements, Streamlabs Cloudbot, and Nightbot**. Run it in Docker on your own server — no monthly fees, no data shared with third parties, full control over every feature.
 
-Think of it as a self-hosted alternative to Streamlabs Cloudbot, Nightbot, or StreamElements — but with a modern web dashboard, OBS overlays, and Discord integration built in.
+Everything these cloud services offer (chat bot, alerts, overlays, loyalty points, song requests, channel points) — but self-hosted, customizable, and yours to keep.
 
 ## Features
 

@@ -12,14 +12,15 @@ export function generateSandboxHtml(overlayToken: string): string {
     background: transparent;
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    width: 1920px;
-    height: 1080px;
+    width: 100vw;
+    height: 100vh;
   }
   #sandbox {
     position: relative;
     width: 1920px;
     height: 1080px;
     overflow: hidden;
+    transform-origin: top left;
   }
   .sb-el {
     position: absolute;
@@ -34,12 +35,24 @@ export function generateSandboxHtml(overlayToken: string): string {
 </head>
 <body>
 <div id="sandbox"></div>
-<script src="/socket.io/socket.io.js"></script>
+<script src="/ws/socket.io.js"></script>
 <script>
 (function() {
-  const token = "${overlayToken}";
-  const socket = io({ path: "${wsPath}", query: { overlayToken: token } });
+  const token = ${JSON.stringify(overlayToken)};
+  const socket = io({ path: '${wsPath}', query: { overlayToken: token } });
   const container = document.getElementById("sandbox");
+
+  // Scale 1920x1080 canvas to viewport
+  function scaleCanvas() {
+    var sx = window.innerWidth / 1920;
+    var sy = window.innerHeight / 1080;
+    var s = Math.min(sx, sy);
+    container.style.transform = 'scale(' + s + ')';
+  }
+  scaleCanvas();
+  window.addEventListener('resize', scaleCanvas);
+
+  socket.on('connect', function() { console.log('Sandbox overlay connected'); });
 
   socket.on("sandbox:update", function(data) {
     container.innerHTML = "";

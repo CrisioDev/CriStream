@@ -213,6 +213,7 @@ model AlertSettings {
   ttsRate       Float   @default(1.0)
   ttsVolume     Int     @default(80)
   videoMuted    Boolean @default(false)
+  videoLoop     Boolean @default(false)
   channelId     String
   channel       Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 

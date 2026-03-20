@@ -348,12 +348,12 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
     return lower.endsWith('.webm') || lower.endsWith('.mp4');
   }
 
-  function createMediaElement(url, styles, muted) {
+  function createMediaElement(url, styles, muted, loop) {
     if (isVideoUrl(url)) {
       const vid = document.createElement('video');
       vid.src = url;
       vid.autoplay = true;
-      vid.loop = true;
+      vid.loop = !!loop;
       vid.muted = !!muted;
       vid.playsInline = true;
       Object.assign(vid.style, styles);
@@ -410,7 +410,7 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
         if (el.borderWidth) {
           mediaStyles.border = el.borderWidth + 'px solid ' + (el.borderColor || '#fff');
         }
-        const media = createMediaElement(alert.imageUrl, mediaStyles, alert.videoMuted);
+        const media = createMediaElement(alert.imageUrl, mediaStyles, alert.videoMuted, alert.videoLoop);
         canvasDiv.appendChild(media);
       } else if (el.type === 'text') {
         loadGoogleFont(el.fontFamily || 'Segoe UI');
@@ -606,7 +606,7 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
       vid.src = alert.imageUrl;
       vid.className = 'alert-image alert-media';
       vid.autoplay = true;
-      vid.loop = true;
+      vid.loop = !!alert.videoLoop;
       vid.muted = !!alert.videoMuted;
       vid.playsInline = true;
       alertEl.insertBefore(vid, textEl);

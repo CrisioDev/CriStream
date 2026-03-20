@@ -97,7 +97,23 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
   const uploadMedia = async (alertType: string, file: File) => {
     const ext = file.name.toLowerCase();
     const isVideo = ext.endsWith('.webm') || ext.endsWith('.mp4');
-    await uploadFile(isVideo ? "video" : "image", alertType, file);
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = localStorage.getItem("token");
+    const type = isVideo ? "video" : "image";
+    const res = await fetch(`/api/channels/${channelId}/uploads/${type}`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      const patch: Record<string, unknown> = { imageFileUrl: data.data.url };
+      if (isVideo && data.data.duration) {
+        patch.duration = data.data.duration;
+      }
+      await updateAlert(alertType, patch);
+    }
   };
 
   return (
@@ -205,12 +221,21 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
               </div>
             </div>
             {alert.imageFileUrl && /\.(webm|mp4)$/i.test(alert.imageFileUrl) && (
-              <div className="flex items-center justify-between">
-                <Label>Video-Ton stummschalten</Label>
-                <Switch
-                  checked={alert.videoMuted}
-                  onCheckedChange={(checked) => updateAlert(alert.alertType, { videoMuted: checked })}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center justify-between">
+                  <Label>Video-Ton stummschalten</Label>
+                  <Switch
+                    checked={alert.videoMuted}
+                    onCheckedChange={(checked) => updateAlert(alert.alertType, { videoMuted: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Video wiederholen</Label>
+                  <Switch
+                    checked={alert.videoLoop}
+                    onCheckedChange={(checked) => updateAlert(alert.alertType, { videoLoop: checked })}
+                  />
+                </div>
               </div>
             )}
             {(alert.alertType === "giftsub" || alert.alertType === "raid") && (

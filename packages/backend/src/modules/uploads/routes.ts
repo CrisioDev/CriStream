@@ -13,8 +13,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     }
 
     try {
-      const url = await uploadService.upload(request.params.cid, "sound", file);
-      return { success: true, data: { url } };
+      const result = await uploadService.upload(request.params.cid, "sound", file);
+      return { success: true, data: result };
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }
@@ -28,8 +28,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     }
 
     try {
-      const url = await uploadService.upload(request.params.cid, "image", file);
-      return { success: true, data: { url } };
+      const result = await uploadService.upload(request.params.cid, "image", file);
+      return { success: true, data: result };
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }
@@ -43,8 +43,8 @@ export async function uploadRoutes(app: FastifyInstance) {
     }
 
     try {
-      const url = await uploadService.upload(request.params.cid, "video", file);
-      return { success: true, data: { url } };
+      const result = await uploadService.upload(request.params.cid, "video", file);
+      return { success: true, data: result };
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }

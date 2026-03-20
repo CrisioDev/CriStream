@@ -314,6 +314,7 @@ export interface RewardActionAlert {
   ttsRate?: number;
   ttsVolume?: number;
   videoMuted?: boolean;
+  videoLoop?: boolean;
 }
 
 export interface RewardActionCommand {
@@ -463,6 +464,7 @@ export interface AlertSettingsDto {
   ttsRate: number;
   ttsVolume: number;
   videoMuted: boolean;
+  videoLoop: boolean;
 }
 
 export interface UpdateAlertSettingsDto {
@@ -480,6 +482,7 @@ export interface UpdateAlertSettingsDto {
   ttsRate?: number;
   ttsVolume?: number;
   videoMuted?: boolean;
+  videoLoop?: boolean;
 }
 
 // ── Sound Alerts ──
@@ -553,6 +556,7 @@ export interface OverlayAlertPayload {
   ttsRate?: number;
   ttsVolume?: number;
   videoMuted?: boolean;
+  videoLoop?: boolean;
 }
 
 // ── WebSocket Events ──

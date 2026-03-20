@@ -16,8 +16,23 @@ export type UploadType = "sound" | "image" | "video";
 const VIDEO_EXTENSIONS = new Set([".webm", ".mp4"]);
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp"]);
 
+async function getVideoDuration(filePath: string): Promise<number> {
+  try {
+    const { stdout } = await execFileAsync("ffprobe", [
+      "-v", "quiet",
+      "-print_format", "json",
+      "-show_format",
+      filePath,
+    ], { timeout: 10_000 });
+    const info = JSON.parse(stdout);
+    return Math.ceil(parseFloat(info.format?.duration ?? "0"));
+  } catch {
+    return 0;
+  }
+}
+
 class UploadService {
-  async upload(channelId: string, type: UploadType, file: MultipartFile): Promise<string> {
+  async upload(channelId: string, type: UploadType, file: MultipartFile): Promise<{ url: string; duration?: number }> {
     const limits = UPLOAD_LIMITS[type];
     const ext = extname(file.filename).toLowerCase();
 
@@ -47,7 +62,7 @@ class UploadService {
           .toBuffer();
         await writeFile(filePath, webpBuffer);
         logger.info({ original: ext, size: buffer.length, converted: webpBuffer.length }, "Image converted to WebP");
-        return `/uploads/${channelId}/${subdir}/${filename}`;
+        return { url: `/uploads/${channelId}/${subdir}/${filename}` };
       } catch (err) {
         logger.warn({ err, ext }, "WebP conversion failed, saving original");
       }
@@ -71,8 +86,9 @@ class UploadService {
           outPath,
         ], { timeout: 120_000 });
         await unlink(tempPath);
-        logger.info({ original: ext, size: buffer.length }, "Video converted to WebM");
-        return `/uploads/${channelId}/${subdir}/${outFilename}`;
+        const duration = await getVideoDuration(outPath);
+        logger.info({ original: ext, size: buffer.length, duration }, "Video converted to WebM");
+        return { url: `/uploads/${channelId}/${subdir}/${outFilename}`, duration };
       } catch (err) {
         logger.warn({ err }, "WebM conversion failed, saving original MP4");
         // Clean up temp file if it exists
@@ -85,7 +101,13 @@ class UploadService {
     const filename = `${id}${ext}`;
     const filePath = join(dir, filename);
     await writeFile(filePath, buffer);
-    return `/uploads/${channelId}/${subdir}/${filename}`;
+
+    // Get duration for video files
+    let duration: number | undefined;
+    if (type === "video") {
+      duration = await getVideoDuration(filePath);
+    }
+    return { url: `/uploads/${channelId}/${subdir}/${filename}`, duration };
   }
 }
 

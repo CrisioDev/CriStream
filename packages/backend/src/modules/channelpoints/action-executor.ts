@@ -49,6 +49,7 @@ export async function executeRewardActions(
             ttsRate: action.ttsRate,
             ttsVolume: action.ttsVolume,
             videoMuted: action.videoMuted,
+            videoLoop: action.videoLoop,
           };
           emitToChannel(channelId, "alert:trigger", { channelId, payload });
           break;

@@ -139,7 +139,26 @@ cristream/
 
 ## Screenshots
 
-*Coming soon*
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Commands
+![Commands](docs/screenshots/commands.png)
+
+### Auto-Moderation
+![Moderation](docs/screenshots/moderation.png)
+
+### Loyalty Points & Leaderboard
+![Points](docs/screenshots/points.png)
+
+### Alert Configuration
+![Alerts](docs/screenshots/alerts.png)
+
+### WYSIWYG Alert Layout Editor
+![Layout Editor](docs/screenshots/layout-editor.png)
+
+### Channel Points Rewards
+![Channel Points](docs/screenshots/channelpoints.png)
 
 ## Support
 

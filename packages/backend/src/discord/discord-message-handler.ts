@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import { handleCommand } from "../modules/commands/executor.js";
 import { viewerRequestService } from "../modules/requests/service.js";
+import { incrementDiscordLines } from "../modules/timers/timer-scheduler.js";
 import type { CommandContext } from "../modules/commands/executor.js";
 
 export function setupDiscordMessageHandler(client: Client): void {
@@ -24,11 +25,16 @@ async function processDiscordMessage(message: Message): Promise<void> {
 
   // Find DiscordSettings that match this guild
   const settings = await prisma.discordSettings.findFirst({
-    where: { guildId, commandsEnabled: true },
+    where: { guildId },
     include: { channel: true },
   });
 
   if (!settings) return;
+
+  // Count Discord messages for timer thresholds
+  incrementDiscordLines(settings.channelId).catch(() => {});
+
+  if (!settings.commandsEnabled) return;
 
   // Only respond in configured command channel (or anywhere if not set)
   if (settings.commandChannelId && message.channel.id !== settings.commandChannelId) return;

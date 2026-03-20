@@ -7,8 +7,9 @@
   </p>
   <p align="center">
     <a href="#features">Features</a> &middot;
-    <a href="#quick-start">Quick Start</a> &middot;
-    <a href="docs/SETUP.md">Setup Guide</a> &middot;
+    <a href="docs/SETUP.md">Installation</a> &middot;
+    <a href="docs/CONFIGURATION.md">Configuration</a> &middot;
+    <a href="docs/ROADMAP.md">Roadmap</a> &middot;
     <a href="https://ko-fi.com/thecrisio">Support on Ko-fi</a>
   </p>
 </p>

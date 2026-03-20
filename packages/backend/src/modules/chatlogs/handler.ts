@@ -15,6 +15,7 @@ registerHandler("chatlog", 99, async (ctx) => {
     twitchUserId: ctx.msg.userInfo.userId,
     displayName: ctx.user,
     message: ctx.message,
+    platform: "twitch",
     channelId: channel.id,
     createdAt: new Date(),
   });

@@ -188,6 +188,7 @@ export interface ChatLogDto {
   twitchUserId: string;
   displayName: string;
   message: string;
+  platform: string;
   channelId: string;
   createdAt: string;
 }
@@ -197,6 +198,7 @@ export interface ChatLogSearchParams {
   keyword?: string;
   from?: string;
   to?: string;
+  platform?: string;
   page?: number;
   pageSize?: number;
 }

@@ -17,6 +17,7 @@ export async function chatLogRoutes(app: FastifyInstance) {
       keyword: q.keyword,
       from: q.from,
       to: q.to,
+      platform: q.platform as string | undefined,
       page: q.page ? parseInt(q.page as string, 10) : 1,
       pageSize: q.pageSize ? parseInt(q.pageSize as string, 10) : 50,
     });

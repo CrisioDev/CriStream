@@ -130,12 +130,14 @@ model ChatLog {
   twitchUserId String
   displayName String
   message     String
+  platform    String   @default("twitch")
   createdAt   DateTime @default(now())
   channelId   String
   channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   @@index([channelId, createdAt])
   @@index([channelId, twitchUserId])
+  @@index([channelId, platform])
 }
 
 model BannedWord {

@@ -4,6 +4,7 @@ import { logger } from "../lib/logger.js";
 import { handleCommand } from "../modules/commands/executor.js";
 import { viewerRequestService } from "../modules/requests/service.js";
 import { incrementDiscordLines } from "../modules/timers/timer-scheduler.js";
+import { chatLogService } from "../modules/chatlogs/service.js";
 import type { CommandContext } from "../modules/commands/executor.js";
 
 export function setupDiscordMessageHandler(client: Client): void {
@@ -33,6 +34,16 @@ async function processDiscordMessage(message: Message): Promise<void> {
 
   // Count Discord messages for timer thresholds
   incrementDiscordLines(settings.channelId).catch(() => {});
+
+  // Log Discord message
+  chatLogService.addToBuffer({
+    twitchUserId: message.author.id,
+    displayName: message.author.displayName ?? message.author.username,
+    message: message.content,
+    platform: "discord",
+    channelId: settings.channelId,
+    createdAt: new Date(),
+  });
 
   if (!settings.commandsEnabled) return;
 

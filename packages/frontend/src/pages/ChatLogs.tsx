@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
@@ -15,6 +17,7 @@ export function ChatLogsPage() {
   const [keyword, setKeyword] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [platform, setPlatform] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -28,6 +31,7 @@ export function ChatLogsPage() {
     if (keyword) params.set("keyword", keyword);
     if (from) params.set("from", from);
     if (to) params.set("to", to);
+    if (platform) params.set("platform", platform);
     params.set("page", String(p));
     params.set("pageSize", "50");
 
@@ -49,7 +53,7 @@ export function ChatLogsPage() {
           <CardTitle>Search</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div>
               <Label>Username</Label>
               <Input value={user} onChange={(e) => setUser(e.target.value)} placeholder="Username" />
@@ -57,6 +61,14 @@ export function ChatLogsPage() {
             <div>
               <Label>Keyword</Label>
               <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="Search text..." />
+            </div>
+            <div>
+              <Label>Platform</Label>
+              <Select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+                <option value="">All</option>
+                <option value="twitch">Twitch</option>
+                <option value="discord">Discord</option>
+              </Select>
             </div>
             <div>
               <Label>From</Label>
@@ -109,6 +121,9 @@ export function ChatLogsPage() {
                   <span className="text-xs text-muted-foreground w-36 shrink-0">
                     {new Date(log.createdAt).toLocaleString()}
                   </span>
+                  <Badge variant="outline" className={`w-16 shrink-0 text-center text-xs ${log.platform === "discord" ? "text-indigo-400 border-indigo-400/50" : "text-purple-400 border-purple-400/50"}`}>
+                    {log.platform}
+                  </Badge>
                   <span className="font-medium text-primary w-32 shrink-0 truncate">
                     {log.displayName}
                   </span>

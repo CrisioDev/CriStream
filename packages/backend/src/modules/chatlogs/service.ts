@@ -7,6 +7,7 @@ interface BufferEntry {
   twitchUserId: string;
   displayName: string;
   message: string;
+  platform: string;
   channelId: string;
   createdAt: Date;
 }
@@ -62,6 +63,9 @@ class ChatLogService {
     if (params.keyword) {
       where.message = { contains: params.keyword, mode: "insensitive" };
     }
+    if (params.platform) {
+      where.platform = params.platform;
+    }
     if (params.from || params.to) {
       where.createdAt = {};
       if (params.from) where.createdAt.gte = new Date(params.from);
@@ -84,6 +88,7 @@ class ChatLogService {
         twitchUserId: l.twitchUserId,
         displayName: l.displayName,
         message: l.message,
+        platform: l.platform,
         channelId: l.channelId,
         createdAt: l.createdAt.toISOString(),
       })),

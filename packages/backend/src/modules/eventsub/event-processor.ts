@@ -125,6 +125,56 @@ export async function processEvent(type: string, event: any): Promise<void> {
       break;
     }
 
+    case "channel.poll.begin":
+    case "channel.poll.progress":
+    case "channel.poll.end": {
+      const choices = (event.choices ?? []).map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        votes: (c.votes ?? 0) + (c.channel_points_votes ?? 0) + (c.bits_votes ?? 0),
+        channelPointsVotes: c.channel_points_votes ?? 0,
+      }));
+      const totalVotes = choices.reduce((sum: number, c: any) => sum + c.votes, 0);
+      const status = type === "channel.poll.end" ? "ended" : "active";
+      emitToChannel(channel.id, "poll:update", {
+        channelId: channel.id,
+        status,
+        pollId: event.id,
+        title: event.title,
+        choices,
+        totalVotes,
+        endsAt: event.ends_at ?? null,
+        endedAt: event.ended_at ?? null,
+      });
+      break;
+    }
+
+    case "channel.prediction.begin":
+    case "channel.prediction.progress":
+    case "channel.prediction.lock":
+    case "channel.prediction.end": {
+      const outcomes = (event.outcomes ?? []).map((o: any) => ({
+        id: o.id,
+        title: o.title,
+        color: o.color ?? "BLUE",
+        users: o.users ?? 0,
+        channelPoints: o.channel_points ?? 0,
+      }));
+      let status: "active" | "locked" | "ended" = "active";
+      if (type === "channel.prediction.lock") status = "locked";
+      else if (type === "channel.prediction.end") status = "ended";
+      emitToChannel(channel.id, "prediction:update", {
+        channelId: channel.id,
+        status,
+        predictionId: event.id,
+        title: event.title,
+        outcomes,
+        locksAt: event.locks_at ?? null,
+        winningOutcomeId: event.winning_outcome_id ?? null,
+      });
+      break;
+    }
+
     default:
       logger.debug({ type }, "Unhandled EventSub event type");
   }

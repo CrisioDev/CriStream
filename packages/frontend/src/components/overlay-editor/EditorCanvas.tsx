@@ -46,24 +46,29 @@ export function EditorCanvas({
     [onSelect]
   );
 
+  const scaledWidth = layout.canvas.width * scale;
+  const scaledHeight = layout.canvas.height * scale;
+
   return (
     <div ref={wrapperRef} className="flex-1 flex items-center justify-center overflow-hidden p-4">
-      <div
-        style={{
-          width: layout.canvas.width,
-          height: layout.canvas.height,
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
-          position: "relative",
-          background:
-            layout.canvas.background === "transparent"
-              ? `repeating-conic-gradient(#808080 0% 25%, #a0a0a0 0% 50%) 50% / 20px 20px`
-              : layout.canvas.background,
-          borderRadius: 4,
-          boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
-        }}
-        onClick={handleCanvasClick}
-      >
+      <div style={{ width: scaledWidth, height: scaledHeight, flexShrink: 0 }}>
+        <div
+          style={{
+            width: layout.canvas.width,
+            height: layout.canvas.height,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            position: "relative",
+            background:
+              layout.canvas.background === "transparent"
+                ? `repeating-conic-gradient(#808080 0% 25%, #a0a0a0 0% 50%) 50% / 20px 20px`
+                : layout.canvas.background,
+            borderRadius: 4,
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
+            overflow: "hidden",
+          }}
+          onClick={handleCanvasClick}
+        >
         {layout.elements.map((el) => (
           <EditorElement
             key={el.id}
@@ -76,6 +81,7 @@ export function EditorCanvas({
             onUpdate={(patch) => onUpdateElement(el.id, patch)}
           />
         ))}
+        </div>
       </div>
     </div>
   );

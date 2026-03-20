@@ -138,6 +138,7 @@ class AlertService {
       ttsVoice: s.ttsVoice ?? "",
       ttsRate: s.ttsRate ?? 1.0,
       ttsVolume: s.ttsVolume ?? 80,
+      videoMuted: s.videoMuted ?? false,
     };
   }
 

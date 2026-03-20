@@ -16,7 +16,12 @@ export async function overlayRoutes(app: FastifyInstance) {
         return reply.status(404).send("Invalid overlay token");
       }
 
-      const html = generateOverlayHtml(request.params.overlayToken);
+      // Load poll/prediction settings for the overlay
+      const ppSettings = await prisma.pollPredictionSettings.findUnique({
+        where: { channelId: channel.id },
+      });
+
+      const html = generateOverlayHtml(request.params.overlayToken, ppSettings);
       return reply.type("text/html").send(html);
     }
   );

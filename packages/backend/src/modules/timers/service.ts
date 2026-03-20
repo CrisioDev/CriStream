@@ -26,6 +26,8 @@ class TimerService {
         intervalMinutes: data.intervalMinutes,
         minChatLines: data.minChatLines ?? 5,
         enabled: data.enabled ?? true,
+        twitchEnabled: data.twitchEnabled ?? true,
+        discordEnabled: data.discordEnabled ?? true,
       },
     });
     return this.toDto(timer);
@@ -52,6 +54,8 @@ class TimerService {
     intervalMinutes: number;
     minChatLines: number;
     enabled: boolean;
+    twitchEnabled: boolean;
+    discordEnabled: boolean;
     channelId: string;
   }): TimerDto {
     return {
@@ -61,6 +65,8 @@ class TimerService {
       intervalMinutes: timer.intervalMinutes,
       minChatLines: timer.minChatLines,
       enabled: timer.enabled,
+      twitchEnabled: timer.twitchEnabled,
+      discordEnabled: timer.discordEnabled,
       channelId: timer.channelId,
     };
   }

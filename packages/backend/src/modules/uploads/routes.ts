@@ -34,4 +34,19 @@ export async function uploadRoutes(app: FastifyInstance) {
       return reply.status(400).send({ success: false, error: err.message });
     }
   });
+
+  // Upload video file
+  app.post<{ Params: { cid: string } }>("/:cid/uploads/video", async (request, reply) => {
+    const file = await request.file();
+    if (!file) {
+      return reply.status(400).send({ success: false, error: "No file provided" });
+    }
+
+    try {
+      const url = await uploadService.upload(request.params.cid, "video", file);
+      return { success: true, data: { url } };
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
 }

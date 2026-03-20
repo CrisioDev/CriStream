@@ -176,24 +176,38 @@ export function OverlayEditor({ alert, onSave, onClose }: OverlayEditorProps) {
               .map((el) => {
                 if (el.type === "image") {
                   if (!alert.imageFileUrl) return null;
+                  const mediaStyle: React.CSSProperties = {
+                    position: "absolute",
+                    left: el.x,
+                    top: el.y,
+                    width: el.width,
+                    height: el.height,
+                    zIndex: el.zIndex,
+                    borderRadius: el.borderRadius,
+                    objectFit: el.objectFit,
+                    border: el.borderWidth
+                      ? `${el.borderWidth}px solid ${el.borderColor}`
+                      : "none",
+                  };
+                  if (/\.(webm|mp4)$/i.test(alert.imageFileUrl)) {
+                    return (
+                      <video
+                        key={el.id}
+                        src={alert.imageFileUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        style={mediaStyle}
+                      />
+                    );
+                  }
                   return (
                     <img
                       key={el.id}
                       src={alert.imageFileUrl}
                       alt=""
-                      style={{
-                        position: "absolute",
-                        left: el.x,
-                        top: el.y,
-                        width: el.width,
-                        height: el.height,
-                        zIndex: el.zIndex,
-                        borderRadius: el.borderRadius,
-                        objectFit: el.objectFit,
-                        border: el.borderWidth
-                          ? `${el.borderWidth}px solid ${el.borderColor}`
-                          : "none",
-                      }}
+                      style={mediaStyle}
                     />
                   );
                 }

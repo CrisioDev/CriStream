@@ -46,6 +46,7 @@ export async function processAlertEvent(
     ttsVoice: (settings as any).ttsVoice ?? "",
     ttsRate: (settings as any).ttsRate ?? 1.0,
     ttsVolume: (settings as any).ttsVolume ?? 80,
+    videoMuted: (settings as any).videoMuted ?? false,
   };
 
   emitToChannel(channelId, "alert:trigger", { channelId, payload });

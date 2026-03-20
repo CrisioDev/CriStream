@@ -42,18 +42,22 @@ async function checkTimers() {
     if (lines < timer.minChatLines) continue;
 
     // Fire the timer (Twitch)
-    sayInChannel(timer.channel.displayName, timer.message);
+    if (timer.twitchEnabled) {
+      sayInChannel(timer.channel.displayName, timer.message);
+    }
 
     // Fire the timer (Discord)
-    try {
-      const discordSettings = await prisma.discordSettings.findUnique({
-        where: { channelId: timer.channelId },
-      });
-      if (discordSettings?.timersEnabled && discordSettings.timerChannelId) {
-        sendToDiscordChannel(discordSettings.timerChannelId, timer.message).catch(() => {});
+    if (timer.discordEnabled) {
+      try {
+        const discordSettings = await prisma.discordSettings.findUnique({
+          where: { channelId: timer.channelId },
+        });
+        if (discordSettings?.timersEnabled && discordSettings.timerChannelId) {
+          sendToDiscordChannel(discordSettings.timerChannelId, timer.message).catch(() => {});
+        }
+      } catch {
+        // Discord send is fire-and-forget
       }
-    } catch {
-      // Discord send is fire-and-forget
     }
 
     await prisma.timer.update({

@@ -77,7 +77,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
     }
   };
 
-  const uploadFile = async (type: "sound" | "image", alertType: string, file: File) => {
+  const uploadFile = async (type: "sound" | "image" | "video", alertType: string, file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -92,6 +92,12 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
       const field = type === "sound" ? "soundFileUrl" : "imageFileUrl";
       await updateAlert(alertType, { [field]: data.data.url });
     }
+  };
+
+  const uploadMedia = async (alertType: string, file: File) => {
+    const ext = file.name.toLowerCase();
+    const isVideo = ext.endsWith('.webm') || ext.endsWith('.mp4');
+    await uploadFile(isVideo ? "video" : "image", alertType, file);
   };
 
   return (
@@ -181,7 +187,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                 )}
               </div>
               <div>
-                <Label>Image</Label>
+                <Label>Image / Video</Label>
                 {alert.imageFileUrl ? (
                   <div className="flex items-center gap-2 text-xs">
                     <Badge variant="outline" className="truncate max-w-[150px]">{alert.imageFileUrl.split("/").pop()}</Badge>
@@ -191,13 +197,22 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                   </div>
                 ) : (
                   <FileUpload
-                    accept="image/*"
-                    label="Upload Image"
-                    onUpload={(f) => uploadFile("image", alert.alertType, f)}
+                    accept="image/*,video/webm,video/mp4,.webm,.mp4"
+                    label="Upload Media"
+                    onUpload={(f) => uploadMedia(alert.alertType, f)}
                   />
                 )}
               </div>
             </div>
+            {alert.imageFileUrl && /\.(webm|mp4)$/i.test(alert.imageFileUrl) && (
+              <div className="flex items-center justify-between">
+                <Label>Video-Ton stummschalten</Label>
+                <Switch
+                  checked={alert.videoMuted}
+                  onCheckedChange={(checked) => updateAlert(alert.alertType, { videoMuted: checked })}
+                />
+              </div>
+            )}
             {(alert.alertType === "giftsub" || alert.alertType === "raid") && (
               <div>
                 <Label>Min Amount</Label>

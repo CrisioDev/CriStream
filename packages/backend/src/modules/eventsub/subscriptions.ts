@@ -1,7 +1,6 @@
 import { config } from "../../config/index.js";
 import { prisma } from "../../lib/prisma.js";
 import { logger } from "../../lib/logger.js";
-import { decrypt } from "../../lib/crypto.js";
 
 interface EventSubSubscription {
   type: string;
@@ -18,6 +17,13 @@ const SUBSCRIPTION_TYPES: EventSubSubscription[] = [
   { type: "channel.channel_points_custom_reward_redemption.add", version: "1", condition: {} },
   { type: "stream.online", version: "1", condition: {} },
   { type: "stream.offline", version: "1", condition: {} },
+  { type: "channel.poll.begin", version: "1", condition: {} },
+  { type: "channel.poll.progress", version: "1", condition: {} },
+  { type: "channel.poll.end", version: "1", condition: {} },
+  { type: "channel.prediction.begin", version: "1", condition: {} },
+  { type: "channel.prediction.progress", version: "1", condition: {} },
+  { type: "channel.prediction.lock", version: "1", condition: {} },
+  { type: "channel.prediction.end", version: "1", condition: {} },
 ];
 
 async function getAppAccessToken(): Promise<string> {

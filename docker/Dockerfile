@@ -28,22 +28,21 @@ RUN pnpm --filter @streamguard/frontend build
 # ── Production Stage ──
 FROM node:20-alpine AS production
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN apk add --no-cache ffmpeg
 WORKDIR /app
 
-COPY pnpm-workspace.yaml pnpm-lock.yaml* package.json tsconfig.base.json ./
-COPY packages/shared/package.json packages/shared/
-COPY packages/backend/package.json packages/backend/
-COPY packages/frontend/package.json packages/frontend/
-
-RUN pnpm install --frozen-lockfile || pnpm install
-
+# Copy node_modules from builder (includes sharp native bindings)
+COPY --from=builder /app/node_modules/ node_modules/
+COPY --from=builder /app/package.json /app/pnpm-workspace.yaml /app/tsconfig.base.json ./
+COPY --from=builder /app/packages/shared/package.json packages/shared/
 COPY --from=builder /app/packages/shared/dist/ packages/shared/dist/
+COPY --from=builder /app/packages/backend/package.json packages/backend/
 COPY --from=builder /app/packages/backend/dist/ packages/backend/dist/
 COPY --from=builder /app/packages/backend/prisma/ packages/backend/prisma/
+COPY --from=builder /app/packages/backend/node_modules/ packages/backend/node_modules/
 COPY --from=builder /app/packages/frontend/dist/ packages/frontend/dist/
-COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/ node_modules/.prisma/
+COPY --from=builder /app/packages/frontend/package.json packages/frontend/
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd packages/backend && pnpm exec prisma generate && pnpm exec prisma migrate deploy && node dist/server.js"]
+CMD ["sh", "-c", "cd packages/backend && npx prisma generate && npx prisma migrate deploy && node dist/server.js"]

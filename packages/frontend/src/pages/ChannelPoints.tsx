@@ -130,7 +130,7 @@ export function ChannelPointsPage() {
     updateReward(rewardId, { actionConfig: reward.actionConfig.filter((_, i) => i !== idx) });
   };
 
-  const uploadFile = async (type: "sound" | "image", file: File): Promise<string> => {
+  const uploadFile = async (type: "sound" | "image" | "video", file: File): Promise<string> => {
     if (!channel) return "";
     const formData = new FormData(); formData.append("file", file);
     const token = localStorage.getItem("token");
@@ -196,7 +196,7 @@ export function ChannelPointsPage() {
             duration: editorAlertData.action.duration, animationType: editorAlertData.action.animationType,
             volume: editorAlertData.action.volume, layoutConfig: editorAlertData.action.layoutConfig ?? null,
             enabled: true, id: "", minAmount: 0, channelId: channel?.id ?? "",
-            ttsEnabled: false, ttsVoice: "", ttsRate: 1.0, ttsVolume: 80,
+            ttsEnabled: false, ttsVoice: "", ttsRate: 1.0, ttsVolume: 80, videoMuted: editorAlertData.action.videoMuted ?? false,
           }}
           onSave={(lc) => saveLayout(editorReward!.rewardId, editorReward!.actionIdx, lc)}
           onClose={() => setEditorReward(null)}
@@ -309,7 +309,7 @@ export function ChannelPointsPage() {
 function ActionCard({ action, index, commands, channelId, onUpdate, onRemove, onUploadFile, onOpenLayout }: {
   action: RewardAction; index: number; commands: CommandDto[]; channelId: string;
   onUpdate: (patch: Partial<RewardAction>) => void; onRemove: () => void;
-  onUploadFile: (type: "sound" | "image", file: File) => Promise<string>; onOpenLayout: () => void;
+  onUploadFile: (type: "sound" | "image" | "video", file: File) => Promise<string>; onOpenLayout: () => void;
 }) {
   return (
     <div className="rounded-lg border p-4 space-y-3">
@@ -325,7 +325,7 @@ function ActionCard({ action, index, commands, channelId, onUpdate, onRemove, on
   );
 }
 
-function SoundActionForm({ action, onUpdate, onUploadFile }: { action: RewardActionSound; onUpdate: (p: Partial<RewardActionSound>) => void; onUploadFile: (t: "sound"|"image", f: File) => Promise<string> }) {
+function SoundActionForm({ action, onUpdate, onUploadFile }: { action: RewardActionSound; onUpdate: (p: Partial<RewardActionSound>) => void; onUploadFile: (t: "sound"|"image"|"video", f: File) => Promise<string> }) {
   const sounds = action.soundFileUrl ? action.soundFileUrl.split(",").map(s => s.trim()).filter(Boolean) : [];
   const addSound = async (file: File) => {
     const url = await onUploadFile("sound", file);
@@ -357,14 +357,14 @@ function SoundActionForm({ action, onUpdate, onUploadFile }: { action: RewardAct
   );
 }
 
-function AlertActionForm({ action, onUpdate, onUploadFile, onOpenLayout }: { action: RewardActionAlert; onUpdate: (p: Partial<RewardActionAlert>) => void; onUploadFile: (t: "sound"|"image", f: File) => Promise<string>; onOpenLayout: () => void }) {
+function AlertActionForm({ action, onUpdate, onUploadFile, onOpenLayout }: { action: RewardActionAlert; onUpdate: (p: Partial<RewardActionAlert>) => void; onUploadFile: (t: "sound"|"image"|"video", f: File) => Promise<string>; onOpenLayout: () => void }) {
   return (
     <div className="space-y-3">
       <div><Label>Text Template</Label><Input value={action.textTemplate} onChange={(e) => onUpdate({ textTemplate: e.target.value })} placeholder="{user} redeemed {reward}!" /><p className="text-xs text-muted-foreground mt-1">{"{user}"} {"{reward}"} {"{input}"} + $(points) $(watchtime) $(rank) $(game) $(title) $(viewers) $(random)</p></div>
       <div className="grid grid-cols-2 gap-3"><div><Label>Duration (s)</Label><Input type="number" value={action.duration} onChange={(e) => onUpdate({ duration: parseInt(e.target.value) || 5 })} /></div><div><Label>Animation</Label><Select value={action.animationType} onChange={(e) => onUpdate({ animationType: e.target.value as any })}>{ANIMATION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</Select></div></div>
       <div><Label>Volume: {action.volume}%</Label><Slider value={action.volume} min={0} max={100} onChange={(v) => onUpdate({ volume: v })} /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Image</Label>{action.imageFileUrl ? (<div className="flex items-center gap-2"><img src={action.imageFileUrl} alt="" className="h-10 w-10 rounded object-cover" /><Button size="sm" variant="outline" onClick={() => onUpdate({ imageFileUrl: "" })}>Remove</Button></div>) : (<FileUpload accept=".png,.jpg,.jpeg,.gif,.webp" label="Upload Image" onUpload={async (f) => { const u = await onUploadFile("image", f); if (u) onUpdate({ imageFileUrl: u }); }} />)}</div>
+        <div><Label>Image / Video</Label>{action.imageFileUrl ? (<div className="flex items-center gap-2">{action.imageFileUrl.match(/\.(webm|mp4)$/i) ? <video src={action.imageFileUrl} className="h-10 w-10 rounded object-cover" autoPlay loop muted /> : <img src={action.imageFileUrl} alt="" className="h-10 w-10 rounded object-cover" />}<Button size="sm" variant="outline" onClick={() => onUpdate({ imageFileUrl: "" })}>Remove</Button></div>) : (<FileUpload accept=".png,.jpg,.jpeg,.gif,.webp,.webm,.mp4" label="Upload Media" onUpload={async (f) => { const ext = f.name.toLowerCase(); const isVid = ext.endsWith('.webm') || ext.endsWith('.mp4'); const u = await onUploadFile(isVid ? "video" : "image", f); if (u) onUpdate({ imageFileUrl: u }); }} />)}</div>
         <div><Label>Sounds {(() => { const s = action.soundFileUrl?.split(",").filter(Boolean) ?? []; return s.length > 1 ? <span className="text-muted-foreground font-normal">(zufällig)</span> : null; })()}</Label>
           {(action.soundFileUrl?.split(",").filter(Boolean) ?? []).map((url, idx) => (
             <div key={idx} className="flex items-center gap-2 mt-1"><span className="text-sm text-muted-foreground truncate flex-1">{url.trim().split("/").pop()}</span><Button size="sm" variant="outline" onClick={() => { const urls = action.soundFileUrl.split(",").filter(Boolean); urls.splice(idx, 1); onUpdate({ soundFileUrl: urls.join(",") }); }}>Remove</Button></div>
@@ -372,6 +372,9 @@ function AlertActionForm({ action, onUpdate, onUploadFile, onOpenLayout }: { act
           <div className="mt-1"><FileUpload accept=".mp3,.wav,.ogg,.webm" label={action.soundFileUrl ? "+ Sound" : "Upload Sound"} onUpload={async (f) => { const u = await onUploadFile("sound", f); if (u) { const existing = action.soundFileUrl ? action.soundFileUrl + "," + u : u; onUpdate({ soundFileUrl: existing }); } }} /></div>
         </div>
       </div>
+      {action.imageFileUrl && /\.(webm|mp4)$/i.test(action.imageFileUrl) && (
+        <div className="flex items-center justify-between"><Label>Video-Ton stummschalten</Label><Switch checked={action.videoMuted ?? false} onCheckedChange={(v) => onUpdate({ videoMuted: v })} /></div>
+      )}
       <Button size="sm" variant="outline" onClick={onOpenLayout}><Paintbrush className="h-3 w-3 mr-1" /> Edit Layout</Button>
     </div>
   );

@@ -133,21 +133,41 @@ export function EditorElement({
       onPointerUp={handlePointerUp}
     >
       {element.type === "image" ? (
-        <img
-          src={imageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23333' rx='12'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23888' font-size='24'%3EImage%3C/text%3E%3C/svg%3E"}
-          alt=""
-          style={{
-            width: "100%",
-            height: "100%",
-            borderRadius: element.borderRadius,
-            objectFit: element.objectFit || "contain",
-            border: element.borderWidth
-              ? `${element.borderWidth}px solid ${element.borderColor || "#fff"}`
-              : "none",
-            pointerEvents: "none",
-          }}
-          draggable={false}
-        />
+        imageUrl && /\.(webm|mp4)$/i.test(imageUrl) ? (
+          <video
+            src={imageUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: element.borderRadius,
+              objectFit: element.objectFit || "contain",
+              border: element.borderWidth
+                ? `${element.borderWidth}px solid ${element.borderColor || "#fff"}`
+                : "none",
+              pointerEvents: "none",
+            }}
+          />
+        ) : (
+          <img
+            src={imageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23333' rx='12'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23888' font-size='24'%3EImage%3C/text%3E%3C/svg%3E"}
+            alt=""
+            style={{
+              width: "100%",
+              height: "100%",
+              borderRadius: element.borderRadius,
+              objectFit: element.objectFit || "contain",
+              border: element.borderWidth
+                ? `${element.borderWidth}px solid ${element.borderColor || "#fff"}`
+                : "none",
+              pointerEvents: "none",
+            }}
+            draggable={false}
+          />
+        )
       ) : (
         <div
           style={{

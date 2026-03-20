@@ -86,6 +86,8 @@ export interface TimerDto {
   intervalMinutes: number;
   minChatLines: number;
   enabled: boolean;
+  twitchEnabled: boolean;
+  discordEnabled: boolean;
   channelId: string;
 }
 
@@ -95,6 +97,8 @@ export interface CreateTimerDto {
   intervalMinutes: number;
   minChatLines?: number;
   enabled?: boolean;
+  twitchEnabled?: boolean;
+  discordEnabled?: boolean;
 }
 
 export interface UpdateTimerDto {
@@ -103,6 +107,8 @@ export interface UpdateTimerDto {
   intervalMinutes?: number;
   minChatLines?: number;
   enabled?: boolean;
+  twitchEnabled?: boolean;
+  discordEnabled?: boolean;
 }
 
 // ── Moderation ──
@@ -305,6 +311,7 @@ export interface RewardActionAlert {
   ttsVoice?: string;
   ttsRate?: number;
   ttsVolume?: number;
+  videoMuted?: boolean;
 }
 
 export interface RewardActionCommand {
@@ -453,6 +460,7 @@ export interface AlertSettingsDto {
   ttsVoice: string;
   ttsRate: number;
   ttsVolume: number;
+  videoMuted: boolean;
 }
 
 export interface UpdateAlertSettingsDto {
@@ -469,6 +477,7 @@ export interface UpdateAlertSettingsDto {
   ttsVoice?: string;
   ttsRate?: number;
   ttsVolume?: number;
+  videoMuted?: boolean;
 }
 
 // ── Sound Alerts ──
@@ -541,6 +550,7 @@ export interface OverlayAlertPayload {
   ttsVoice?: string;
   ttsRate?: number;
   ttsVolume?: number;
+  videoMuted?: boolean;
 }
 
 // ── WebSocket Events ──
@@ -645,6 +655,25 @@ export interface WsEvents {
     rewardTitle: string;
     userInput: string;
   };
+  "poll:update": {
+    channelId: string;
+    status: "active" | "ended";
+    pollId: string;
+    title: string;
+    choices: Array<{ id: string; title: string; votes: number; channelPointsVotes: number }>;
+    totalVotes: number;
+    endsAt: string | null;
+    endedAt: string | null;
+  };
+  "prediction:update": {
+    channelId: string;
+    status: "active" | "locked" | "ended";
+    predictionId: string;
+    title: string;
+    outcomes: Array<{ id: string; title: string; color: string; users: number; channelPoints: number }>;
+    locksAt: string | null;
+    winningOutcomeId: string | null;
+  };
 }
 
 // ── Twitch Channel Point Rewards (from Twitch API) ──
@@ -715,6 +744,35 @@ export interface UpdateDiscordSettingsDto {
   timersEnabled?: boolean;
   summariesEnabled?: boolean;
   notificationsEnabled?: boolean;
+}
+
+// ── Poll & Prediction Settings ──
+export interface PollPredictionSettingsDto {
+  id: string;
+  pollEnabled: boolean;
+  predictionEnabled: boolean;
+  resultDuration: number;
+  position: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  barHeight: number;
+  width: number;
+  fontSize: number;
+  channelId: string;
+}
+
+export interface UpdatePollPredictionSettingsDto {
+  pollEnabled?: boolean;
+  predictionEnabled?: boolean;
+  resultDuration?: number;
+  position?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  accentColor?: string;
+  barHeight?: number;
+  width?: number;
+  fontSize?: number;
 }
 
 // ── Bot Status ──

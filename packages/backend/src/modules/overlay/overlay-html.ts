@@ -1,7 +1,34 @@
 import { config } from "../../config/index.js";
 
-export function generateOverlayHtml(overlayToken: string): string {
+interface PollPredictionSettings {
+  pollEnabled: boolean;
+  predictionEnabled: boolean;
+  resultDuration: number;
+  position: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  barHeight: number;
+  width: number;
+  fontSize: number;
+}
+
+const DEFAULT_PP_SETTINGS: PollPredictionSettings = {
+  pollEnabled: true,
+  predictionEnabled: true,
+  resultDuration: 60,
+  position: "top-left",
+  backgroundColor: "rgba(0,0,0,0.8)",
+  textColor: "#ffffff",
+  accentColor: "#9147FF",
+  barHeight: 28,
+  width: 400,
+  fontSize: 16,
+};
+
+export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredictionSettings | null): string {
   const wsPath = "/ws";
+  const pp = ppSettings ?? DEFAULT_PP_SETTINGS;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,18 +84,22 @@ export function generateOverlayHtml(overlayToken: string): string {
   }
 
   /* Custom layout canvas */
-  #custom-alert-container {
+  #custom-alert-wrapper {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
     z-index: 9999;
-    display: none;
   }
 
-  #custom-alert-container.active {
-    display: block;
+  #custom-alert-wrapper.active {
+    display: flex;
+  }
+
+  #custom-alert-container {
+    pointer-events: none;
   }
 
   /* Animations */
@@ -115,6 +146,104 @@ export function generateOverlayHtml(overlayToken: string): string {
   .anim-bounce-out { animation: bounceOut 0.4s ease-in forwards; }
   .anim-zoom-in { animation: zoomIn 0.4s ease-out forwards; }
   .anim-zoom-out { animation: zoomOut 0.4s ease-in forwards; }
+
+  /* ── Poll / Prediction Widget ── */
+  #pp-widget {
+    position: fixed;
+    z-index: 8000;
+    pointer-events: none;
+    width: var(--pp-width);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: var(--pp-font-size);
+    color: var(--pp-text-color);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  #pp-widget.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #pp-widget.pos-top-right { top: 20px; right: 20px; }
+  #pp-widget.pos-top-left { top: 20px; left: 20px; }
+  #pp-widget.pos-bottom-right { bottom: 20px; right: 20px; }
+  #pp-widget.pos-bottom-left { bottom: 20px; left: 20px; }
+  #pp-widget.pos-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  #pp-widget.pos-center.visible { transform: translate(-50%, -50%); }
+  #pp-widget.pos-top-left, #pp-widget.pos-bottom-left {
+    transform: translateX(-50px);
+  }
+  #pp-widget.pos-top-left.visible, #pp-widget.pos-bottom-left.visible {
+    transform: translateX(0);
+  }
+  .pp-card {
+    background: var(--pp-bg-color);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .pp-title {
+    font-weight: 700;
+    font-size: calc(var(--pp-font-size) + 2px);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pp-timer {
+    font-size: calc(var(--pp-font-size) - 2px);
+    opacity: 0.8;
+    font-variant-numeric: tabular-nums;
+  }
+  .pp-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: calc(var(--pp-font-size) - 4px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .pp-status-locked { background: #e74c3c; color: #fff; }
+  .pp-status-ended { background: #2ecc71; color: #fff; }
+  .pp-choice {
+    margin-bottom: 6px;
+  }
+  .pp-choice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+    font-size: calc(var(--pp-font-size) - 1px);
+  }
+  .pp-bar-bg {
+    width: 100%;
+    height: var(--pp-bar-height);
+    background: rgba(255,255,255,0.15);
+    border-radius: calc(var(--pp-bar-height) / 2);
+    overflow: hidden;
+    position: relative;
+  }
+  .pp-bar-fill {
+    height: 100%;
+    border-radius: calc(var(--pp-bar-height) / 2);
+    transition: width 0.6s ease;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: calc(var(--pp-font-size) - 3px);
+    font-weight: 600;
+    min-width: 0;
+  }
+  .pp-choice.winner .pp-bar-fill {
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
+  }
+  .pp-choice.loser {
+    opacity: 0.4;
+  }
+  .pp-prediction-color-BLUE { background: #387AFF; }
+  .pp-prediction-color-PINK { background: #F5009B; }
+  .pp-prediction-color-default { background: var(--pp-accent-color); }
 </style>
 </head>
 <body>
@@ -127,7 +256,17 @@ export function generateOverlayHtml(overlayToken: string): string {
 </div>
 
 <!-- Custom layout alert container -->
-<div id="custom-alert-container"></div>
+<div id="custom-alert-wrapper"><div id="custom-alert-container"></div></div>
+
+<!-- Poll / Prediction Widget -->
+<div id="pp-widget" class="pos-${pp.position}" style="
+  --pp-width: ${pp.width}px;
+  --pp-font-size: ${pp.fontSize}px;
+  --pp-text-color: ${pp.textColor};
+  --pp-bg-color: ${pp.backgroundColor};
+  --pp-accent-color: ${pp.accentColor};
+  --pp-bar-height: ${pp.barHeight}px;
+"></div>
 
 <audio id="alert-audio" preload="auto"></audio>
 
@@ -152,6 +291,7 @@ export function generateOverlayHtml(overlayToken: string): string {
   const imageEl = document.getElementById('alert-image');
   const audioEl = document.getElementById('alert-audio');
   const alertContainer = document.getElementById('alert-container');
+  const customWrapper = document.getElementById('custom-alert-wrapper');
   const customContainer = document.getElementById('custom-alert-container');
 
   socket.on('connect', () => console.log('Overlay connected'));
@@ -202,6 +342,30 @@ export function generateOverlayHtml(overlayToken: string): string {
     }
   }
 
+  function isVideoUrl(url) {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.endsWith('.webm') || lower.endsWith('.mp4');
+  }
+
+  function createMediaElement(url, styles, muted) {
+    if (isVideoUrl(url)) {
+      const vid = document.createElement('video');
+      vid.src = url;
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = !!muted;
+      vid.playsInline = true;
+      Object.assign(vid.style, styles);
+      return vid;
+    } else {
+      const img = document.createElement('img');
+      img.src = url;
+      Object.assign(img.style, styles);
+      return img;
+    }
+  }
+
   function loadGoogleFont(family) {
     if (loadedFonts.has(family)) return;
     const webSafe = ['Segoe UI','Arial','Georgia','Impact','Comic Sans MS'];
@@ -233,20 +397,21 @@ export function generateOverlayHtml(overlayToken: string): string {
     sorted.forEach(el => {
       if (el.type === 'image') {
         if (!alert.imageUrl) return;
-        const img = document.createElement('img');
-        img.src = alert.imageUrl;
-        img.style.position = 'absolute';
-        img.style.left = el.x + 'px';
-        img.style.top = el.y + 'px';
-        img.style.width = el.width + 'px';
-        img.style.height = el.height + 'px';
-        img.style.zIndex = String(el.zIndex || 1);
-        img.style.borderRadius = (el.borderRadius || 0) + 'px';
-        img.style.objectFit = el.objectFit || 'contain';
+        const mediaStyles = {
+          position: 'absolute',
+          left: el.x + 'px',
+          top: el.y + 'px',
+          width: el.width + 'px',
+          height: el.height + 'px',
+          zIndex: String(el.zIndex || 1),
+          borderRadius: (el.borderRadius || 0) + 'px',
+          objectFit: el.objectFit || 'contain',
+        };
         if (el.borderWidth) {
-          img.style.border = el.borderWidth + 'px solid ' + (el.borderColor || '#fff');
+          mediaStyles.border = el.borderWidth + 'px solid ' + (el.borderColor || '#fff');
         }
-        canvasDiv.appendChild(img);
+        const media = createMediaElement(alert.imageUrl, mediaStyles, alert.videoMuted);
+        canvasDiv.appendChild(media);
       } else if (el.type === 'text') {
         loadGoogleFont(el.fontFamily || 'Segoe UI');
         const div = document.createElement('div');
@@ -277,13 +442,23 @@ export function generateOverlayHtml(overlayToken: string): string {
       }
     });
 
+    // Scale canvas to fit viewport
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const sx = vw / canvas.width;
+    const sy = vh / canvas.height;
+    const canvasScale = Math.min(sx, sy, 1);
+    canvasDiv.style.transform = 'scale(' + canvasScale + ')';
+    canvasDiv.style.transformOrigin = 'center center';
+
     customContainer.innerHTML = '';
     customContainer.appendChild(canvasDiv);
-    customContainer.style.width = canvas.width + 'px';
-    customContainer.style.height = canvas.height + 'px';
+    customContainer.style.width = (canvas.width * canvasScale) + 'px';
+    customContainer.style.height = (canvas.height * canvasScale) + 'px';
 
     const anim = alert.animationType || 'fade';
-    customContainer.className = 'active anim-' + anim + '-in';
+    customWrapper.className = 'active';
+    customContainer.className = 'anim-' + anim + '-in';
 
     // Play sound
     if (alert.soundUrl) {
@@ -295,8 +470,9 @@ export function generateOverlayHtml(overlayToken: string): string {
     const duration = (alert.duration || 5) * 1000;
     function hideCustomAlert() {
       speechSynthesis.cancel();
-      customContainer.className = 'active anim-' + anim + '-out';
+      customContainer.className = 'anim-' + anim + '-out';
       setTimeout(() => {
+        customWrapper.className = '';
         customContainer.className = '';
         customContainer.innerHTML = '';
         alertContainer.style.display = '';
@@ -312,10 +488,129 @@ export function generateOverlayHtml(overlayToken: string): string {
     }, duration);
   }
 
+  // ── Poll / Prediction Widget ──
+  const ppWidget = document.getElementById('pp-widget');
+  const ppConfig = {
+    pollEnabled: ${pp.pollEnabled},
+    predictionEnabled: ${pp.predictionEnabled},
+    resultDuration: ${pp.resultDuration},
+  };
+  let ppHideTimer = null;
+
+  function ppRenderPoll(data) {
+    if (!ppConfig.pollEnabled) return;
+    const total = data.totalVotes || 1;
+    let timerHtml = '';
+    if (data.status === 'active' && data.endsAt) {
+      timerHtml = '<span class="pp-timer" id="pp-countdown"></span>';
+    }
+    let statusBadge = '';
+    if (data.status === 'ended') {
+      statusBadge = '<span class="pp-status-badge pp-status-ended">Ended</span>';
+    }
+    const maxVotes = Math.max(...data.choices.map(c => c.votes));
+    const choicesHtml = data.choices.map((c, i) => {
+      const pct = Math.round((c.votes / total) * 100);
+      const isWinner = data.status === 'ended' && c.votes === maxVotes;
+      const cls = data.status === 'ended' ? (isWinner ? 'winner' : 'loser') : '';
+      return '<div class="pp-choice ' + cls + '">'
+        + '<div class="pp-choice-header"><span>' + escHtml(c.title) + '</span><span>' + c.votes + ' (' + pct + '%)</span></div>'
+        + '<div class="pp-bar-bg"><div class="pp-bar-fill pp-prediction-color-default" style="width:' + pct + '%">' + (pct > 10 ? pct + '%' : '') + '</div></div>'
+        + '</div>';
+    }).join('');
+    ppWidget.innerHTML = '<div class="pp-card"><div class="pp-title"><span>📊 ' + escHtml(data.title) + '</span>' + statusBadge + timerHtml + '</div>' + choicesHtml + '</div>';
+    ppWidget.classList.add('visible');
+    ppStartCountdown(data.endsAt);
+    if (data.status === 'ended') {
+      ppScheduleHide();
+    }
+  }
+
+  function ppRenderPrediction(data) {
+    if (!ppConfig.predictionEnabled) return;
+    const totalPoints = data.outcomes.reduce((s, o) => s + o.channelPoints, 0) || 1;
+    let timerHtml = '';
+    if (data.status === 'active' && data.locksAt) {
+      timerHtml = '<span class="pp-timer" id="pp-countdown"></span>';
+    }
+    let statusBadge = '';
+    if (data.status === 'locked') statusBadge = '<span class="pp-status-badge pp-status-locked">Locked</span>';
+    if (data.status === 'ended') statusBadge = '<span class="pp-status-badge pp-status-ended">Resolved</span>';
+    const outcomesHtml = data.outcomes.map(o => {
+      const pct = Math.round((o.channelPoints / totalPoints) * 100);
+      const colorCls = o.color === 'BLUE' ? 'pp-prediction-color-BLUE' : o.color === 'PINK' ? 'pp-prediction-color-PINK' : 'pp-prediction-color-default';
+      let cls = '';
+      if (data.status === 'ended') {
+        cls = o.id === data.winningOutcomeId ? 'winner' : 'loser';
+      }
+      return '<div class="pp-choice ' + cls + '">'
+        + '<div class="pp-choice-header"><span>' + escHtml(o.title) + '</span><span>' + o.channelPoints.toLocaleString() + ' pts (' + pct + '%)</span></div>'
+        + '<div class="pp-bar-bg"><div class="pp-bar-fill ' + colorCls + '" style="width:' + pct + '%">' + (pct > 10 ? pct + '%' : '') + '</div></div>'
+        + '</div>';
+    }).join('');
+    ppWidget.innerHTML = '<div class="pp-card"><div class="pp-title"><span>🔮 ' + escHtml(data.title) + '</span>' + statusBadge + timerHtml + '</div>' + outcomesHtml + '</div>';
+    ppWidget.classList.add('visible');
+    ppStartCountdown(data.locksAt);
+    if (data.status === 'ended') {
+      ppScheduleHide();
+    }
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  let ppCountdownInterval = null;
+  function ppStartCountdown(isoDate) {
+    if (ppCountdownInterval) clearInterval(ppCountdownInterval);
+    if (!isoDate) return;
+    const el = document.getElementById('pp-countdown');
+    if (!el) return;
+    const end = new Date(isoDate).getTime();
+    function tick() {
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((end - now) / 1000));
+      const m = Math.floor(diff / 60);
+      const s = diff % 60;
+      const cel = document.getElementById('pp-countdown');
+      if (cel) cel.textContent = m + ':' + String(s).padStart(2, '0');
+      if (diff <= 0 && ppCountdownInterval) clearInterval(ppCountdownInterval);
+    }
+    tick();
+    ppCountdownInterval = setInterval(tick, 1000);
+  }
+
+  function ppScheduleHide() {
+    if (ppHideTimer) clearTimeout(ppHideTimer);
+    ppHideTimer = setTimeout(() => {
+      ppWidget.classList.remove('visible');
+      setTimeout(() => { ppWidget.innerHTML = ''; }, 600);
+    }, ppConfig.resultDuration * 1000);
+  }
+
+  socket.on('poll:update', (data) => ppRenderPoll(data));
+  socket.on('prediction:update', (data) => ppRenderPrediction(data));
+
   function showLegacyAlert(alert) {
     textEl.textContent = alert.text;
 
-    if (alert.imageUrl) {
+    // Remove previous video if any
+    const oldVid = alertEl.querySelector('video.alert-media');
+    if (oldVid) oldVid.remove();
+
+    if (alert.imageUrl && isVideoUrl(alert.imageUrl)) {
+      imageEl.style.display = 'none';
+      const vid = document.createElement('video');
+      vid.src = alert.imageUrl;
+      vid.className = 'alert-image alert-media';
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = !!alert.videoMuted;
+      vid.playsInline = true;
+      alertEl.insertBefore(vid, textEl);
+    } else if (alert.imageUrl) {
       imageEl.src = alert.imageUrl;
       imageEl.style.display = 'block';
     } else {
@@ -338,6 +633,8 @@ export function generateOverlayHtml(overlayToken: string): string {
       alertEl.className = 'alert active anim-' + anim + '-out';
       setTimeout(() => {
         alertEl.className = 'alert';
+        const vid = alertEl.querySelector('video.alert-media');
+        if (vid) vid.remove();
         playNext();
       }, 600);
     }

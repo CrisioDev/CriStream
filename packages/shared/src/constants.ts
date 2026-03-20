@@ -27,6 +27,8 @@ export const TWITCH_SCOPES = [
   "channel:manage:redemptions",
   "user:manage:whispers",
   "user:read:moderated_channels",
+  "channel:read:polls",
+  "channel:read:predictions",
 ];
 
 // Custom API Variables
@@ -84,13 +86,13 @@ export const GOOGLE_FONTS = [
 // Default Overlay Layout
 export const DEFAULT_LAYOUT_CONFIG = {
   version: 1 as const,
-  canvas: { width: 1600, height: 900, background: "transparent" },
+  canvas: { width: 1920, height: 1080, background: "transparent" },
   elements: [
     {
       type: "image" as const,
       id: "image-1",
-      x: 550,
-      y: 50,
+      x: 710,
+      y: 90,
       width: 500,
       height: 500,
       zIndex: 1,
@@ -102,8 +104,8 @@ export const DEFAULT_LAYOUT_CONFIG = {
     {
       type: "text" as const,
       id: "text-1",
-      x: 200,
-      y: 620,
+      x: 360,
+      y: 650,
       width: 1200,
       height: 100,
       zIndex: 2,
@@ -136,5 +138,10 @@ export const UPLOAD_LIMITS = {
     maxSizeBytes: 2 * 1024 * 1024, // 2MB
     allowedExtensions: [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     allowedMimeTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
+  },
+  video: {
+    maxSizeBytes: 10 * 1024 * 1024, // 10MB
+    allowedExtensions: [".webm", ".mp4"],
+    allowedMimeTypes: ["video/webm", "video/mp4"],
   },
 } as const;

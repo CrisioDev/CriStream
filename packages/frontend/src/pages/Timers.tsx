@@ -21,6 +21,8 @@ export function TimersPage() {
     intervalMinutes: 15,
     minChatLines: 5,
     enabled: true,
+    twitchEnabled: true,
+    discordEnabled: true,
   });
   const [editForm, setEditForm] = useState<UpdateTimerDto>({});
 
@@ -38,7 +40,7 @@ export function TimersPage() {
     if (!channel) return;
     await api.post(`/channels/${channel.id}/timers`, form);
     setShowCreate(false);
-    setForm({ name: "", message: "", intervalMinutes: 15, minChatLines: 5, enabled: true });
+    setForm({ name: "", message: "", intervalMinutes: 15, minChatLines: 5, enabled: true, twitchEnabled: true, discordEnabled: true });
     loadTimers();
   };
 
@@ -50,6 +52,8 @@ export function TimersPage() {
       intervalMinutes: timer.intervalMinutes,
       minChatLines: timer.minChatLines,
       enabled: timer.enabled,
+      twitchEnabled: timer.twitchEnabled,
+      discordEnabled: timer.discordEnabled,
     });
   };
 
@@ -98,6 +102,16 @@ export function TimersPage() {
                 <Input type="number" value={form.minChatLines} onChange={(e) => setForm({ ...form, minChatLines: parseInt(e.target.value) })} />
               </div>
             </div>
+            <div className="flex gap-6">
+              <div className="flex items-center gap-2">
+                <Switch checked={form.twitchEnabled ?? true} onCheckedChange={(v) => setForm({ ...form, twitchEnabled: v })} />
+                <Label>Twitch</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={form.discordEnabled ?? true} onCheckedChange={(v) => setForm({ ...form, discordEnabled: v })} />
+                <Label>Discord</Label>
+              </div>
+            </div>
             <Button onClick={handleCreate}>Create Timer</Button>
           </CardContent>
         </Card>
@@ -141,6 +155,16 @@ export function TimersPage() {
                       />
                     </div>
                   </div>
+                  <div className="flex gap-6">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={editForm.twitchEnabled ?? true} onCheckedChange={(v) => setEditForm({ ...editForm, twitchEnabled: v })} />
+                      <Label>Twitch</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={editForm.discordEnabled ?? true} onCheckedChange={(v) => setEditForm({ ...editForm, discordEnabled: v })} />
+                      <Label>Discord</Label>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => handleUpdate(timer.id)}>
                       <Check className="mr-2 h-4 w-4" /> Save
@@ -160,6 +184,8 @@ export function TimersPage() {
                       <Badge variant={timer.enabled ? "default" : "outline"}>
                         {timer.enabled ? "Active" : "Paused"}
                       </Badge>
+                      {timer.twitchEnabled && <Badge variant="secondary">Twitch</Badge>}
+                      {timer.discordEnabled && <Badge variant="secondary">Discord</Badge>}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{timer.message}</p>
                   </div>

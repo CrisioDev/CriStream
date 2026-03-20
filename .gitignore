@@ -13,3 +13,7 @@ proxmoxapitokens.md
 packages/frontend/src/**/*.js
 packages/frontend/vite.config.js
 packages/frontend/vite.config.d.ts
+/uploads/
+packages/backend/uploads/
+*.tar.gz
+.claude/

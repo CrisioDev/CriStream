@@ -26,6 +26,7 @@ import { overlayRoutes } from "./modules/overlay/routes.js";
 import { eventsubWebhookRoute } from "./modules/eventsub/listener.js";
 import { requestRoutes, publicRequestRoutes } from "./modules/requests/routes.js";
 import { discordRoutes } from "./modules/discord/routes.js";
+import { pollPredictionRoutes } from "./modules/pollprediction/routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -44,7 +45,7 @@ export async function buildApp() {
 
   await app.register(fastifyMultipart, {
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB max
+      fileSize: 10 * 1024 * 1024, // 10MB max (videos)
     },
   });
 
@@ -71,6 +72,7 @@ export async function buildApp() {
   await app.register(channelPointRoutes, { prefix: "/api/channels" });
   await app.register(requestRoutes, { prefix: "/api/channels" });
   await app.register(discordRoutes, { prefix: "/api/channels" });
+  await app.register(pollPredictionRoutes, { prefix: "/api/channels" });
 
   // Health check (used by Docker healthcheck)
   app.get("/api/health", async () => {

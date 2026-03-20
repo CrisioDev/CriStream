@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Timer" ADD COLUMN "twitchEnabled" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Timer" ADD COLUMN "discordEnabled" BOOLEAN NOT NULL DEFAULT true;

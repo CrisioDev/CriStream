@@ -48,7 +48,8 @@ model Channel {
   editors              ChannelEditor[]
   channelPointRewards  ChannelPointReward[]
   viewerRequests       ViewerRequest[]
-  discordSettings      DiscordSettings?
+  discordSettings          DiscordSettings?
+  pollPredictionSettings   PollPredictionSettings?
 }
 
 model Command {
@@ -77,6 +78,8 @@ model Timer {
   intervalMinutes Int       @default(15)
   minChatLines    Int       @default(5)
   enabled         Boolean   @default(true)
+  twitchEnabled   Boolean   @default(true)
+  discordEnabled  Boolean   @default(true)
   lastFiredAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -207,6 +210,7 @@ model AlertSettings {
   ttsVoice      String  @default("")
   ttsRate       Float   @default(1.0)
   ttsVolume     Int     @default(80)
+  videoMuted    Boolean @default(false)
   channelId     String
   channel       Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
@@ -275,6 +279,22 @@ model DiscordSettings {
   notificationsEnabled  Boolean @default(false)
   channelId             String  @unique
   channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model PollPredictionSettings {
+  id                String  @id @default(uuid())
+  pollEnabled       Boolean @default(true)
+  predictionEnabled Boolean @default(true)
+  resultDuration    Int     @default(60)
+  position          String  @default("top-left")
+  backgroundColor   String  @default("rgba(0,0,0,0.8)")
+  textColor         String  @default("#ffffff")
+  accentColor       String  @default("#9147FF")
+  barHeight         Int     @default(28)
+  width             Int     @default(400)
+  fontSize          Int     @default(16)
+  channelId         String  @unique
+  channel           Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 }
 
 model EventLog {

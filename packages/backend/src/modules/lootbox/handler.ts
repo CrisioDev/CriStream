@@ -37,14 +37,14 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
   if (cmd === "inventory" || cmd === "inv") {
     const items = await lootboxService.getInventory(ctx.channelId, ctx.msg.userInfo.userId);
     if (items.length === 0) {
-      sayInChannel(ctx.channel, `@${ctx.user} Your inventory is empty! Try !lootbox`);
+      sayInChannel(ctx.channel, `@${ctx.user} Dein Inventar ist leer! Versuch !lootbox`);
     } else {
       const summary = items
         .slice(0, 5)
         .map((i) => `${i.itemName} x${i.quantity}`)
         .join(", ");
-      const more = items.length > 5 ? ` (+${items.length - 5} more)` : "";
-      sayInChannel(ctx.channel, `@${ctx.user} Inventory: ${summary}${more}`);
+      const more = items.length > 5 ? ` (+${items.length - 5} mehr)` : "";
+      sayInChannel(ctx.channel, `@${ctx.user} Inventar: ${summary}${more}`);
     }
     ctx.handled = true;
     return;
@@ -52,24 +52,42 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
 
   // !equip <title name> — equip a chat title
   if (cmd === "equip") {
-    const titleName = parts.slice(1).join(" ").toLowerCase();
+    const titleName = parts.slice(1).join(" ").toLowerCase().replace(/"/g, "");
     if (!titleName) {
-      sayInChannel(ctx.channel, `@${ctx.user} Usage: !equip <title name>`);
+      sayInChannel(ctx.channel, `@${ctx.user} Nutze: !equip <Titel-Name>`);
       ctx.handled = true;
       return;
     }
     const items = await lootboxService.getInventory(ctx.channelId, ctx.msg.userInfo.userId);
-    const titleItem = items.find(
-      (i) => i.itemType === "title" && i.itemName.toLowerCase() === titleName
-    );
-    if (!titleItem) {
-      sayInChannel(ctx.channel, `@${ctx.user} You don't have that title!`);
+
+    // Check if user has a non-title item with that name (helpful error)
+    const anyMatch = items.find((i) => i.itemName.toLowerCase() === titleName);
+    if (anyMatch && anyMatch.itemType !== "title") {
+      sayInChannel(ctx.channel, `@${ctx.user} "${anyMatch.itemName}" ist kein Titel! Nur Items vom Typ "Chat Title" können equipped werden.`);
       ctx.handled = true;
       return;
     }
-    const prefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
-    await lootboxService.equipTitle(ctx.channelId, ctx.msg.userInfo.userId, prefix);
-    sayInChannel(ctx.channel, `@${ctx.user} Title equipped: ${prefix}`);
+
+    // Find title - exact match first, then partial match
+    const titles = items.filter((i) => i.itemType === "title");
+    let titleItem = titles.find((i) => i.itemName.toLowerCase() === titleName);
+    if (!titleItem) {
+      titleItem = titles.find((i) => i.itemName.toLowerCase().startsWith(titleName));
+    }
+
+    if (!titleItem) {
+      const ownedTitles = titles.map((i) => i.itemName).join(", ");
+      if (ownedTitles) {
+        sayInChannel(ctx.channel, `@${ctx.user} Diesen Titel hast du nicht! Deine Titel: ${ownedTitles}`);
+      } else {
+        sayInChannel(ctx.channel, `@${ctx.user} Du hast noch keine Titel! Öffne Lootboxen mit !lootbox`);
+      }
+      ctx.handled = true;
+      return;
+    }
+    const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
+    await lootboxService.equipTitle(ctx.channelId, ctx.msg.userInfo.userId, titlePrefix);
+    sayInChannel(ctx.channel, `@${ctx.user} Titel equipped: ${titlePrefix}`);
     ctx.handled = true;
     return;
   }
@@ -77,7 +95,7 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
   // !unequip — remove title
   if (cmd === "unequip") {
     await lootboxService.unequipTitle(ctx.channelId, ctx.msg.userInfo.userId);
-    sayInChannel(ctx.channel, `@${ctx.user} Title removed!`);
+    sayInChannel(ctx.channel, `@${ctx.user} Titel entfernt!`);
     ctx.handled = true;
     return;
   }

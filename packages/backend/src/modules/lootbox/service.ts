@@ -27,6 +27,14 @@ const RARITY_EMOJI: Record<string, string> = {
   legendary: "🟨",
 };
 
+const RARITY_LABEL: Record<string, string> = {
+  common: "GEWÖHNLICH",
+  uncommon: "UNGEWÖHNLICH",
+  rare: "SELTEN",
+  epic: "EPISCH",
+  legendary: "LEGENDÄR",
+};
+
 class LootboxService {
   // ── Settings ──
 
@@ -108,18 +116,18 @@ class LootboxService {
     displayName: string
   ): Promise<{ item: LootboxItemDto; message: string } | { error: string }> {
     const settings = await this.getSettings(channelId);
-    if (!settings.enabled) return { error: "Lootbox is disabled." };
+    if (!settings.enabled) return { error: "Lootbox ist deaktiviert." };
 
     // Check cooldown
     const cdKey = `cd:${channelId}:lootbox:${twitchUserId}`;
     const cdSet = await redis.set(cdKey, "1", "EX", settings.cooldownSeconds, "NX");
-    if (!cdSet) return { error: "Lootbox on cooldown!" };
+    if (!cdSet) return { error: "Lootbox ist noch auf Cooldown!" };
 
     // Check points
     const user = await pointsService.getUserPoints(channelId, twitchUserId);
     if (!user || user.points < settings.cost) {
       await redis.del(cdKey); // refund cooldown
-      return { error: `Not enough points! Need ${settings.cost}, have ${user?.points ?? 0}.` };
+      return { error: `Nicht genug Punkte! Brauchst ${settings.cost}, hast ${user?.points ?? 0}.` };
     }
 
     // Get enabled items
@@ -128,7 +136,7 @@ class LootboxService {
     });
     if (items.length === 0) {
       await redis.del(cdKey);
-      return { error: "No items in lootbox!" };
+      return { error: "Keine Items in der Lootbox!" };
     }
 
     // Deduct points
@@ -198,7 +206,8 @@ class LootboxService {
     });
 
     const emoji = RARITY_EMOJI[selected.rarity] ?? "";
-    const msg = `${emoji} ${displayName} got ${selected.rarity.toUpperCase()}: ${selected.name}! ${selected.description ? "— " + selected.description : ""}`;
+    const label = RARITY_LABEL[selected.rarity] ?? selected.rarity.toUpperCase();
+    const msg = `${emoji} ${displayName} hat ${label} gezogen: ${selected.name}! ${selected.description ? "— " + selected.description : ""}`;
 
     return { item: itemDto, message: msg };
   }

@@ -2,6 +2,8 @@ import type { FastifyInstance } from "fastify";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
 import { lootboxService } from "./service.js";
+import { generateSeedItems } from "./seed-items.js";
+import { prisma } from "../../lib/prisma.js";
 import type { UpdateLootboxSettingsDto } from "@cristream/shared";
 
 export async function lootboxRoutes(app: FastifyInstance) {
@@ -49,6 +51,24 @@ export async function lootboxRoutes(app: FastifyInstance) {
     if (!canEdit(role)) return reply.status(403).send({ success: false, error: "Forbidden" });
     await lootboxService.deleteItem(request.params.cid, request.params.id);
     return { success: true };
+  });
+
+  // Seed default items
+  app.post<{ Params: { cid: string } }>("/:cid/lootbox/seed", async (request, reply) => {
+    const role = await getChannelAccess(request.params.cid, request.user!.sub);
+    if (!canEdit(role)) return reply.status(403).send({ success: false, error: "Forbidden" });
+
+    const existing = await prisma.lootboxItem.count({ where: { channelId: request.params.cid } });
+    if (existing > 0) {
+      return reply.status(400).send({ success: false, error: `Channel already has ${existing} items. Delete them first or add individually.` });
+    }
+
+    const seedItems = generateSeedItems();
+    await prisma.lootboxItem.createMany({
+      data: seedItems.map((item) => ({ ...item, channelId: request.params.cid })),
+    });
+
+    return { success: true, data: { count: seedItems.length } };
   });
 
   // Inventory

@@ -119,6 +119,7 @@ function SettingsTab({ channelId }: { channelId: string }) {
 function ItemsTab({ channelId }: { channelId: string }) {
   const [items, setItems] = useState<LootboxItemDto[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -158,13 +159,29 @@ function ItemsTab({ channelId }: { channelId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center gap-2">
         <p className="text-sm text-muted-foreground">
           {items.length} items configured. Items are drawn randomly based on weight/rarity.
         </p>
-        <Button onClick={() => setShowAdd(!showAdd)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Item
-        </Button>
+        <div className="flex gap-2">
+          {items.length === 0 && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setSeeding(true);
+                const res = await api.post<{ count: number }>(`/channels/${channelId}/lootbox/seed`);
+                setSeeding(false);
+                if (res.data) loadItems();
+              }}
+              disabled={seeding}
+            >
+              {seeding ? "Seeding..." : `Seed ~1000 Items`}
+            </Button>
+          )}
+          <Button onClick={() => setShowAdd(!showAdd)}>
+            <Plus className="mr-2 h-4 w-4" /> Add Item
+          </Button>
+        </div>
       </div>
 
       {showAdd && (

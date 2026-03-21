@@ -244,6 +244,45 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
   .pp-prediction-color-BLUE { background: #387AFF; }
   .pp-prediction-color-PINK { background: #F5009B; }
   .pp-prediction-color-default { background: var(--pp-accent-color); }
+
+  /* ── Clip Alert ── */
+  #clip-wrapper {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    pointer-events: none;
+  }
+  #clip-wrapper.active { display: flex; }
+  .clip-container {
+    background: rgba(0,0,0,0.85);
+    border-radius: 16px;
+    padding: 16px;
+    max-width: 800px;
+    width: 90%;
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(145,71,255,0.5);
+  }
+  .clip-header {
+    color: #fff;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  }
+  .clip-meta {
+    color: rgba(255,255,255,0.7);
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .clip-iframe {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    border: none;
+  }
 </style>
 </head>
 <body>
@@ -257,6 +296,9 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
 
 <!-- Custom layout alert container -->
 <div id="custom-alert-wrapper"><div id="custom-alert-container"></div></div>
+
+<!-- Clip alert container -->
+<div id="clip-wrapper"><div id="clip-container"></div></div>
 
 <!-- Poll / Prediction Widget -->
 <div id="pp-widget" class="pos-${pp.position}" style="
@@ -293,6 +335,8 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
   const alertContainer = document.getElementById('alert-container');
   const customWrapper = document.getElementById('custom-alert-wrapper');
   const customContainer = document.getElementById('custom-alert-container');
+  const clipWrapper = document.getElementById('clip-wrapper');
+  const clipContainer = document.getElementById('clip-container');
 
   socket.on('connect', () => console.log('Overlay connected'));
   socket.on('disconnect', () => console.log('Overlay disconnected'));
@@ -335,11 +379,51 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
     isPlaying = true;
     const alert = alertQueue.shift();
 
-    if (alert.layoutConfig && alert.layoutConfig.elements) {
+    if (alert.clipUrl) {
+      showClipAlert(alert);
+    } else if (alert.layoutConfig && alert.layoutConfig.elements) {
       showCustomAlert(alert);
     } else {
       showLegacyAlert(alert);
     }
+  }
+
+  function showClipAlert(alert) {
+    alertContainer.style.display = 'none';
+
+    var html = '<div class="clip-container">';
+    html += '<div class="clip-header">' + escHtml(alert.text) + '</div>';
+    if (alert.clipTitle) {
+      html += '<div class="clip-meta">';
+      html += escHtml(alert.clipTitle);
+      if (alert.clipViews) html += ' &middot; ' + alert.clipViews.toLocaleString() + ' views';
+      if (alert.clipCreator) html += ' &middot; Clipped by ' + escHtml(alert.clipCreator);
+      html += '</div>';
+    }
+    html += '<iframe class="clip-iframe" src="' + alert.clipUrl + '" allowfullscreen></iframe>';
+    html += '</div>';
+
+    clipContainer.innerHTML = html;
+    clipWrapper.className = 'active';
+    clipContainer.className = 'anim-fade-in';
+
+    // Play sound if set
+    if (alert.soundUrl) {
+      audioEl.src = alert.soundUrl;
+      audioEl.volume = (alert.volume ?? 80) / 100;
+      audioEl.play().catch(function() {});
+    }
+
+    var duration = (alert.duration || 30) * 1000;
+    setTimeout(function() {
+      clipContainer.className = 'anim-fade-out';
+      setTimeout(function() {
+        clipWrapper.className = '';
+        clipContainer.innerHTML = '';
+        alertContainer.style.display = '';
+        playNext();
+      }, 600);
+    }, duration);
   }
 
   function isVideoUrl(url) {

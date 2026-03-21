@@ -575,6 +575,12 @@ export interface OverlayAlertPayload {
   ttsVolume?: number;
   videoMuted?: boolean;
   videoLoop?: boolean;
+  // Clip fields (for raid clip alerts)
+  clipUrl?: string;
+  clipTitle?: string;
+  clipDuration?: number;
+  clipViews?: number;
+  clipCreator?: string;
 }
 
 // ── WebSocket Events ──

@@ -62,6 +62,16 @@ export async function processEvent(type: string, event: any): Promise<void> {
         fromUser: event.from_broadcaster_user_name ?? "unknown",
         viewers: event.viewers ?? 0,
       });
+
+      // Auto-shoutout + clip alert for raider
+      try {
+        const { handleRaidShoutout } = await import("./raid-shoutout.js");
+        handleRaidShoutout(channel, event).catch((err: unknown) => {
+          logger.error({ err }, "Raid shoutout/clip failed");
+        });
+      } catch {
+        // raid-shoutout not available
+      }
       break;
 
     case "channel.hype_train.begin":

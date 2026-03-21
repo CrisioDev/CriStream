@@ -524,6 +524,24 @@ export interface EventLogDto {
   createdAt: string;
 }
 
+// ── Counters ──
+export interface CounterDto {
+  id: string;
+  name: string;
+  value: number;
+  channelId: string;
+}
+
+export interface CreateCounterDto {
+  name: string;
+  value?: number;
+}
+
+export interface UpdateCounterDto {
+  name?: string;
+  value?: number;
+}
+
 // ── Viewer Requests ──
 export type RequestStatus = "open" | "done" | "rejected";
 

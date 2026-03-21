@@ -27,6 +27,7 @@ import { eventsubWebhookRoute } from "./modules/eventsub/listener.js";
 import { requestRoutes, publicRequestRoutes } from "./modules/requests/routes.js";
 import { discordRoutes } from "./modules/discord/routes.js";
 import { pollPredictionRoutes } from "./modules/pollprediction/routes.js";
+import { counterRoutes } from "./modules/counters/routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -72,6 +73,7 @@ export async function buildApp() {
   await app.register(channelPointRoutes, { prefix: "/api/channels" });
   await app.register(requestRoutes, { prefix: "/api/channels" });
   await app.register(discordRoutes, { prefix: "/api/channels" });
+  await app.register(counterRoutes, { prefix: "/api/channels" });
   await app.register(pollPredictionRoutes, { prefix: "/api/channels" });
 
   // Health check (used by Docker healthcheck)

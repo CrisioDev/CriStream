@@ -8,9 +8,11 @@ import { emitEvent } from "../lib/socket.js";
 // Import handlers to register them (priority order: spam=5, moderation=10, soundalerts=43, songrequests=45, commands=50, points=90, chatlog=99)
 import "../modules/moderation/spam-handler.js";
 import "../modules/moderation/handler.js";
+import "../modules/autoresponse/handler.js";
 import "../modules/alerts/sound-handler.js";
 import "../modules/songrequests/handler.js";
 import "../modules/requests/handler.js";
+import "../modules/counters/handler.js";
 import "../modules/commands/handler.js";
 import "../modules/points/handler.js";
 import "../modules/chatlogs/handler.js";

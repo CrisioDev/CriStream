@@ -17,6 +17,7 @@ import { OverlayPage } from "@/pages/Overlay";
 import { RequestsPage } from "@/pages/Requests";
 import { DiscordPage } from "@/pages/Discord";
 import { SandboxPage } from "@/pages/Sandbox";
+import { CountersPage } from "@/pages/Counters";
 
 export function App() {
   const { user, isLoading, loadFromUrl } = useAuthStore();
@@ -49,6 +50,7 @@ export function App() {
         <Route path="/songrequests" element={<SongRequestsPage />} />
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/channelpoints" element={<ChannelPointsPage />} />
+        <Route path="/counters" element={<CountersPage />} />
         <Route path="/requests" element={<RequestsPage />} />
         <Route path="/overlay" element={<OverlayPage />} />
         <Route path="/sandbox" element={<SandboxPage />} />

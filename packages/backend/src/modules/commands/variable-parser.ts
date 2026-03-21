@@ -57,6 +57,20 @@ registerVariable("uptime", () => {
   return `${h}h ${m}m`;
 });
 
+// ── Counter variable ──
+registerVariable("counter", async (args, ctx) => {
+  const name = args[0]?.toLowerCase();
+  if (!name) return "0";
+  const channel = await prisma.channel.findFirst({
+    where: { displayName: { equals: ctx.channel, mode: "insensitive" } },
+  });
+  if (!channel) return "0";
+  const counter = await prisma.counter.findUnique({
+    where: { channelId_name: { channelId: channel.id, name } },
+  });
+  return String(counter?.value ?? 0);
+});
+
 // ── User data variables ──
 
 registerVariable("points", async (_args, ctx) => {

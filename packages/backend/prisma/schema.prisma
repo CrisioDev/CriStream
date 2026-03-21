@@ -50,6 +50,7 @@ model Channel {
   viewerRequests       ViewerRequest[]
   discordSettings          DiscordSettings?
   pollPredictionSettings   PollPredictionSettings?
+  counters                 Counter[]
 }
 
 model Command {
@@ -289,6 +290,16 @@ model DiscordSettings {
   notifyStreamOffline   Boolean @default(true)
   channelId             String  @unique
   channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model Counter {
+  id        String  @id @default(uuid())
+  name      String
+  value     Int     @default(0)
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, name])
 }
 
 model PollPredictionSettings {

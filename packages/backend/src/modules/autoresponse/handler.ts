@@ -9,7 +9,7 @@ registerHandler("autoresponse", 42, async (ctx) => {
   const lower = ctx.message.toLowerCase();
 
   if (lower.includes("was wird")) {
-    sayInChannel(ctx.channel, "was wird können wird");
+    sayInChannel(ctx.channel, "was wird");
     ctx.handled = true;
   }
 });

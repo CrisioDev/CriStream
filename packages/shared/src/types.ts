@@ -524,6 +524,68 @@ export interface EventLogDto {
   createdAt: string;
 }
 
+// ── Lootbox ──
+export type LootboxItemType = "title" | "bonus_points" | "card" | "sound" | "action_token" | "point_multiplier";
+export type LootboxRarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+
+export interface LootboxSettingsDto {
+  id: string;
+  enabled: boolean;
+  cost: number;
+  cooldownSeconds: number;
+  channelId: string;
+}
+
+export interface UpdateLootboxSettingsDto {
+  enabled?: boolean;
+  cost?: number;
+  cooldownSeconds?: number;
+}
+
+export interface LootboxItemDto {
+  id: string;
+  name: string;
+  description: string;
+  type: LootboxItemType;
+  rarity: LootboxRarity;
+  weight: number;
+  enabled: boolean;
+  config: Record<string, unknown>;
+  channelId: string;
+}
+
+export interface CreateLootboxItemDto {
+  name: string;
+  description?: string;
+  type: LootboxItemType;
+  rarity: LootboxRarity;
+  weight?: number;
+  enabled?: boolean;
+  config: Record<string, unknown>;
+}
+
+export interface UpdateLootboxItemDto {
+  name?: string;
+  description?: string;
+  type?: LootboxItemType;
+  rarity?: LootboxRarity;
+  weight?: number;
+  enabled?: boolean;
+  config?: Record<string, unknown>;
+}
+
+export interface ViewerInventoryItemDto {
+  id: string;
+  twitchUserId: string;
+  displayName: string;
+  itemName: string;
+  itemType: LootboxItemType;
+  itemRarity: LootboxRarity;
+  itemConfig: Record<string, unknown>;
+  quantity: number;
+  acquiredAt: string;
+}
+
 // ── Counters ──
 export interface CounterDto {
   id: string;

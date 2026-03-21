@@ -51,6 +51,10 @@ model Channel {
   discordSettings          DiscordSettings?
   pollPredictionSettings   PollPredictionSettings?
   counters                 Counter[]
+  lootboxSettings          LootboxSettings?
+  lootboxItems             LootboxItem[]
+  viewerInventory          ViewerInventoryItem[]
+  activeTitles             ActiveTitle[]
 }
 
 model Command {
@@ -290,6 +294,56 @@ model DiscordSettings {
   notifyStreamOffline   Boolean @default(true)
   channelId             String  @unique
   channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model LootboxSettings {
+  id              String  @id @default(uuid())
+  enabled         Boolean @default(false)
+  cost            Int     @default(100)
+  cooldownSeconds Int     @default(30)
+  channelId       String  @unique
+  channel         Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+}
+
+model LootboxItem {
+  id          String  @id @default(uuid())
+  name        String
+  description String  @default("")
+  type        String  // title, bonus_points, card, sound, action_token, point_multiplier
+  rarity      String  @default("common") // common, uncommon, rare, epic, legendary
+  weight      Int     @default(50)
+  enabled     Boolean @default(true)
+  config      Json    @default("{}")
+  channelId   String
+  channel     Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  inventoryItems ViewerInventoryItem[]
+
+  @@unique([channelId, name])
+}
+
+model ViewerInventoryItem {
+  id           String   @id @default(uuid())
+  twitchUserId String
+  displayName  String
+  quantity     Int      @default(1)
+  acquiredAt   DateTime @default(now())
+  channelId    String
+  channel      Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  itemId       String
+  item         LootboxItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, twitchUserId, itemId])
+  @@index([channelId, twitchUserId])
+}
+
+model ActiveTitle {
+  id           String @id @default(uuid())
+  twitchUserId String
+  title        String
+  channelId    String
+  channel      Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, twitchUserId])
 }
 
 model Counter {

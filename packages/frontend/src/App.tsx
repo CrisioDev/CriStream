@@ -18,6 +18,7 @@ import { RequestsPage } from "@/pages/Requests";
 import { DiscordPage } from "@/pages/Discord";
 import { SandboxPage } from "@/pages/Sandbox";
 import { CountersPage } from "@/pages/Counters";
+import { LootboxPage } from "@/pages/Lootbox";
 
 export function App() {
   const { user, isLoading, loadFromUrl } = useAuthStore();
@@ -51,6 +52,7 @@ export function App() {
         <Route path="/alerts" element={<AlertsPage />} />
         <Route path="/channelpoints" element={<ChannelPointsPage />} />
         <Route path="/counters" element={<CountersPage />} />
+        <Route path="/lootbox" element={<LootboxPage />} />
         <Route path="/requests" element={<RequestsPage />} />
         <Route path="/overlay" element={<OverlayPage />} />
         <Route path="/sandbox" element={<SandboxPage />} />

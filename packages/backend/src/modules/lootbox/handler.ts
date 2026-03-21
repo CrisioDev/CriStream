@@ -2,6 +2,7 @@ import { registerHandler } from "../../twitch/message-handler.js";
 import { sayInChannel } from "../../twitch/twitch-client.js";
 import { lootboxService } from "./service.js";
 import { prisma } from "../../lib/prisma.js";
+import { config } from "../../config/index.js";
 import type { MessageContext } from "../../twitch/message-handler.js";
 
 // Priority 44 = after soundalerts (43), before songrequests (45)
@@ -96,6 +97,30 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
   if (cmd === "unequip") {
     await lootboxService.unequipTitle(ctx.channelId, ctx.msg.userInfo.userId);
     sayInChannel(ctx.channel, `@${ctx.user} Titel entfernt!`);
+    ctx.handled = true;
+    return;
+  }
+
+  // !profil — link to viewer profile
+  if (cmd === "profil" || cmd === "profile") {
+    const baseUrl = config.publicUrl.replace(/\/$/, "");
+    sayInChannel(ctx.channel, `@${ctx.user} Dein Profil: ${baseUrl}/viewer/${ctx.channel}/profile/${ctx.msg.userInfo.userId}`);
+    ctx.handled = true;
+    return;
+  }
+
+  // !markt / !marketplace — link to marketplace
+  if (cmd === "markt" || cmd === "marketplace" || cmd === "marktplatz") {
+    const baseUrl = config.publicUrl.replace(/\/$/, "");
+    sayInChannel(ctx.channel, `Marktplatz: ${baseUrl}/viewer/${ctx.channel}/marketplace`);
+    ctx.handled = true;
+    return;
+  }
+
+  // !trade / !trades — link to trades page
+  if (cmd === "trade" || cmd === "trades" || cmd === "tauschen") {
+    const baseUrl = config.publicUrl.replace(/\/$/, "");
+    sayInChannel(ctx.channel, `@${ctx.user} Trades: ${baseUrl}/viewer/${ctx.channel}/trades`);
     ctx.handled = true;
     return;
   }

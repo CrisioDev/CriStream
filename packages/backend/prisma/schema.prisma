@@ -55,6 +55,8 @@ model Channel {
   lootboxItems             LootboxItem[]
   viewerInventory          ViewerInventoryItem[]
   activeTitles             ActiveTitle[]
+  marketplaceListings      MarketplaceListing[]
+  tradeOffers              TradeOffer[]
 }
 
 model Command {
@@ -316,9 +318,58 @@ model LootboxItem {
   config      Json    @default("{}")
   channelId   String
   channel     Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  tradeable      Boolean @default(true)
   inventoryItems ViewerInventoryItem[]
+  marketplaceListings MarketplaceListing[]
+  tradeOfferItems TradeOfferItem[]
 
   @@unique([channelId, name])
+}
+
+model MarketplaceListing {
+  id           String   @id @default(uuid())
+  sellerId     String
+  sellerName   String
+  itemId       String
+  item         LootboxItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  quantity     Int      @default(1)
+  pricePerUnit Int
+  status       String   @default("active") // active, sold, cancelled
+  createdAt    DateTime @default(now())
+  channelId    String
+  channel      Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, status])
+  @@index([channelId, sellerId])
+}
+
+model TradeOffer {
+  id              String   @id @default(uuid())
+  senderId        String
+  senderName      String
+  receiverId      String
+  receiverName    String
+  status          String   @default("pending") // pending, accepted, declined, cancelled
+  pointsOffered   Int      @default(0)
+  pointsRequested Int      @default(0)
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  offerItems      TradeOfferItem[]
+
+  @@index([channelId, receiverId, status])
+  @@index([channelId, senderId])
+}
+
+model TradeOfferItem {
+  id       String     @id @default(uuid())
+  tradeId  String
+  trade    TradeOffer @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  itemId   String
+  item     LootboxItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  quantity Int         @default(1)
+  side     String      // "offered" or "requested"
 }
 
 model ViewerInventoryItem {

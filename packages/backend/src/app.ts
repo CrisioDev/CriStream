@@ -29,6 +29,7 @@ import { discordRoutes } from "./modules/discord/routes.js";
 import { pollPredictionRoutes } from "./modules/pollprediction/routes.js";
 import { counterRoutes } from "./modules/counters/routes.js";
 import { lootboxRoutes } from "./modules/lootbox/routes.js";
+import { viewerRoutes } from "./modules/viewer/routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -76,6 +77,7 @@ export async function buildApp() {
   await app.register(discordRoutes, { prefix: "/api/channels" });
   await app.register(counterRoutes, { prefix: "/api/channels" });
   await app.register(lootboxRoutes, { prefix: "/api/channels" });
+  await app.register(viewerRoutes, { prefix: "/api/viewer" });
   await app.register(pollPredictionRoutes, { prefix: "/api/channels" });
 
   // Health check (used by Docker healthcheck)

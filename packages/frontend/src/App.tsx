@@ -19,6 +19,10 @@ import { DiscordPage } from "@/pages/Discord";
 import { SandboxPage } from "@/pages/Sandbox";
 import { CountersPage } from "@/pages/Counters";
 import { LootboxPage } from "@/pages/Lootbox";
+import { ViewerLayout } from "@/pages/viewer/ViewerLayout";
+import { ViewerProfilePage } from "@/pages/viewer/ViewerProfile";
+import { MarketplacePage } from "@/pages/viewer/Marketplace";
+import { TradesPage } from "@/pages/viewer/Trades";
 
 export function App() {
   const { user, isLoading, loadFromUrl } = useAuthStore();
@@ -35,31 +39,42 @@ export function App() {
     );
   }
 
-  if (!user) {
-    return <LoginPage />;
-  }
-
   return (
     <Routes>
-      <Route element={<DashboardLayout />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/commands" element={<CommandsPage />} />
-        <Route path="/timers" element={<TimersPage />} />
-        <Route path="/moderation" element={<ModerationPage />} />
-        <Route path="/chatlogs" element={<ChatLogsPage />} />
-        <Route path="/points" element={<PointsPage />} />
-        <Route path="/songrequests" element={<SongRequestsPage />} />
-        <Route path="/alerts" element={<AlertsPage />} />
-        <Route path="/channelpoints" element={<ChannelPointsPage />} />
-        <Route path="/counters" element={<CountersPage />} />
-        <Route path="/lootbox" element={<LootboxPage />} />
-        <Route path="/requests" element={<RequestsPage />} />
-        <Route path="/overlay" element={<OverlayPage />} />
-        <Route path="/sandbox" element={<SandboxPage />} />
-        <Route path="/discord" element={<DiscordPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+      {/* Viewer section — accessible without dashboard login */}
+      <Route path="/viewer/:channelName" element={<ViewerLayout />}>
+        <Route path="profile/:twitchUserId" element={<ViewerProfilePage />} />
+        <Route path="marketplace" element={<MarketplacePage />} />
+        <Route path="trades" element={<TradesPage />} />
+        <Route index element={<Navigate to="marketplace" />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" />} />
+
+      {/* Dashboard — requires login */}
+      {!user ? (
+        <Route path="*" element={<LoginPage />} />
+      ) : (
+        <>
+          <Route element={<DashboardLayout />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/commands" element={<CommandsPage />} />
+            <Route path="/timers" element={<TimersPage />} />
+            <Route path="/moderation" element={<ModerationPage />} />
+            <Route path="/chatlogs" element={<ChatLogsPage />} />
+            <Route path="/points" element={<PointsPage />} />
+            <Route path="/songrequests" element={<SongRequestsPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/channelpoints" element={<ChannelPointsPage />} />
+            <Route path="/counters" element={<CountersPage />} />
+            <Route path="/lootbox" element={<LootboxPage />} />
+            <Route path="/requests" element={<RequestsPage />} />
+            <Route path="/overlay" element={<OverlayPage />} />
+            <Route path="/sandbox" element={<SandboxPage />} />
+            <Route path="/discord" element={<DiscordPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" />} />
+        </>
+      )}
     </Routes>
   );
 }

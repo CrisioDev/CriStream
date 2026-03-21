@@ -586,6 +586,61 @@ export interface ViewerInventoryItemDto {
   acquiredAt: string;
 }
 
+// ── Viewer Profiles ──
+export interface ViewerProfileDto {
+  twitchUserId: string;
+  displayName: string;
+  points: number;
+  watchMinutes: number;
+  activeTitle: string | null;
+  inventory: ViewerInventoryItemDto[];
+  collectionProgress: { rarity: string; owned: number; total: number }[];
+}
+
+// ── Marketplace ──
+export interface MarketplaceListingDto {
+  id: string;
+  sellerId: string;
+  sellerName: string;
+  itemName: string;
+  itemType: LootboxItemType;
+  itemRarity: LootboxRarity;
+  itemDescription: string;
+  quantity: number;
+  pricePerUnit: number;
+  status: string;
+  createdAt: string;
+}
+
+export interface CreateMarketplaceListingDto {
+  itemId: string;
+  quantity: number;
+  pricePerUnit: number;
+}
+
+// ── Trading ──
+export interface TradeOfferDto {
+  id: string;
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  receiverName: string;
+  status: string;
+  pointsOffered: number;
+  pointsRequested: number;
+  offerItems: { itemName: string; itemRarity: string; quantity: number; side: string }[];
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface CreateTradeOfferDto {
+  receiverTwitchUserId: string;
+  offeredItems: { itemId: string; quantity: number }[];
+  requestedItems: { itemId: string; quantity: number }[];
+  pointsOffered?: number;
+  pointsRequested?: number;
+}
+
 // ── Counters ──
 export interface CounterDto {
   id: string;

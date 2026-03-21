@@ -47,6 +47,13 @@ export function DiscordPage() {
       timersEnabled: settings.timersEnabled,
       summariesEnabled: settings.summariesEnabled,
       notificationsEnabled: settings.notificationsEnabled,
+      notifyFollow: settings.notifyFollow,
+      notifySub: settings.notifySub,
+      notifyGiftSub: settings.notifyGiftSub,
+      notifyRaid: settings.notifyRaid,
+      notifyHypeTrain: settings.notifyHypeTrain,
+      notifyStreamOnline: settings.notifyStreamOnline,
+      notifyStreamOffline: settings.notifyStreamOffline,
     });
   };
 
@@ -220,8 +227,7 @@ export function DiscordPage() {
           </label>
         </div>
         <p className="text-sm text-muted-foreground">
-          Send Discord notifications for Twitch events: follows, subs, gift subs, raids, hype trains, and stream
-          going live/offline.
+          Send Discord notifications for Twitch events. Enable/disable individual event types below.
         </p>
         <div>
           <label className="text-sm font-medium mb-1 block">Notification Channel ID</label>
@@ -231,6 +237,30 @@ export function DiscordPage() {
             placeholder="Channel for event notifications"
           />
         </div>
+
+        {settings.notificationsEnabled && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+            {([
+              { key: "notifyStreamOnline" as const, label: "Stream Online" },
+              { key: "notifyStreamOffline" as const, label: "Stream Offline" },
+              { key: "notifyFollow" as const, label: "Follows" },
+              { key: "notifySub" as const, label: "Subscriptions" },
+              { key: "notifyGiftSub" as const, label: "Gift Subs" },
+              { key: "notifyRaid" as const, label: "Raids" },
+              { key: "notifyHypeTrain" as const, label: "Hype Trains" },
+            ]).map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-2 cursor-pointer rounded-md border px-3 py-2 hover:bg-accent">
+                <input
+                  type="checkbox"
+                  checked={settings[key]}
+                  onChange={(e) => setSettings({ ...settings, [key]: e.target.checked })}
+                  className="rounded border-input"
+                />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Save + Invite */}

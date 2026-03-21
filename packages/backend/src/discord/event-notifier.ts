@@ -15,6 +15,18 @@ export async function notifyDiscordEvent(
 
   if (!settings?.notificationsEnabled || !settings.notifyChannelId) return;
 
+  // Check per-event toggles
+  const eventToggleMap: Record<string, boolean> = {
+    "channel.follow": settings.notifyFollow,
+    "channel.subscribe": settings.notifySub,
+    "channel.subscription.gift": settings.notifyGiftSub,
+    "channel.raid": settings.notifyRaid,
+    "channel.hype_train.begin": settings.notifyHypeTrain,
+    "stream.online": settings.notifyStreamOnline,
+    "stream.offline": settings.notifyStreamOffline,
+  };
+  if (eventToggleMap[eventType] === false) return;
+
   const channelName = settings.channel.displayName;
   let embed: EmbedBuilder | null = null;
 

@@ -280,6 +280,13 @@ model DiscordSettings {
   timersEnabled         Boolean @default(false)
   summariesEnabled      Boolean @default(false)
   notificationsEnabled  Boolean @default(false)
+  notifyFollow          Boolean @default(true)
+  notifySub             Boolean @default(true)
+  notifyGiftSub         Boolean @default(true)
+  notifyRaid            Boolean @default(true)
+  notifyHypeTrain       Boolean @default(true)
+  notifyStreamOnline    Boolean @default(true)
+  notifyStreamOffline   Boolean @default(true)
   channelId             String  @unique
   channel               Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 }

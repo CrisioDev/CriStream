@@ -743,6 +743,13 @@ export interface DiscordSettingsDto {
   timersEnabled: boolean;
   summariesEnabled: boolean;
   notificationsEnabled: boolean;
+  notifyFollow: boolean;
+  notifySub: boolean;
+  notifyGiftSub: boolean;
+  notifyRaid: boolean;
+  notifyHypeTrain: boolean;
+  notifyStreamOnline: boolean;
+  notifyStreamOffline: boolean;
   hasBotToken: boolean;
   discordClientId: string;
 }
@@ -757,6 +764,13 @@ export interface UpdateDiscordSettingsDto {
   timersEnabled?: boolean;
   summariesEnabled?: boolean;
   notificationsEnabled?: boolean;
+  notifyFollow?: boolean;
+  notifySub?: boolean;
+  notifyGiftSub?: boolean;
+  notifyRaid?: boolean;
+  notifyHypeTrain?: boolean;
+  notifyStreamOnline?: boolean;
+  notifyStreamOffline?: boolean;
 }
 
 // ── Poll & Prediction Settings ──

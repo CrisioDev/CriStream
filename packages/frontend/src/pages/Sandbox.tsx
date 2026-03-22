@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -481,21 +481,7 @@ function SandboxElementView({
           {element.content || ""}
         </div>
       ) : element.type === "video" && element.src ? (
-        <video
-          src={element.src}
-          autoPlay
-          loop={element.videoLoop !== false}
-          muted={element.videoMuted !== false}
-          playsInline
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: element.objectFit || "contain",
-            borderRadius: element.borderRadius || 0,
-            border: element.borderWidth ? `${element.borderWidth}px solid ${element.borderColor || "#fff"}` : "none",
-            pointerEvents: "none",
-          }}
-        />
+        <SandboxVideo element={element} />
       ) : element.type === "image" && element.src ? (
         <img
           src={element.src}
@@ -551,6 +537,44 @@ function SandboxElementView({
     </div>
   );
 }
+
+// ── Video Component (memoized to prevent re-render on drag) ──
+
+const SandboxVideo = memo(function SandboxVideo({ element }: { element: SandboxElement }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [element.src]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={element.src}
+      autoPlay
+      loop={element.videoLoop !== false}
+      muted={element.videoMuted !== false}
+      playsInline
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: element.objectFit || "contain",
+        borderRadius: element.borderRadius || 0,
+        border: element.borderWidth ? `${element.borderWidth}px solid ${element.borderColor || "#fff"}` : "none",
+        pointerEvents: "none",
+      }}
+    />
+  );
+}, (prev, next) => prev.element.src === next.element.src
+  && prev.element.videoLoop === next.element.videoLoop
+  && prev.element.videoMuted === next.element.videoMuted
+  && prev.element.objectFit === next.element.objectFit
+  && prev.element.borderRadius === next.element.borderRadius
+  && prev.element.borderWidth === next.element.borderWidth
+  && prev.element.borderColor === next.element.borderColor
+);
 
 // ── Sidebar ──
 

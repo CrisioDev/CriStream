@@ -7,6 +7,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { config } from "./config/index.js";
+import { prisma } from "./lib/prisma.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { logger } from "./lib/logger.js";
 import { authRoutes } from "./modules/auth/routes.js";
@@ -109,6 +110,48 @@ export async function buildApp() {
         connected: client?.isConnected ?? false,
         uptime: process.uptime(),
         channels: client?.currentChannels ?? [],
+      },
+    };
+  });
+
+  // Public status dashboard data
+  app.get("/api/status", async () => {
+    const { getTwitchClient } = await import("./twitch/twitch-client.js");
+    const { getDiscordClient } = await import("./discord/discord-client.js");
+    const client = getTwitchClient();
+    const discord = getDiscordClient();
+
+    const [channelCount, userCount, commandCount, chatLogCount, lootboxCount] = await Promise.all([
+      prisma.channel.count(),
+      prisma.channelUser.count(),
+      prisma.command.count(),
+      prisma.chatLog.count(),
+      prisma.viewerInventoryItem.count(),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        status: client.isConnected ? "online" : "offline",
+        uptime: process.uptime(),
+        version: "1.0.0",
+        twitch: {
+          connected: client.isConnected,
+          channels: client.currentChannels,
+          channelCount: client.currentChannels.length,
+        },
+        discord: {
+          connected: discord.isReady,
+          guilds: discord.guildCount,
+        },
+        stats: {
+          totalChannels: channelCount,
+          totalUsers: userCount,
+          totalCommands: commandCount,
+          totalChatLogs: chatLogCount,
+          totalLootboxItems: lootboxCount,
+        },
+        timestamp: new Date().toISOString(),
       },
     };
   });

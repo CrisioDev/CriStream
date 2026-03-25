@@ -19,6 +19,7 @@ import { DiscordPage } from "@/pages/Discord";
 import { SandboxPage } from "@/pages/Sandbox";
 import { CountersPage } from "@/pages/Counters";
 import { LootboxPage } from "@/pages/Lootbox";
+import { StatusPage } from "@/pages/Status";
 import { ViewerLayout } from "@/pages/viewer/ViewerLayout";
 import { ViewerProfilePage } from "@/pages/viewer/ViewerProfile";
 import { MarketplacePage } from "@/pages/viewer/Marketplace";
@@ -41,6 +42,9 @@ export function App() {
 
   return (
     <Routes>
+      {/* Public status page */}
+      <Route path="/status" element={<StatusPage />} />
+
       {/* Viewer section — accessible without dashboard login */}
       <Route path="/viewer/:channelName" element={<ViewerLayout />}>
         <Route path="profile/:twitchUserId" element={<ViewerProfilePage />} />

@@ -20,6 +20,7 @@ import { SandboxPage } from "@/pages/Sandbox";
 import { CountersPage } from "@/pages/Counters";
 import { LootboxPage } from "@/pages/Lootbox";
 import { StatusPage } from "@/pages/Status";
+import { StopwatchPage } from "@/pages/Stopwatch";
 import { ViewerLayout } from "@/pages/viewer/ViewerLayout";
 import { ViewerProfilePage } from "@/pages/viewer/ViewerProfile";
 import { MarketplacePage } from "@/pages/viewer/Marketplace";
@@ -73,6 +74,7 @@ export function App() {
             <Route path="/requests" element={<RequestsPage />} />
             <Route path="/overlay" element={<OverlayPage />} />
             <Route path="/sandbox" element={<SandboxPage />} />
+            <Route path="/stopwatch" element={<StopwatchPage />} />
             <Route path="/discord" element={<DiscordPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

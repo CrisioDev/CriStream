@@ -641,6 +641,17 @@ export interface CreateTradeOfferDto {
   pointsRequested?: number;
 }
 
+// ── Stopwatch ──
+export interface StopwatchDto {
+  id: string;
+  name: string;
+  game: string;
+  elapsedMs: number;
+  running: boolean;
+  startedAt: string | null;
+  channelId: string;
+}
+
 // ── Counters ──
 export interface CounterDto {
   id: string;
@@ -818,6 +829,10 @@ export interface WsEvents {
   };
   "sandbox:clear": {
     channelId: string;
+  };
+  "stopwatch:update": {
+    channelId: string;
+    stopwatch: StopwatchDto;
   };
   "prediction:update": {
     channelId: string;

@@ -51,6 +51,7 @@ model Channel {
   discordSettings          DiscordSettings?
   pollPredictionSettings   PollPredictionSettings?
   counters                 Counter[]
+  stopwatches              Stopwatch[]
   lootboxSettings          LootboxSettings?
   lootboxItems             LootboxItem[]
   viewerInventory          ViewerInventoryItem[]
@@ -395,6 +396,19 @@ model ActiveTitle {
   channel      Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   @@unique([channelId, twitchUserId])
+}
+
+model Stopwatch {
+  id        String    @id @default(uuid())
+  name      String
+  game      String    @default("")
+  elapsedMs Int       @default(0)
+  running   Boolean   @default(false)
+  startedAt DateTime?
+  channelId String
+  channel   Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, name])
 }
 
 model Counter {

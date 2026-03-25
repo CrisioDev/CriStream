@@ -16,6 +16,7 @@ import {
   ListTodo,
   Hash,
   Package,
+  Timer,
   Bot,
   Layers,
   ChevronDown,
@@ -40,6 +41,7 @@ const navItems = [
   { to: "/requests", icon: ListTodo, label: "Requests" },
   { to: "/overlay", icon: Monitor, label: "Overlay" },
   { to: "/sandbox", icon: Layers, label: "Sandbox" },
+  { to: "/stopwatch", icon: Timer, label: "Stopwatch" },
   { to: "/discord", icon: Bot, label: "Discord" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];

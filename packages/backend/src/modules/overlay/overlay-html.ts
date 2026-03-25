@@ -245,6 +245,32 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
   .pp-prediction-color-PINK { background: #F5009B; }
   .pp-prediction-color-default { background: var(--pp-accent-color); }
 
+  /* ── Stopwatch ── */
+  #stopwatch {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 7000;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 36px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    display: none;
+    transition: opacity 0.3s ease;
+  }
+  #stopwatch.visible { display: block; }
+  #stopwatch .sw-game {
+    font-size: 14px;
+    font-weight: normal;
+    color: rgba(255,255,255,0.7);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
   /* ── Clip Alert ── */
   #clip-wrapper {
     position: fixed;
@@ -296,6 +322,9 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
 
 <!-- Custom layout alert container -->
 <div id="custom-alert-wrapper"><div id="custom-alert-container"></div></div>
+
+<!-- Stopwatch -->
+<div id="stopwatch"></div>
 
 <!-- Clip alert container -->
 <div id="clip-wrapper"><div id="clip-container"></div></div>
@@ -676,6 +705,51 @@ export function generateOverlayHtml(overlayToken: string, ppSettings?: PollPredi
 
   socket.on('poll:update', (data) => ppRenderPoll(data));
   socket.on('prediction:update', (data) => ppRenderPrediction(data));
+
+  // ── Stopwatch ──
+  const swEl = document.getElementById('stopwatch');
+  let swState = null;
+  let swInterval = null;
+
+  socket.on('stopwatch:update', function(data) {
+    swState = data.stopwatch;
+    renderStopwatch();
+  });
+
+  function renderStopwatch() {
+    if (!swState || (!swState.running && swState.elapsedMs === 0)) {
+      swEl.classList.remove('visible');
+      if (swInterval) { clearInterval(swInterval); swInterval = null; }
+      return;
+    }
+    swEl.classList.add('visible');
+    updateSwDisplay();
+    if (swState.running && !swInterval) {
+      swInterval = setInterval(updateSwDisplay, 50);
+    } else if (!swState.running && swInterval) {
+      clearInterval(swInterval); swInterval = null;
+    }
+  }
+
+  function updateSwDisplay() {
+    if (!swState) return;
+    var ms = swState.elapsedMs;
+    if (swState.running && swState.startedAt) {
+      ms += Date.now() - new Date(swState.startedAt).getTime();
+    }
+    var totalSec = Math.floor(ms / 1000);
+    var h = Math.floor(totalSec / 3600);
+    var m = Math.floor((totalSec % 3600) / 60);
+    var s = totalSec % 60;
+    var frac = Math.floor((ms % 1000) / 10);
+    var timeStr = '';
+    if (h > 0) timeStr += h + ':' + String(m).padStart(2, '0') + ':';
+    else timeStr += m + ':';
+    timeStr += String(s).padStart(2, '0') + '.' + String(frac).padStart(2, '0');
+    var html = timeStr;
+    if (swState.game) html += '<div class="sw-game">' + escHtml(swState.game) + '</div>';
+    swEl.innerHTML = html;
+  }
 
   function showLegacyAlert(alert) {
     textEl.textContent = alert.text;

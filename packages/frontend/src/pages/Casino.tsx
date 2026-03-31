@@ -27,6 +27,19 @@ export function CasinoPage() {
   const confettiRef = useRef<HTMLDivElement>(null);
   const channelName = channelInput || "TheCrisio";
 
+  // Handle token from OAuth callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const refresh = params.get("refresh");
+    if (token && refresh) {
+      localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refresh);
+      window.history.replaceState({}, "", "/casino");
+      window.location.reload();
+    }
+  }, []);
+
   const [points, setPoints] = useState<number | null>(null);
 
   // Slots
@@ -433,7 +446,7 @@ export function CasinoPage() {
           ★ CASINO ★
         </h1>
         {!user ? (
-          <a href="/api/auth/twitch/viewer" className="inline-block mt-4 casino-btn rounded-full px-8 py-3 font-bold text-lg" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5)", boxShadow: "0 4px 15px rgba(145,71,255,0.4)" }}>
+          <a href="/api/auth/twitch/viewer?returnTo=/casino" className="inline-block mt-4 casino-btn rounded-full px-8 py-3 font-bold text-lg" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5)", boxShadow: "0 4px 15px rgba(145,71,255,0.4)" }}>
             🎮 Login mit Twitch
           </a>
         ) : (

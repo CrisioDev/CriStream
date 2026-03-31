@@ -10,18 +10,21 @@ import { addUserToAuthProvider } from "../../twitch/twitch-auth.js";
 import { getTwitchApi } from "../../twitch/twitch-api.js";
 
 class AuthService {
-  getAuthUrl(viewer = false): string {
+  getAuthUrl(viewer = false, returnTo = "/viewer"): string {
     const params = new URLSearchParams({
       client_id: config.twitchClientId,
       redirect_uri: config.twitchRedirectUri,
       response_type: "code",
       scope: (viewer ? TWITCH_VIEWER_SCOPES : TWITCH_SCOPES).join(" "),
     });
-    if (viewer) params.set("state", "viewer");
+    if (viewer) {
+      // Encode returnTo in state: "viewer:/casino" or just "viewer"
+      params.set("state", returnTo && returnTo !== "/viewer" ? `viewer:${returnTo}` : "viewer");
+    }
     return `https://id.twitch.tv/oauth2/authorize?${params}`;
   }
 
-  async handleCallback(code: string): Promise<AuthTokens> {
+  async handleCallback(code: string, isViewer = false): Promise<AuthTokens> {
     // Exchange code for tokens
     const tokenRes = await fetch("https://id.twitch.tv/oauth2/token", {
       method: "POST",
@@ -67,7 +70,39 @@ class AuthService {
     };
     const twitchUser = userData.data[0];
 
-    // Upsert user in DB
+    if (isViewer) {
+      // Viewer login: only upsert basic profile, NEVER overwrite stored Twitch tokens
+      // This prevents viewer logins from destroying broadcaster chat scopes
+      const existing = await prisma.user.findUnique({ where: { twitchId: twitchUser.id } });
+      let user;
+      if (existing) {
+        // Update only display info, keep tokens untouched
+        user = await prisma.user.update({
+          where: { twitchId: twitchUser.id },
+          data: {
+            displayName: twitchUser.display_name,
+            avatarUrl: twitchUser.profile_image_url,
+          },
+        });
+      } else {
+        // New viewer — store their minimal tokens (they have no broadcaster tokens to protect)
+        user = await prisma.user.create({
+          data: {
+            twitchId: twitchUser.id,
+            displayName: twitchUser.display_name,
+            avatarUrl: twitchUser.profile_image_url,
+            email: twitchUser.email ?? "",
+            accessTokenEncrypted: encrypt(tokenData.access_token),
+            refreshTokenEncrypted: encrypt(tokenData.refresh_token),
+          },
+        });
+      }
+
+      logger.info({ twitchId: twitchUser.id, displayName: twitchUser.display_name }, "Viewer authenticated (tokens preserved)");
+      return this.issueTokens(user.id, twitchUser.id, twitchUser.display_name, user.isAdmin);
+    }
+
+    // Dashboard/Broadcaster login: full upsert with token storage
     const user = await prisma.user.upsert({
       where: { twitchId: twitchUser.id },
       update: {
@@ -108,7 +143,7 @@ class AuthService {
       });
     }
 
-    logger.info({ twitchId: twitchUser.id, displayName: twitchUser.display_name }, "User authenticated");
+    logger.info({ twitchId: twitchUser.id, displayName: twitchUser.display_name }, "Broadcaster authenticated");
 
     // Update auth provider with fresh tokens (includes chat intents)
     try {

@@ -10,8 +10,10 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   // Redirect to Twitch OAuth (minimal scopes for viewers)
-  app.get("/twitch/viewer", async (_request, reply) => {
-    const url = authService.getAuthUrl(true);
+  // Optional ?returnTo= query param to redirect back after login (e.g. /casino)
+  app.get<{ Querystring: { returnTo?: string } }>("/twitch/viewer", async (request, reply) => {
+    const returnTo = request.query.returnTo ?? "/viewer";
+    const url = authService.getAuthUrl(true, returnTo);
     return reply.redirect(url);
   });
 
@@ -24,9 +26,15 @@ export async function authRoutes(app: FastifyInstance) {
         return reply.redirect("/?error=auth_denied");
       }
 
-      const tokens = await authService.handleCallback(code);
-      // Redirect back — viewer goes to returnTo or /, broadcaster goes to /
-      const redirectBase = state === "viewer" ? "/viewer" : "/";
+      const isViewer = state?.startsWith("viewer") ?? false;
+      const tokens = await authService.handleCallback(code, isViewer);
+      // Parse redirect from state: "viewer:/casino" → /casino, "viewer" → /viewer, else /
+      let redirectBase = "/";
+      if (state?.startsWith("viewer:")) {
+        redirectBase = state.slice(7); // after "viewer:"
+      } else if (state === "viewer") {
+        redirectBase = "/viewer";
+      }
       return reply.redirect(`${redirectBase}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}`);
     }
   );

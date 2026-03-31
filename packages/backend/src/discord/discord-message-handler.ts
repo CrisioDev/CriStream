@@ -119,18 +119,29 @@ async function processDiscordMessage(message: Message): Promise<void> {
       const displayName = message.author.displayName ?? message.author.username;
       const userId = await resolveUserId("discord", discordId);
 
-      // !link CODE — redeem link code from Twitch
+      // !link [CODE] — link Discord ↔ Twitch
       if (cmd === "link") {
-        const code = body[1];
-        if (!code) {
-          await message.reply("Gib zuerst auf Twitch !link ein, dann hier !link CODE");
-          return;
-        }
-        const result = await redeemLinkCode(code, discordId);
-        if (result.success) {
-          await message.reply("Accounts erfolgreich verbunden! Dein Twitch- und Discord-Inventar sind jetzt eins.");
+        const { createLinkCode } = await import("../modules/lootbox/account-link.js");
+        const codeArg = body[1];
+
+        if (codeArg) {
+          // Redeeming a code from Twitch
+          const result = await redeemLinkCode("discord", discordId, codeArg);
+          if (result.success) {
+            await message.reply("Accounts verbunden! Dein Twitch- und Discord-Inventar sind jetzt eins.");
+          } else {
+            await message.reply(result.error!);
+          }
         } else {
-          await message.reply(result.error!);
+          // Generate code — send as DM
+          const code = await createLinkCode("discord", discordId);
+          try {
+            await message.author.send(`Dein Link-Code: **${code}** — Gib auf Twitch \`!link ${code}\` ein (5 Min gültig)`);
+            await message.reply("Link-Code per DM gesendet!");
+          } catch {
+            // DMs disabled fallback
+            await message.reply(`Dein Link-Code: ${code} — Gib auf Twitch !link ${code} ein (5 Min gültig)`);
+          }
         }
         return;
       }

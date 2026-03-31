@@ -101,11 +101,30 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
     return;
   }
 
-  // !link — generate code to link Discord account
+  // !link [CODE] — link Twitch ↔ Discord account
   if (cmd === "link") {
-    const { createLinkCode } = await import("./account-link.js");
-    const code = await createLinkCode(ctx.msg.userInfo.userId);
-    sayInChannel(ctx.channel, `@${ctx.user} Dein Link-Code: ${code} — Gib auf Discord !link ${code} ein (5 Min gültig)`);
+    const { createLinkCode, redeemLinkCode } = await import("./account-link.js");
+    const codeArg = parts[1];
+
+    if (codeArg) {
+      // Redeeming a code from Discord
+      const result = await redeemLinkCode("twitch", ctx.msg.userInfo.userId, codeArg);
+      sayInChannel(ctx.channel, `@${ctx.user} ${result.success ? "Accounts verbunden! Inventar wird geteilt." : result.error}`);
+    } else {
+      // Generate code — send as whisper
+      const code = await createLinkCode("twitch", ctx.msg.userInfo.userId);
+      try {
+        const { sendWhisper } = await import("../../twitch/twitch-api.js");
+        const channel = await prisma.channel.findUnique({ where: { id: ctx.channelId } });
+        if (channel) {
+          await sendWhisper(channel.twitchId, ctx.msg.userInfo.userId, `Dein Link-Code: ${code} — Gib auf Discord !link ${code} ein (5 Min gültig)`);
+          sayInChannel(ctx.channel, `@${ctx.user} Link-Code per Flüsternachricht gesendet!`);
+        }
+      } catch {
+        // Whisper fallback — some accounts can't receive whispers
+        sayInChannel(ctx.channel, `@${ctx.user} Dein Link-Code: ${code} — Gib auf Discord !link ${code} ein (5 Min gültig)`);
+      }
+    }
     ctx.handled = true;
     return;
   }

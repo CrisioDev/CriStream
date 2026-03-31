@@ -9,19 +9,35 @@ function generateCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
 }
 
-export async function createLinkCode(twitchUserId: string): Promise<string> {
+// Create a code from either platform
+export async function createLinkCode(platform: "twitch" | "discord", platformUserId: string): Promise<string> {
   const code = generateCode();
-  await redis.set(`${LINK_CODE_PREFIX}${code}`, twitchUserId, "EX", LINK_CODE_TTL);
+  await redis.set(`${LINK_CODE_PREFIX}${code}`, JSON.stringify({ platform, platformUserId }), "EX", LINK_CODE_TTL);
   return code;
 }
 
-export async function redeemLinkCode(code: string, discordUserId: string): Promise<{ success: boolean; error?: string }> {
+// Redeem from either platform — the code tells us which platform created it
+export async function redeemLinkCode(
+  redeemPlatform: "twitch" | "discord",
+  redeemUserId: string,
+  code: string
+): Promise<{ success: boolean; error?: string }> {
   const key = `${LINK_CODE_PREFIX}${code}`;
-  const twitchUserId = await redis.get(key);
+  const raw = await redis.get(key);
 
-  if (!twitchUserId) {
-    return { success: false, error: "Code ungültig oder abgelaufen. Generiere einen neuen mit !link auf Twitch." };
+  if (!raw) {
+    return { success: false, error: "Code ungültig oder abgelaufen. Generiere einen neuen mit !link." };
   }
+
+  const { platform: codePlatform, platformUserId: codeUserId } = JSON.parse(raw);
+
+  // Must redeem from the OTHER platform
+  if (codePlatform === redeemPlatform) {
+    return { success: false, error: "Gib den Code auf der anderen Plattform ein (Twitch ↔ Discord)." };
+  }
+
+  const twitchUserId = codePlatform === "twitch" ? codeUserId : redeemUserId;
+  const discordUserId = codePlatform === "discord" ? codeUserId : redeemUserId;
 
   // Check if either account is already linked
   const existing = await prisma.accountLink.findFirst({
@@ -32,7 +48,6 @@ export async function redeemLinkCode(code: string, discordUserId: string): Promi
     if (existing.twitchUserId === twitchUserId && existing.discordUserId === discordUserId) {
       return { success: false, error: "Diese Accounts sind bereits verbunden!" };
     }
-    // Unlink old and create new
     await prisma.accountLink.delete({ where: { id: existing.id } });
   }
 
@@ -41,8 +56,6 @@ export async function redeemLinkCode(code: string, discordUserId: string): Promi
   });
 
   await redis.del(key);
-
-  // Migrate Discord inventory to Twitch ID
   await migrateInventory(discordUserId, twitchUserId);
 
   logger.info({ twitchUserId, discordUserId }, "Accounts linked");

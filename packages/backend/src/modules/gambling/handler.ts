@@ -179,4 +179,29 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
     ctx.handled = true;
     return;
   }
+
+  // ── !flip (Münzwurf) ──
+  // Cost: 1 point | 55% chance to win 2 pts, 45% chance to lose → net positive
+  if (cmd === "flip" || cmd === "münze" || cmd === "coinflip") {
+    const user = await pointsService.getUserPoints(ctx.channelId, userId);
+    if (!user || user.points < 1) {
+      sayInChannel(ctx.channel, `@${ctx.user} Du hast keine Punkte!`);
+      ctx.handled = true;
+      return;
+    }
+
+    await pointsService.deductPoints(ctx.channelId, userId, 1);
+
+    const win = Math.random() < 0.55;
+    if (win) {
+      await pointsService.addMessagePoints(ctx.channelId, userId, ctx.user, 2);
+      const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
+      sayInChannel(ctx.channel, `🪙 ${ctx.user} wirft... ${side}! Gewonnen! +1 Punkt`);
+    } else {
+      const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
+      sayInChannel(ctx.channel, `🪙 ${ctx.user} wirft... ${side}! Verloren! -1 Punkt`);
+    }
+    ctx.handled = true;
+    return;
+  }
 });

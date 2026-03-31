@@ -896,6 +896,7 @@ export interface DiscordSettingsDto {
   timerChannelId: string;
   summaryChannelId: string;
   notifyChannelId: string;
+  pointsChannelId: string;
   commandsEnabled: boolean;
   timersEnabled: boolean;
   summariesEnabled: boolean;
@@ -917,6 +918,7 @@ export interface UpdateDiscordSettingsDto {
   timerChannelId?: string;
   summaryChannelId?: string;
   notifyChannelId?: string;
+  pointsChannelId?: string;
   commandsEnabled?: boolean;
   timersEnabled?: boolean;
   summariesEnabled?: boolean;

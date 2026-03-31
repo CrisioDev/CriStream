@@ -43,6 +43,7 @@ export function DiscordPage() {
       timerChannelId: settings.timerChannelId,
       summaryChannelId: settings.summaryChannelId,
       notifyChannelId: settings.notifyChannelId,
+      pointsChannelId: settings.pointsChannelId,
       commandsEnabled: settings.commandsEnabled,
       timersEnabled: settings.timersEnabled,
       summariesEnabled: settings.summariesEnabled,
@@ -156,6 +157,23 @@ export function DiscordPage() {
         >
           {syncing ? "Syncing..." : "Sync Slash Commands"}
         </button>
+      </div>
+
+      {/* Points & Lootbox */}
+      <div className="rounded-lg border bg-card p-6 space-y-4">
+        <h2 className="text-lg font-semibold">Punkte & Lootbox</h2>
+        <p className="text-sm text-muted-foreground">
+          Separater Channel für !points, !lootbox, !inventory, !equip, !link, !profil, !markt, !trade.
+          Wenn leer, werden diese Commands im Command Channel akzeptiert.
+        </p>
+        <div>
+          <label className="text-sm font-medium mb-1 block">Points Channel ID</label>
+          <Input
+            value={settings.pointsChannelId}
+            onChange={(e) => setSettings({ ...settings, pointsChannelId: e.target.value })}
+            placeholder="Channel für Punkte & Lootbox Commands"
+          />
+        </div>
       </div>
 
       {/* Timers */}

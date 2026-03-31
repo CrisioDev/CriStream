@@ -284,6 +284,7 @@ model DiscordSettings {
   timerChannelId        String  @default("")
   summaryChannelId      String  @default("")
   notifyChannelId       String  @default("")
+  pointsChannelId       String  @default("")
   commandsEnabled       Boolean @default(false)
   timersEnabled         Boolean @default(false)
   summariesEnabled      Boolean @default(false)

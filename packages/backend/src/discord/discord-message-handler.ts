@@ -68,11 +68,22 @@ async function processDiscordMessage(message: Message): Promise<void> {
 
   if (!settings.commandsEnabled) return;
 
-  // Only respond in configured command channel (or anywhere if not set)
-  if (settings.commandChannelId && message.channel.id !== settings.commandChannelId) return;
-
   const channel = settings.channel;
   const prefix = channel.commandPrefix;
+
+  // Determine if this message is in an allowed channel
+  const isCommandChannel = !settings.commandChannelId || message.channel.id === settings.commandChannelId;
+  const isPointsChannel = settings.pointsChannelId && message.channel.id === settings.pointsChannelId;
+
+  // Points/Lootbox commands work in both command channel AND points channel
+  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen"];
+
+  if (!message.content.startsWith(prefix)) return;
+  const cmdCheck = message.content.slice(prefix.length).trim().split(/\s+/)[0]?.toLowerCase();
+  const isPointsCommand = cmdCheck ? POINTS_COMMANDS.includes(cmdCheck) : false;
+
+  // Allow if: in command channel, or in points channel for points commands
+  if (!isCommandChannel && !(isPointsChannel && isPointsCommand)) return;
 
   // Handle !gib requests
   if (message.content.startsWith(`${prefix}gib `)) {

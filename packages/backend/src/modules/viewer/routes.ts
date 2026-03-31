@@ -1,27 +1,21 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { viewerService } from "./service.js";
+import { prisma } from "../../lib/prisma.js";
 import jwt from "jsonwebtoken";
 import { config } from "../../config/index.js";
 
-// Optional JWT - sets request.user if valid token, but doesn't reject
-function optionalJwt(request: FastifyRequest) {
+function getUser(request: FastifyRequest): { sub: string; twitchId: string } | null {
   const auth = request.headers.authorization;
-  if (!auth?.startsWith("Bearer ")) return;
+  if (!auth?.startsWith("Bearer ")) return null;
   try {
-    const payload = jwt.verify(auth.slice(7), config.jwtSecret) as any;
-    (request as any).user = payload;
+    return jwt.verify(auth.slice(7), config.jwtSecret) as any;
   } catch {
-    // Invalid token, continue without user
+    return null;
   }
 }
 
-function requireAuth(request: FastifyRequest): { sub: string; twitchId: string } | null {
-  optionalJwt(request);
-  return (request as any).user ?? null;
-}
-
 export async function viewerRoutes(app: FastifyInstance) {
-  // ── Profile ──
+  // ── Profile (public) ──
   app.get<{ Params: { channelName: string; twitchUserId: string } }>(
     "/:channelName/profile/:twitchUserId",
     async (request, reply) => {
@@ -33,7 +27,7 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
-  // ── Marketplace ──
+  // ── Marketplace (public read) ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/marketplace",
     async (request, reply) => {
@@ -43,14 +37,14 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Sell item (auth required) ──
   app.post<{ Params: { channelName: string }; Body: { itemId: string; quantity: number; pricePerUnit: number } }>(
     "/:channelName/marketplace",
     async (request, reply) => {
-      const user = requireAuth(request);
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-      const { prisma } = await import("../../lib/prisma.js");
       const channelUser = await prisma.channelUser.findUnique({
         where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
       });
@@ -63,29 +57,28 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Buy listing (auth required) ──
   app.post<{ Params: { channelName: string; listingId: string } }>(
     "/:channelName/marketplace/:listingId/buy",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-
-      const { prisma } = await import("../../lib/prisma.js");
       const channelUser = await prisma.channelUser.findUnique({
         where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
       });
-
       const result = await viewerService.buyListing(channel.id, request.params.listingId, user.twitchId, channelUser?.displayName ?? "Unknown");
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
       return { success: true };
     }
   );
 
+  // ── Cancel listing (auth required) ──
   app.delete<{ Params: { channelName: string; listingId: string } }>(
     "/:channelName/marketplace/:listingId",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
@@ -95,11 +88,11 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
-  // ── Trades ──
+  // ── Trades (auth required) ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/trades",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
@@ -107,19 +100,16 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
-  app.post<{ Params: { channelName: string }; Body: { receiverTwitchUserId: string; offeredItems: any[]; requestedItems: any[]; pointsOffered?: number; pointsRequested?: number } }>(
+  app.post<{ Params: { channelName: string }; Body: { receiverTwitchUserId: string; offeredItems: { itemId: string; quantity: number }[]; requestedItems: { itemId: string; quantity: number }[]; pointsOffered?: number; pointsRequested?: number } }>(
     "/:channelName/trades",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-
-      const { prisma } = await import("../../lib/prisma.js");
       const channelUser = await prisma.channelUser.findUnique({
         where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
       });
-
       const result = await viewerService.createTrade(
         channel.id, user.twitchId, channelUser?.displayName ?? "Unknown",
         request.body.receiverTwitchUserId,
@@ -136,7 +126,7 @@ export async function viewerRoutes(app: FastifyInstance) {
   app.post<{ Params: { channelName: string; tradeId: string } }>(
     "/:channelName/trades/:tradeId/accept",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
@@ -149,7 +139,7 @@ export async function viewerRoutes(app: FastifyInstance) {
   app.post<{ Params: { channelName: string; tradeId: string } }>(
     "/:channelName/trades/:tradeId/decline",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       await viewerService.declineTrade(request.params.tradeId, user.twitchId);
       return { success: true };
@@ -159,7 +149,7 @@ export async function viewerRoutes(app: FastifyInstance) {
   app.delete<{ Params: { channelName: string; tradeId: string } }>(
     "/:channelName/trades/:tradeId",
     async (request, reply) => {
-      const user = (request as any).user;
+      const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       await viewerService.cancelTrade(request.params.tradeId, user.twitchId);
       return { success: true };

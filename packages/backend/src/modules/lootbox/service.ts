@@ -222,6 +222,7 @@ class LootboxService {
     });
     return items.map((i) => ({
       id: i.id,
+      itemId: i.itemId,
       twitchUserId: i.twitchUserId,
       displayName: i.displayName,
       itemName: i.item.name,
@@ -242,6 +243,7 @@ class LootboxService {
     });
     return items.map((i) => ({
       id: i.id,
+      itemId: i.itemId,
       twitchUserId: i.twitchUserId,
       displayName: i.displayName,
       itemName: i.item.name,

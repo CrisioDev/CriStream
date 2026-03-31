@@ -61,13 +61,8 @@ export function MarketplacePage() {
 
   const sell = async () => {
     if (!channelName || !sellItemId) return;
-    // Find the lootbox item id from inventory
-    const invItem = inventory.find((i) => i.id === sellItemId);
-    if (!invItem) return;
-    // We need the actual itemId, not the inventory id - extract from API
-    // The inventory items have the item info embedded
-    await api.post(`/viewer/${channelName}/marketplace/sell`, {
-      itemId: sellItemId, // This is the inventory item id, we need to fix this
+    await api.post(`/viewer/${channelName}/marketplace`, {
+      itemId: sellItemId,
       quantity: sellQty,
       pricePerUnit: sellPrice,
     });
@@ -118,7 +113,7 @@ export function MarketplacePage() {
               >
                 <option value="">-- Item wählen --</option>
                 {inventory.map((i) => (
-                  <option key={i.id} value={i.id}>
+                  <option key={i.itemId} value={i.itemId}>
                     {i.itemName} (x{i.quantity}) - {RARITY_LABEL[i.itemRarity] ?? i.itemRarity}
                   </option>
                 ))}

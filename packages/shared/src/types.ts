@@ -576,6 +576,7 @@ export interface UpdateLootboxItemDto {
 
 export interface ViewerInventoryItemDto {
   id: string;
+  itemId: string;
   twitchUserId: string;
   displayName: string;
   itemName: string;

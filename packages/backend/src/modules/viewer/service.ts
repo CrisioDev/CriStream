@@ -60,6 +60,7 @@ class ViewerService {
       activeTitle: activeTitle?.title ?? null,
       inventory: inventory.map((i) => ({
         id: i.id,
+        itemId: i.itemId,
         twitchUserId: i.twitchUserId,
         displayName: i.displayName,
         itemName: i.item.name,

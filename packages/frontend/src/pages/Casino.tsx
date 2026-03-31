@@ -333,7 +333,7 @@ export function CasinoPage() {
         <div className="slot-machine rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-purple-300 mb-1">🎰 SLOTS</h2>
-            <p className="text-center text-xs text-gray-500 mb-4">25 Punkte · EV +16%</p>
+            <p className="text-center text-xs text-gray-500 mb-4">20 Punkte · 10 Gratis/Tag · EV +25%</p>
             <div className="flex justify-center gap-2 mb-4">
               {slotReels.map((sym, i) => (
                 <div key={i} className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl" style={{
@@ -354,7 +354,7 @@ export function CasinoPage() {
         <div className="rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#0a1a15,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-emerald-300 mb-1">🎟️ RUBBELLOS</h2>
-            <p className="text-center text-xs text-gray-500 mb-4">50 Punkte · EV +8%</p>
+            <p className="text-center text-xs text-gray-500 mb-4">40 Punkte · 10 Gratis/Tag · EV +15%</p>
             <div className="flex justify-center gap-3 mb-4">
               {scratchCards.map((sym, i) => (
                 <div key={i} className={`w-20 h-24 rounded-xl flex items-center justify-center text-3xl ${sym !== "❓" ? "scratch-pop" : ""}`} style={{
@@ -375,7 +375,7 @@ export function CasinoPage() {
         <div className="rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1508,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-yellow-300 mb-1">🪙 MÜNZWURF</h2>
-            <p className="text-center text-xs text-gray-500 mb-4">1 Punkt · EV +10%</p>
+            <p className="text-center text-xs text-gray-500 mb-4">1 Punkt · 10 Gratis/Tag · EV +10%</p>
             <div className="flex justify-center mb-4">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black ${coinFlipping ? "coin-anim" : "float-anim"}`} style={{
                 background: coinSide ? "radial-gradient(circle,#ffd700,#b8860b)" : "radial-gradient(circle,#444,#222)",

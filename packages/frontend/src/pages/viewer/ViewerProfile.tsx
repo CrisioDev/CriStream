@@ -136,8 +136,8 @@ export function ViewerProfilePage() {
             <h2 className="font-semibold text-lg mb-3">🎰 Quick Gamble</h2>
             <div className="flex flex-wrap gap-2 mb-3">
               <GambleButton label="🪙 Flip (1)" game="flip" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
-              <GambleButton label="🎰 Slots (25)" game="slots" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
-              <GambleButton label="🎟️ Rubbellos (50)" game="scratch" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
+              <GambleButton label="🎰 Slots (20)" game="slots" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
+              <GambleButton label="🎟️ Rubbellos (40)" game="scratch" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
             </div>
             {gambleResult && (
               <div className="rounded-lg bg-black/30 border border-white/10 px-4 py-3 text-sm animate-pulse">

@@ -105,7 +105,8 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
   const prefix = channel.commandPrefix;
   if (!ctx.message.startsWith(prefix)) return;
 
-  const cmd = ctx.message.slice(prefix.length).trim().split(/\s+/)[0]!.toLowerCase();
+  const parts = ctx.message.slice(prefix.length).trim().split(/\s+/);
+  const cmd = parts[0]!.toLowerCase();
   const userId = ctx.msg.userInfo.userId;
 
   // ── !slots ──
@@ -176,6 +177,62 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
     const profitStr = profit >= 0 ? `+${profit}` : `${profit}`;
 
     sayInChannel(ctx.channel, `🎟️ ${ctx.user} kratzt... ${s1} ${s2} ${s3} ▸ ${label} → ${payout} Punkte (${profitStr})`);
+    ctx.handled = true;
+    return;
+  }
+
+  // ── !bingo ──
+  if (cmd === "bingo") {
+    const { buyTicket, getLastDraw } = await import("./bingo.js");
+    const arg = parts[1]?.toLowerCase();
+
+    if (arg === "ergebnis" || arg === "result") {
+      const draw = await getLastDraw(ctx.channelId);
+      if (!draw) { sayInChannel(ctx.channel, `@${ctx.user} Noch keine Ziehung!`); }
+      else {
+        const winStr = draw.winners.length > 0
+          ? draw.winners.map(w => `${w.name} (${w.matches}/5)`).join(", ")
+          : "Keine";
+        sayInChannel(ctx.channel, `🎱 Letzte Ziehung: ${draw.numbers.join(", ")} | Gewinner: ${winStr}`);
+      }
+      ctx.handled = true;
+      return;
+    }
+
+    const result = await buyTicket(ctx.channelId, userId, ctx.user);
+    if ("error" in result) {
+      sayInChannel(ctx.channel, `@${ctx.user} ${result.error}`);
+    } else {
+      sayInChannel(ctx.channel, `🎱 @${ctx.user} Bingo-Ticket gekauft! Deine Zahlen: ${result.numbers.join(", ")} | Ziehung täglich 07:00`);
+    }
+    ctx.handled = true;
+    return;
+  }
+
+  // ── !lotto ──
+  if (cmd === "lotto") {
+    const { buyLottoTicket, getLastLottoDraw } = await import("./lotto.js");
+    const arg = parts[1]?.toLowerCase();
+
+    if (arg === "ergebnis" || arg === "result") {
+      const draw = await getLastLottoDraw(ctx.channelId);
+      if (!draw) { sayInChannel(ctx.channel, `@${ctx.user} Noch keine Ziehung!`); }
+      else {
+        const winStr = draw.winners.length > 0
+          ? draw.winners.map((w: any) => `${w.name} (${w.matches}/6)`).join(", ")
+          : "Keine";
+        sayInChannel(ctx.channel, `🍀 Letzte Lotto-Ziehung: ${draw.numbers.join(", ")} | Gewinner: ${winStr}`);
+      }
+      ctx.handled = true;
+      return;
+    }
+
+    const result = await buyLottoTicket(ctx.channelId, userId, ctx.user);
+    if ("error" in result) {
+      sayInChannel(ctx.channel, `@${ctx.user} ${result.error}`);
+    } else {
+      sayInChannel(ctx.channel, `🍀 @${ctx.user} Lottoschein gekauft! Deine Zahlen: ${result.numbers.join(", ")} | Ziehung Sonntag 10:00`);
+    }
     ctx.handled = true;
     return;
   }

@@ -8,6 +8,8 @@ import { initTwitchClient } from "./twitch/twitch-client.js";
 import { initDiscordClient } from "./discord/discord-client.js";
 import { initTimerScheduler } from "./modules/timers/timer-scheduler.js";
 import { initSummaryScheduler } from "./modules/summaries/summary-scheduler.js";
+import { initBingoScheduler } from "./modules/gambling/bingo.js";
+import { initLottoScheduler } from "./modules/gambling/lotto.js";
 import { chatLogService } from "./modules/chatlogs/service.js";
 import { pointsService } from "./modules/points/service.js";
 
@@ -57,6 +59,10 @@ async function start() {
 
   // Start points scheduler
   pointsService.initPointsScheduler();
+
+  // Start bingo & lotto schedulers
+  initBingoScheduler();
+  initLottoScheduler();
 
   // Graceful shutdown
   const shutdown = async () => {

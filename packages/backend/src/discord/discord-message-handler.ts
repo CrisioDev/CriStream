@@ -77,7 +77,7 @@ async function processDiscordMessage(message: Message): Promise<void> {
   const isPointsChannel = settings.pointsChannelId && message.channel.id === settings.pointsChannelId;
 
   // Points/Lootbox commands work in both command channel AND points channel
-  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel", "flip", "münze", "coinflip"];
+  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel", "flip", "münze", "coinflip", "bingo", "lotto"];
 
   if (!message.content.startsWith(prefix)) return;
   const cmdCheck = message.content.slice(prefix.length).trim().split(/\s+/)[0]?.toLowerCase();
@@ -274,6 +274,52 @@ async function processDiscordMessage(message: Message): Promise<void> {
     } catch (err) {
       logger.error({ err }, "Discord flip error");
     }
+    return;
+  }
+
+  if (cmd === "bingo") {
+    try {
+      const { resolveUserId } = await import("../modules/lootbox/account-link.js");
+      const resolvedId = await resolveUserId("discord", message.author.id);
+      const displayName = message.author.displayName ?? message.author.username;
+      const { buyTicket, getLastDraw } = await import("../modules/gambling/bingo.js");
+      const arg = body[1]?.toLowerCase();
+      if (arg === "ergebnis" || arg === "result") {
+        const draw = await getLastDraw(channel.id);
+        if (!draw) { await replyToUser("Noch keine Ziehung!"); }
+        else {
+          const winStr = draw.winners.length > 0 ? draw.winners.map((w: any) => `${w.name} (${w.matches}/5)`).join(", ") : "Keine";
+          await replyToUser(`🎱 Letzte Ziehung: ${draw.numbers.join(", ")} | Gewinner: ${winStr}`);
+        }
+      } else {
+        const result = await buyTicket(channel.id, resolvedId, displayName);
+        if ("error" in result) { await replyToUser(result.error); }
+        else { await replyToUser(`🎱 Bingo-Ticket! Deine Zahlen: ${result.numbers.join(", ")} | Ziehung täglich 07:00`); }
+      }
+    } catch (err) { logger.error({ err }, "Discord bingo error"); }
+    return;
+  }
+
+  if (cmd === "lotto") {
+    try {
+      const { resolveUserId } = await import("../modules/lootbox/account-link.js");
+      const resolvedId = await resolveUserId("discord", message.author.id);
+      const displayName = message.author.displayName ?? message.author.username;
+      const { buyLottoTicket, getLastLottoDraw } = await import("../modules/gambling/lotto.js");
+      const arg = body[1]?.toLowerCase();
+      if (arg === "ergebnis" || arg === "result") {
+        const draw = await getLastLottoDraw(channel.id);
+        if (!draw) { await replyToUser("Noch keine Ziehung!"); }
+        else {
+          const winStr = draw.winners.length > 0 ? draw.winners.map((w: any) => `${w.name} (${w.matches}/6)`).join(", ") : "Keine";
+          await replyToUser(`🍀 Letzte Lotto-Ziehung: ${draw.numbers.join(", ")} | Gewinner: ${winStr}`);
+        }
+      } else {
+        const result = await buyLottoTicket(channel.id, resolvedId, displayName);
+        if ("error" in result) { await replyToUser(result.error); }
+        else { await replyToUser(`🍀 Lottoschein! Deine Zahlen: ${result.numbers.join(", ")} | Ziehung Sonntag 10:00`); }
+      }
+    } catch (err) { logger.error({ err }, "Discord lotto error"); }
     return;
   }
 

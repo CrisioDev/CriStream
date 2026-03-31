@@ -28,13 +28,13 @@ async function getFreeCount(channelId: string, userId: string, game: string): Pr
 }
 
 // ── Slot Machine ──
-// Cost: 20 points (was 25) | Higher payouts
+// Cost: 20 points | Specials compensate for lower base payouts
 
 const SLOT_COST = 20;
 const SLOT_COOLDOWN = 8;
 
 const SLOT_SYMBOLS = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"];
-const SLOT_WEIGHTS = [22, 20, 18, 15, 12, 8, 5]; // More balanced, rarer symbols more likely
+const SLOT_WEIGHTS = [25, 22, 18, 15, 10, 6, 4]; // Weighted toward common
 
 function spinReel(): string {
   const total = SLOT_WEIGHTS.reduce((a, b) => a + b, 0);
@@ -60,19 +60,19 @@ function getSlotPayout(a: string, b: string, c: string): { payout: number; label
     }
   }
   if (a === b || b === c || a === c) {
-    return { payout: 30, label: "Doppelt!" };
+    return { payout: 22, label: "Doppelt!" };
   }
-  return { payout: 12, label: "Trostpreis" };
+  return { payout: 8, label: "Trostpreis" };
 }
 
 // ── Scratch Card ──
-// Cost: 40 points (was 50) | Higher payouts
+// Cost: 40 points | Specials compensate for lower base payouts
 
 const SCRATCH_COST = 40;
 const SCRATCH_COOLDOWN = 12;
 
 const SCRATCH_SYMBOLS = ["🍀", "💰", "🎁", "👑", "💎", "🌟"];
-const SCRATCH_WEIGHTS = [28, 24, 20, 14, 9, 5]; // More balanced
+const SCRATCH_WEIGHTS = [30, 26, 20, 12, 8, 4]; // Weighted toward common
 
 function pickScratchSymbol(): string {
   const total = SCRATCH_WEIGHTS.reduce((a, b) => a + b, 0);
@@ -103,10 +103,10 @@ function getScratchPayout(symbols: string[]): { payout: number; label: string } 
   }
 
   for (const [, count] of counts) {
-    if (count === 2) return { payout: 40, label: "Zweier!" };
+    if (count === 2) return { payout: 30, label: "Zweier!" };
   }
 
-  return { payout: 20, label: "Trostpreis" };
+  return { payout: 15, label: "Trostpreis" };
 }
 
 // ── Register Handler ──
@@ -277,7 +277,7 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
       await pointsService.deductPoints(ctx.channelId, userId, 1);
     }
 
-    const winChance = pre.winChanceOverride ?? 0.55;
+    const winChance = pre.winChanceOverride ?? 0.50;
     const win = pre.forceWin || Math.random() < winChance;
     if (win) await pointsService.addMessagePoints(ctx.channelId, userId, ctx.user, 2);
 

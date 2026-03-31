@@ -525,7 +525,7 @@ export function CasinoPage() {
         <div className="slot-machine rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-purple-300 mb-1">🎰 SLOTS</h2>
-            <p className="text-center text-xs text-gray-500 mb-1">20 Punkte · EV +25%</p>
+            <p className="text-center text-xs text-gray-500 mb-1">20 Punkte + Specials</p>
             {freePlays && <p className="text-center text-xs mb-4">{freePlays.slots > 0 ? <span className="text-green-400 font-bold">{freePlays.slots} Gratis-Spins</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
             <div className="flex justify-center gap-2 mb-4">
               {slotReels.map((sym, i) => (
@@ -547,7 +547,7 @@ export function CasinoPage() {
         <div className="rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#0a1a15,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-emerald-300 mb-1">🎟️ RUBBELLOS</h2>
-            <p className="text-center text-xs text-gray-500 mb-1">40 Punkte · EV +15%</p>
+            <p className="text-center text-xs text-gray-500 mb-1">40 Punkte + Specials</p>
             {freePlays && <p className="text-center text-xs mb-4">{freePlays.scratch > 0 ? <span className="text-green-400 font-bold">{freePlays.scratch} Gratis-Lose</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
             <div className="flex justify-center gap-3 mb-4">
               {scratchCards.map((sym, i) => (
@@ -569,7 +569,7 @@ export function CasinoPage() {
         <div className="rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1508,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-yellow-300 mb-1">🪙 MÜNZWURF</h2>
-            <p className="text-center text-xs text-gray-500 mb-1">1 Punkt · EV +10%</p>
+            <p className="text-center text-xs text-gray-500 mb-1">1 Punkt · 50/50 + Specials</p>
             {freePlays && <p className="text-center text-xs mb-4">{freePlays.flip > 0 ? <span className="text-green-400 font-bold">{freePlays.flip} Gratis-Flips</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
             <div className="flex justify-center mb-4">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black ${coinFlipping ? "coin-anim" : "float-anim"}`} style={{

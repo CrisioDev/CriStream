@@ -271,7 +271,7 @@ async function processDiscordMessage(message: Message): Promise<void> {
       const user = await pointsService.getUserPoints(channel.id, resolvedId);
       if (!user || user.points < 1) { await replyToUser("Du hast keine Punkte!"); return; }
       await pointsService.deductPoints(channel.id, resolvedId, 1);
-      const win = Math.random() < 0.55;
+      const win = Math.random() < 0.50;
       if (win) {
         await pointsService.addMessagePoints(channel.id, resolvedId, displayName, 2);
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
@@ -342,9 +342,9 @@ async function processDiscordMessage(message: Message): Promise<void> {
       const SLOT_COST = 20;
       const SCRATCH_COST = 40;
       const SLOT_SYMBOLS = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"];
-      const SLOT_WEIGHTS = [22, 20, 18, 15, 12, 8, 5];
+      const SLOT_WEIGHTS = [25, 22, 18, 15, 10, 6, 4];
       const SCRATCH_SYMBOLS = ["🍀", "💰", "🎁", "👑", "💎", "🌟"];
-      const SCRATCH_WEIGHTS = [28, 24, 20, 14, 9, 5];
+      const SCRATCH_WEIGHTS = [30, 26, 20, 12, 8, 4];
 
       function weightedPick(symbols: string[], weights: number[]): string {
         const total = weights.reduce((a, b) => a + b, 0);
@@ -364,11 +364,11 @@ async function processDiscordMessage(message: Message): Promise<void> {
         if (!user || user.points < SLOT_COST) { await redis.del(cdKey); await replyToUser(`Nicht genug Punkte! Brauchst ${SLOT_COST}.`); return; }
         await pointsService.deductPoints(channel.id, resolvedId, SLOT_COST);
         const r1 = weightedPick(SLOT_SYMBOLS, SLOT_WEIGHTS), r2 = weightedPick(SLOT_SYMBOLS, SLOT_WEIGHTS), r3 = weightedPick(SLOT_SYMBOLS, SLOT_WEIGHTS);
-        let payout = 12, label = "Trostpreis";
+        let payout = 8, label = "Trostpreis";
         if (r1 === r2 && r2 === r3) {
           const payouts: Record<string, [number, string]> = { "7️⃣": [777, "JACKPOT 777!!!"], "💎": [350, "DIAMANT TRIPLE!"], "⭐": [175, "STERN TRIPLE!"], "🍇": [90, "TRIPLE!"], "🍊": [70, "TRIPLE!"], "🍋": [55, "TRIPLE!"], "🍒": [45, "TRIPLE!"] };
           [payout, label] = payouts[r1] ?? [55, "TRIPLE!"];
-        } else if (r1 === r2 || r2 === r3 || r1 === r3) { payout = 30; label = "Doppelt!"; }
+        } else if (r1 === r2 || r2 === r3 || r1 === r3) { payout = 22; label = "Doppelt!"; }
         if (payout > 0) await pointsService.addMessagePoints(channel.id, resolvedId, displayName, payout);
         const profit = payout - SLOT_COST;
         await replyToUser(`🎰 [ ${r1} | ${r2} | ${r3} ] ▸ ${label} → ${payout} Punkte (${profit >= 0 ? "+" : ""}${profit})`);
@@ -380,11 +380,11 @@ async function processDiscordMessage(message: Message): Promise<void> {
         if (!user || user.points < SCRATCH_COST) { await redis.del(cdKey); await replyToUser(`Nicht genug Punkte! Brauchst ${SCRATCH_COST}.`); return; }
         await pointsService.deductPoints(channel.id, resolvedId, SCRATCH_COST);
         const s1 = weightedPick(SCRATCH_SYMBOLS, SCRATCH_WEIGHTS), s2 = weightedPick(SCRATCH_SYMBOLS, SCRATCH_WEIGHTS), s3 = weightedPick(SCRATCH_SYMBOLS, SCRATCH_WEIGHTS);
-        let payout = 20, label = "Trostpreis";
+        let payout = 15, label = "Trostpreis";
         if (s1 === s2 && s2 === s3) {
           const payouts: Record<string, [number, string]> = { "🌟": [1000, "MEGA GEWINN!!!"], "💎": [500, "DIAMANT GEWINN!"], "👑": [300, "KÖNIGLICH!"], "🎁": [175, "GESCHENK!"], "💰": [120, "GELDREGEN!"], "🍀": [85, "GLÜCKSKLEE!"] };
           [payout, label] = payouts[s1] ?? [85, "DREIER!"];
-        } else if (s1 === s2 || s2 === s3 || s1 === s3) { payout = 40; label = "Zweier!"; }
+        } else if (s1 === s2 || s2 === s3 || s1 === s3) { payout = 30; label = "Zweier!"; }
         if (payout > 0) await pointsService.addMessagePoints(channel.id, resolvedId, displayName, payout);
         const profit = payout - SCRATCH_COST;
         await replyToUser(`🎟️ kratzt... ${s1} ${s2} ${s3} ▸ ${label} → ${payout} Punkte (${profit >= 0 ? "+" : ""}${profit})`);

@@ -209,7 +209,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         const cost = free ? 0 : 1;
         if (!free && channelUser.points < 1) return reply.status(400).send({ success: false, error: "Keine Gratis-Flips mehr & keine Punkte!" });
         if (!free) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { decrement: 1 } } });
-        const winChance = pre.winChanceOverride ?? 0.55;
+        const winChance = pre.winChanceOverride ?? 0.50;
         const win = pre.forceWin || Math.random() < winChance;
         if (win) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: 2 } } });
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
@@ -232,7 +232,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         if (!free && channelUser.points < 20) return reply.status(400).send({ success: false, error: "Keine Gratis-Spins mehr & brauchst 20 Punkte!" });
         if (!free) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { decrement: 20 } } });
         const SYMS = ["🍒","🍋","🍊","🍇","⭐","💎","7️⃣"];
-        const W = [22,20,18,15,12,8,5];
+        const W = [25,22,18,15,10,6,4];
         function pickSlot() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
         let r1: string, r2: string, r3: string;
         if (pre.forceWin) {
@@ -241,9 +241,9 @@ export async function viewerRoutes(app: FastifyInstance) {
         } else {
           r1=pickSlot(); r2=pickSlot(); r3=pickSlot();
         }
-        let payout=12,label="Trostpreis";
+        let payout=8,label="Trostpreis";
         if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};[payout,label]=p[r1]??[55,"TRIPLE!"];}
-        else if(r1===r2||r2===r3||r1===r3){payout=30;label="Doppelt!";}
+        else if(r1===r2||r2===r3||r1===r3){payout=22;label="Doppelt!";}
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = r1===r2&&r2===r3;
         const is777 = isTriple && r1==="7️⃣";
@@ -262,7 +262,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         if (!free && channelUser.points < 40) return reply.status(400).send({ success: false, error: "Keine Gratis-Lose mehr & brauchst 40 Punkte!" });
         if (!free) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { decrement: 40 } } });
         const SYMS = ["🍀","💰","🎁","👑","💎","🌟"];
-        const W = [28,24,20,14,9,5];
+        const W = [30,26,20,12,8,4];
         function pickScratch() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
         let s1: string, s2: string, s3: string;
         if (pre.forceWin) {
@@ -271,9 +271,9 @@ export async function viewerRoutes(app: FastifyInstance) {
         } else {
           s1=pickScratch(); s2=pickScratch(); s3=pickScratch();
         }
-        let payout=20,label="Trostpreis";
+        let payout=15,label="Trostpreis";
         if(s1===s2&&s2===s3){const p:any={"🌟":[1000,"MEGA GEWINN!!!"],"💎":[500,"DIAMANT!"],"👑":[300,"KÖNIGLICH!"],"🎁":[175,"GESCHENK!"],"💰":[120,"GELDREGEN!"],"🍀":[85,"GLÜCKSKLEE!"]};[payout,label]=p[s1]??[85,"DREIER!"];}
-        else if(s1===s2||s2===s3||s1===s3){payout=40;label="Zweier!";}
+        else if(s1===s2||s2===s3||s1===s3){payout=30;label="Zweier!";}
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = s1===s2&&s2===s3;
         const post = await postPlaySpecials({ ...specCtx, game: "scratch", win: payout > cost, payout, cost, reels: [s1,s2,s3], isTriple });

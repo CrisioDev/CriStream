@@ -77,7 +77,7 @@ async function processDiscordMessage(message: Message): Promise<void> {
   const isPointsChannel = settings.pointsChannelId && message.channel.id === settings.pointsChannelId;
 
   // Points/Lootbox commands work in both command channel AND points channel
-  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel"];
+  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel", "flip", "münze", "coinflip"];
 
   if (!message.content.startsWith(prefix)) return;
   const cmdCheck = message.content.slice(prefix.length).trim().split(/\s+/)[0]?.toLowerCase();
@@ -254,6 +254,29 @@ async function processDiscordMessage(message: Message): Promise<void> {
   }
 
   // ── Gambling commands on Discord ──
+  if (cmd === "flip" || cmd === "münze" || cmd === "coinflip") {
+    try {
+      const { resolveUserId } = await import("../modules/lootbox/account-link.js");
+      const resolvedId = await resolveUserId("discord", message.author.id);
+      const displayName = message.author.displayName ?? message.author.username;
+      const user = await pointsService.getUserPoints(channel.id, resolvedId);
+      if (!user || user.points < 1) { await replyToUser("Du hast keine Punkte!"); return; }
+      await pointsService.deductPoints(channel.id, resolvedId, 1);
+      const win = Math.random() < 0.55;
+      if (win) {
+        await pointsService.addMessagePoints(channel.id, resolvedId, displayName, 2);
+        const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
+        await replyToUser(`🪙 ${side}! Gewonnen! +1 Punkt`);
+      } else {
+        const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
+        await replyToUser(`🪙 ${side}! Verloren! -1 Punkt`);
+      }
+    } catch (err) {
+      logger.error({ err }, "Discord flip error");
+    }
+    return;
+  }
+
   if (cmd === "slots" || cmd === "slot" || cmd === "rubbellos" || cmd === "scratch" || cmd === "rubbel") {
     try {
       const { resolveUserId } = await import("../modules/lootbox/account-link.js");

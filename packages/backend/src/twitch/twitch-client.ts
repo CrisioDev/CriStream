@@ -9,6 +9,7 @@ import { emitEvent } from "../lib/socket.js";
 import "../modules/moderation/spam-handler.js";
 import "../modules/moderation/handler.js";
 import "../modules/lootbox/title-handler.js";
+import "../modules/gambling/handler.js";
 import "../modules/autoresponse/handler.js";
 import "../modules/lootbox/handler.js";
 import "../modules/alerts/sound-handler.js";

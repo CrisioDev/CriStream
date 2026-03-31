@@ -6,6 +6,7 @@ import { viewerRequestService } from "../modules/requests/service.js";
 import { incrementDiscordLines } from "../modules/timers/timer-scheduler.js";
 import { chatLogService } from "../modules/chatlogs/service.js";
 import { pointsService } from "../modules/points/service.js";
+import { redis } from "../lib/redis.js";
 import type { CommandContext } from "../modules/commands/executor.js";
 
 export function setupDiscordMessageHandler(client: Client): void {
@@ -76,7 +77,7 @@ async function processDiscordMessage(message: Message): Promise<void> {
   const isPointsChannel = settings.pointsChannelId && message.channel.id === settings.pointsChannelId;
 
   // Points/Lootbox commands work in both command channel AND points channel
-  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen"];
+  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel"];
 
   if (!message.content.startsWith(prefix)) return;
   const cmdCheck = message.content.slice(prefix.length).trim().split(/\s+/)[0]?.toLowerCase();
@@ -249,6 +250,69 @@ async function processDiscordMessage(message: Message): Promise<void> {
       }
     } catch (err) {
       logger.error({ err }, "Discord lootbox command error");
+    }
+  }
+
+  // ── Gambling commands on Discord ──
+  if (cmd === "slots" || cmd === "slot" || cmd === "rubbellos" || cmd === "scratch" || cmd === "rubbel") {
+    try {
+      const { resolveUserId } = await import("../modules/lootbox/account-link.js");
+      const resolvedId = await resolveUserId("discord", message.author.id);
+      const displayName = message.author.displayName ?? message.author.username;
+
+      // Import gambling logic inline (same logic as Twitch handler)
+      const SLOT_COST = 25;
+      const SCRATCH_COST = 50;
+      const SLOT_SYMBOLS = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"];
+      const SLOT_WEIGHTS = [25, 22, 20, 15, 10, 6, 2];
+      const SCRATCH_SYMBOLS = ["🍀", "💰", "🎁", "👑", "💎", "🌟"];
+      const SCRATCH_WEIGHTS = [30, 25, 20, 12, 8, 5];
+
+      function weightedPick(symbols: string[], weights: number[]): string {
+        const total = weights.reduce((a, b) => a + b, 0);
+        let roll = Math.random() * total;
+        for (let i = 0; i < symbols.length; i++) {
+          roll -= weights[i]!;
+          if (roll <= 0) return symbols[i]!;
+        }
+        return symbols[0]!;
+      }
+
+      if (cmd === "slots" || cmd === "slot") {
+        const cdKey = `cd:${channel.id}:slots:discord:${message.author.id}`;
+        const cdSet = await redis.set(cdKey, "1", "EX", 10, "NX");
+        if (!cdSet) { await replyToUser("Slots auf Cooldown!"); return; }
+        const user = await pointsService.getUserPoints(channel.id, resolvedId);
+        if (!user || user.points < SLOT_COST) { await redis.del(cdKey); await replyToUser(`Nicht genug Punkte! Brauchst ${SLOT_COST}.`); return; }
+        await pointsService.deductPoints(channel.id, resolvedId, SLOT_COST);
+        const r1 = weightedPick(SLOT_SYMBOLS, SLOT_WEIGHTS), r2 = weightedPick(SLOT_SYMBOLS, SLOT_WEIGHTS), r3 = weightedPick(SLOT_SYMBOLS, SLOT_WEIGHTS);
+        let payout = 10, label = "Trostpreis";
+        if (r1 === r2 && r2 === r3) {
+          const payouts: Record<string, [number, string]> = { "7️⃣": [777, "JACKPOT 777!!!"], "💎": [300, "DIAMANT TRIPLE!"], "⭐": [150, "STERN TRIPLE!"], "🍇": [75, "TRIPLE!"], "🍊": [60, "TRIPLE!"], "🍋": [50, "TRIPLE!"], "🍒": [40, "TRIPLE!"] };
+          [payout, label] = payouts[r1] ?? [50, "TRIPLE!"];
+        } else if (r1 === r2 || r2 === r3 || r1 === r3) { payout = 30; label = "Doppelt!"; }
+        if (payout > 0) await pointsService.addMessagePoints(channel.id, resolvedId, displayName, payout);
+        const profit = payout - SLOT_COST;
+        await replyToUser(`🎰 [ ${r1} | ${r2} | ${r3} ] ▸ ${label} → ${payout} Punkte (${profit >= 0 ? "+" : ""}${profit})`);
+      } else {
+        const cdKey = `cd:${channel.id}:scratch:discord:${message.author.id}`;
+        const cdSet = await redis.set(cdKey, "1", "EX", 15, "NX");
+        if (!cdSet) { await replyToUser("Rubbellos auf Cooldown!"); return; }
+        const user = await pointsService.getUserPoints(channel.id, resolvedId);
+        if (!user || user.points < SCRATCH_COST) { await redis.del(cdKey); await replyToUser(`Nicht genug Punkte! Brauchst ${SCRATCH_COST}.`); return; }
+        await pointsService.deductPoints(channel.id, resolvedId, SCRATCH_COST);
+        const s1 = weightedPick(SCRATCH_SYMBOLS, SCRATCH_WEIGHTS), s2 = weightedPick(SCRATCH_SYMBOLS, SCRATCH_WEIGHTS), s3 = weightedPick(SCRATCH_SYMBOLS, SCRATCH_WEIGHTS);
+        let payout = 15, label = "Trostpreis";
+        if (s1 === s2 && s2 === s3) {
+          const payouts: Record<string, [number, string]> = { "🌟": [1000, "MEGA GEWINN!!!"], "💎": [500, "DIAMANT GEWINN!"], "👑": [250, "KÖNIGLICH!"], "🎁": [150, "GESCHENK!"], "💰": [100, "GELDREGEN!"], "🍀": [75, "GLÜCKSKLEE!"] };
+          [payout, label] = payouts[s1] ?? [75, "DREIER!"];
+        } else if (s1 === s2 || s2 === s3 || s1 === s3) { payout = 35; label = "Zweier!"; }
+        if (payout > 0) await pointsService.addMessagePoints(channel.id, resolvedId, displayName, payout);
+        const profit = payout - SCRATCH_COST;
+        await replyToUser(`🎟️ kratzt... ${s1} ${s2} ${s3} ▸ ${label} → ${payout} Punkte (${profit >= 0 ? "+" : ""}${profit})`);
+      }
+    } catch (err) {
+      logger.error({ err }, "Discord gambling command error");
     }
   }
 }

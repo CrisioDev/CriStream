@@ -1,334 +1,367 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 
+// Confetti particles
+function spawnConfetti(container: HTMLDivElement) {
+  const colors = ["#ffd700", "#ff6b6b", "#4ade80", "#60a5fa", "#f472b6", "#a78bfa"];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement("div");
+    el.style.cssText = `position:absolute;width:${4 + Math.random() * 8}px;height:${4 + Math.random() * 8}px;background:${colors[Math.floor(Math.random() * colors.length)]};left:${Math.random() * 100}%;top:-10px;border-radius:${Math.random() > 0.5 ? "50%" : "2px"};pointer-events:none;z-index:100;animation:confetti-fall ${1.5 + Math.random() * 2}s ease-out forwards;opacity:0.9;`;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
 export function CasinoPage() {
   const { user } = useAuthStore();
-  const [result, setResult] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
   const [channelInput, setChannelInput] = useState("");
+  const confettiRef = useRef<HTMLDivElement>(null);
 
-  // Try to guess channel from URL referrer or use input
+  // Slot state
+  const [slotReels, setSlotReels] = useState(["❓", "❓", "❓"]);
+  const [slotSpinning, setSlotSpinning] = useState(false);
+  const [slotResult, setSlotResult] = useState<string | null>(null);
+
+  // Scratch state
+  const [scratchCards, setScratchCards] = useState(["❓", "❓", "❓"]);
+  const [scratchRevealed, setScratchRevealed] = useState(false);
+  const [scratchResult, setScratchResult] = useState<string | null>(null);
+
+  // Flip state
+  const [coinSide, setCoinSide] = useState<string | null>(null);
+  const [coinFlipping, setCoinFlipping] = useState(false);
+  const [flipResult, setFlipResult] = useState<string | null>(null);
+
+  // General
+  const [message, setMessage] = useState<string | null>(null);
   const channelName = channelInput || "TheCrisio";
 
-  const play = async (game: string) => {
-    if (!user) { setResult("Bitte zuerst einloggen!"); return; }
-    setPlaying(true);
+  const showWin = (big: boolean) => {
+    if (big && confettiRef.current) spawnConfetti(confettiRef.current);
+  };
+
+  const playSlots = async () => {
+    if (!user) { setMessage("Erst einloggen!"); return; }
+    setSlotSpinning(true);
+    setSlotResult(null);
+
+    // Spin animation
+    const symbols = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"];
+    const interval = setInterval(() => {
+      setSlotReels([
+        symbols[Math.floor(Math.random() * symbols.length)]!,
+        symbols[Math.floor(Math.random() * symbols.length)]!,
+        symbols[Math.floor(Math.random() * symbols.length)]!,
+      ]);
+    }, 80);
+
     try {
-      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game }) as any;
-      if (!res.success) { setResult(res.error ?? "Fehler!"); setPlaying(false); return; }
-      const d = res.data;
-      if (game === "flip") setResult(`🪙 ${d.result}! ${d.win ? "Gewonnen! +1 Punkt" : "Verloren! -1 Punkt"}`);
-      else if (game === "slots") { const p = d.payout-d.cost; setResult(`🎰 [ ${d.reels.join(" | ")} ] → ${d.label} → ${d.payout} Pts (${p>=0?"+":""}${p})`); }
-      else if (game === "scratch") { const p = d.payout-d.cost; setResult(`🎟️ ${d.symbols.join(" ")} → ${d.label} → ${d.payout} Pts (${p>=0?"+":""}${p})`); }
-    } catch { setResult("Fehler — bist du eingeloggt?"); }
-    setPlaying(false);
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "slots" }) as any;
+      setTimeout(() => {
+        clearInterval(interval);
+        if (!res.success) {
+          setSlotReels(["❌", "❌", "❌"]);
+          setSlotResult(res.error ?? "Fehler!");
+          setSlotSpinning(false);
+          return;
+        }
+        setSlotReels(res.data.reels);
+        const profit = res.data.payout - res.data.cost;
+        setSlotResult(`${res.data.label} → ${res.data.payout} Pts (${profit >= 0 ? "+" : ""}${profit})`);
+        if (profit > 0) showWin(profit >= 100);
+        setSlotSpinning(false);
+      }, 1500);
+    } catch {
+      clearInterval(interval);
+      setSlotResult("Fehler!");
+      setSlotSpinning(false);
+    }
+  };
+
+  const playScratch = async () => {
+    if (!user) { setMessage("Erst einloggen!"); return; }
+    setScratchCards(["❓", "❓", "❓"]);
+    setScratchRevealed(false);
+    setScratchResult(null);
+
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "scratch" }) as any;
+      if (!res.success) { setScratchResult(res.error ?? "Fehler!"); return; }
+
+      // Reveal one by one
+      setTimeout(() => setScratchCards([res.data.symbols[0], "❓", "❓"]), 400);
+      setTimeout(() => setScratchCards([res.data.symbols[0], res.data.symbols[1], "❓"]), 900);
+      setTimeout(() => {
+        setScratchCards(res.data.symbols);
+        setScratchRevealed(true);
+        const profit = res.data.payout - res.data.cost;
+        setScratchResult(`${res.data.label} → ${res.data.payout} Pts (${profit >= 0 ? "+" : ""}${profit})`);
+        if (profit > 0) showWin(profit >= 100);
+      }, 1400);
+    } catch { setScratchResult("Fehler!"); }
+  };
+
+  const playFlip = async () => {
+    if (!user) { setMessage("Erst einloggen!"); return; }
+    setCoinFlipping(true);
+    setCoinSide(null);
+    setFlipResult(null);
+
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "flip" }) as any;
+      setTimeout(() => {
+        setCoinFlipping(false);
+        if (!res.success) { setFlipResult(res.error ?? "Fehler!"); return; }
+        setCoinSide(res.data.result);
+        setFlipResult(res.data.win ? "GEWONNEN! +1" : "Verloren! -1");
+        if (res.data.win) showWin(false);
+      }, 1000);
+    } catch {
+      setCoinFlipping(false);
+      setFlipResult("Fehler!");
+    }
   };
 
   return (
-    <div className="min-h-screen text-white overflow-auto" style={{
-      background: "radial-gradient(ellipse at top, #1a0a2e 0%, #0d0d1a 50%, #050508 100%)",
-      fontFamily: "'Segoe UI', sans-serif",
+    <div className="min-h-screen text-white overflow-hidden relative" style={{
+      background: "radial-gradient(ellipse at center top, #1a0533 0%, #0a0a1a 40%, #000 100%)",
     }}>
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes neon-pulse { 0%,100% { text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 40px #ff8c00, 0 0 80px #ff6600; } 50% { text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700, 0 0 20px #ff8c00, 0 0 40px #ff6600; } }
+        @keyframes slot-glow { 0%,100% { box-shadow: 0 0 15px rgba(145,71,255,0.5), inset 0 0 15px rgba(145,71,255,0.1); } 50% { box-shadow: 0 0 30px rgba(145,71,255,0.8), inset 0 0 30px rgba(145,71,255,0.2); } }
+        @keyframes coin-flip { 0% { transform: rotateY(0deg) scale(1); } 50% { transform: rotateY(1800deg) scale(1.3); } 100% { transform: rotateY(3600deg) scale(1); } }
+        @keyframes scratch-reveal { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(600px) rotate(720deg); opacity: 0; } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes marquee-scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        @keyframes jackpot-flash { 0%,100% { color: #ffd700; } 25% { color: #ff6b6b; } 50% { color: #4ade80; } 75% { color: #60a5fa; } }
+        .neon-text { animation: neon-pulse 2s ease-in-out infinite; }
+        .slot-machine { animation: slot-glow 2s ease-in-out infinite; }
+        .coin-anim { animation: coin-flip 1s ease-in-out; }
+        .scratch-pop { animation: scratch-reveal 0.4s ease-out; }
+        .float-anim { animation: float 3s ease-in-out infinite; }
+        .casino-btn { transition: all 0.2s; cursor: pointer; }
+        .casino-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 8px 25px rgba(255,215,0,0.3); }
+        .casino-btn:active { transform: scale(0.98); }
+        .casino-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+      `}</style>
+
+      {/* Confetti container */}
+      <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-50" />
+
+      {/* Marquee */}
+      <div className="bg-black/50 border-b border-yellow-500/20 py-1.5 overflow-hidden">
+        <div className="whitespace-nowrap text-sm" style={{ animation: "marquee-scroll 20s linear infinite" }}>
+          <span className="text-yellow-400 mx-8">🎰 WILLKOMMEN IM CRISTREAM CASINO 🎰</span>
+          <span className="text-green-400 mx-8">💰 ALLE SPIELE SIND NETTO POSITIV FÜR DICH 💰</span>
+          <span className="text-purple-400 mx-8">🃏 VERANTWORTUNGSVOLLES FAKE-GAMBLING SEIT 2026 🃏</span>
+          <span className="text-pink-400 mx-8">⚠️ KEINE ECHTEN VERLUSTE MÖGLICH ⚠️</span>
+          <span className="text-blue-400 mx-8">🏆 DAS HAUS VERLIERT IMMER 🏆</span>
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="text-center pt-10 pb-6">
-        <h1 className="text-5xl font-black tracking-wider" style={{
-          background: "linear-gradient(180deg, #ffd700 0%, #ff8c00 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          textShadow: "0 0 40px rgba(255,215,0,0.3)",
+      <div className="text-center pt-12 pb-4">
+        <h1 className="text-6xl md:text-7xl font-black tracking-wider neon-text" style={{
+          fontFamily: "'Impact', 'Arial Black', sans-serif",
+          color: "#ffd700",
+          letterSpacing: "0.1em",
         }}>
-          CriStream Casino
+          ★ CASINO ★
         </h1>
-        <p className="text-gray-400 mt-2 text-lg">Punkte einsetzen. Spaß haben. Gewinnen.</p>
-      </div>
-
-      {/* Play Section */}
-      <div className="max-w-2xl mx-auto px-6 pb-8">
-        <div className="rounded-2xl p-6 text-center" style={{
-          background: "linear-gradient(180deg, rgba(255,215,0,0.08) 0%, rgba(255,215,0,0.02) 100%)",
-          border: "1px solid rgba(255,215,0,0.2)",
-        }}>
-          {user ? (
-            <>
-              <p className="text-sm text-gray-400 mb-1">Eingeloggt als <span className="text-white font-semibold">{user.displayName}</span></p>
-              <div className="flex flex-wrap justify-center gap-3 mb-4 mt-3">
-                <button onClick={() => play("flip")} disabled={playing} className="rounded-xl px-5 py-2.5 font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>🪙 Flip (1 Pt)</button>
-                <button onClick={() => play("slots")} disabled={playing} className="rounded-xl px-5 py-2.5 font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>🎰 Slots (25 Pts)</button>
-                <button onClick={() => play("scratch")} disabled={playing} className="rounded-xl px-5 py-2.5 font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, #00cc88, #009966)", color: "#fff" }}>🎟️ Rubbellos (50 Pts)</button>
-              </div>
-              {result && (
-                <div className="rounded-lg px-4 py-3 text-lg font-bold" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,215,0,0.3)" }}>
-                  {result}
-                </div>
-              )}
-              <div className="mt-3">
-                <input
-                  value={channelInput}
-                  onChange={(e) => setChannelInput(e.target.value)}
-                  placeholder="Channel (default: TheCrisio)"
-                  className="rounded-lg bg-black/30 border border-white/10 px-3 py-1.5 text-xs text-center text-gray-400 w-48"
-                />
-              </div>
-            </>
-          ) : (
-            <div>
-              <p className="text-gray-400 mb-3">Logge dich ein um zu spielen</p>
-              <a href="/api/auth/twitch/viewer" className="rounded-xl px-6 py-2.5 font-semibold text-sm inline-block" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>Login mit Twitch</a>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Grid */}
-      <div className="max-w-7xl mx-auto px-6 pb-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-        {/* Flip */}
-        <GameCard
-          emoji="🪙"
-          name="Münzwurf"
-          command="!flip"
-          aliases="!münze · !coinflip"
-          cost={1}
-          cooldown="kein"
-          ev="+10%"
-          evColor="#4ade80"
-          rows={[
-            ["Gewonnen", "55%", "+1", "#4ade80"],
-            ["Verloren", "45%", "-1", "#f87171"],
-          ]}
-        />
-
-        {/* Slots */}
-        <GameCard
-          emoji="🎰"
-          name="Slot Machine"
-          command="!slots"
-          aliases="!slot"
-          cost={25}
-          cooldown="10s"
-          ev="+16%"
-          evColor="#4ade80"
-          rows={[
-            ["7️⃣7️⃣7️⃣", "0.04%", "777", "#ffd700"],
-            ["💎💎💎", "0.36%", "300", "#a78bfa"],
-            ["⭐⭐⭐", "1.0%", "150", "#fbbf24"],
-            ["Frucht ×3", "~17%", "40-75", "#fb923c"],
-            ["Doppelt", "~39%", "30", "#60a5fa"],
-            ["Nix", "~42%", "10", "#6b7280"],
-          ]}
-        />
-
-        {/* Rubbellos */}
-        <GameCard
-          emoji="🎟️"
-          name="Rubbellos"
-          command="!rubbellos"
-          aliases="!scratch · !rubbel"
-          cost={50}
-          cooldown="15s"
-          ev="+8%"
-          evColor="#4ade80"
-          rows={[
-            ["🌟🌟🌟", "0.25%", "1000", "#ffd700"],
-            ["💎💎💎", "0.64%", "500", "#a78bfa"],
-            ["👑👑👑", "1.44%", "250", "#fbbf24"],
-            ["🎁🎁🎁", "4.0%", "150", "#f472b6"],
-            ["💰💰💰", "6.25%", "100", "#4ade80"],
-            ["🍀🍀🍀", "9.0%", "75", "#34d399"],
-            ["Zweier", "~40%", "45", "#60a5fa"],
-            ["Nix", "~38%", "25", "#6b7280"],
-          ]}
-        />
-
-        {/* Bingo */}
-        <GameCard
-          emoji="🎱"
-          name="Tägliches Bingo"
-          command="!bingo"
-          aliases="Ziehung 07:00"
-          cost={10}
-          cooldown="1×/Tag"
-          ev="-50%"
-          evColor="#fbbf24"
-          description="5 Zahlen aus 1-30 · 10 Gewinnzahlen"
-          rows={[
-            ["5 Treffer", "~0.03%", "500", "#ffd700"],
-            ["4 Treffer", "~1.4%", "100", "#a78bfa"],
-            ["3 Treffer", "~14%", "25", "#60a5fa"],
-            ["0-2", "~85%", "0", "#6b7280"],
-          ]}
-        />
-
-        {/* Lotto */}
-        <GameCard
-          emoji="🍀"
-          name="Wöchentliches Lotto"
-          command="!lotto"
-          aliases="Ziehung Sonntag 10:00"
-          cost={50}
-          cooldown="1×/Woche"
-          ev="-64%"
-          evColor="#f87171"
-          description="6 Zahlen aus 1-49 · 6 Gewinnzahlen"
-          rows={[
-            ["6 Richtige", "0.00007%", "10.000", "#ffd700"],
-            ["5 Richtige", "0.018%", "2.500", "#a78bfa"],
-            ["4 Richtige", "0.97%", "500", "#f472b6"],
-            ["3 Richtige", "12.2%", "100", "#60a5fa"],
-            ["0-2", "~87%", "0", "#6b7280"],
-          ]}
-        />
-
-        {/* Lootbox */}
-        <GameCard
-          emoji="📦"
-          name="Lootbox"
-          command="!lootbox"
-          aliases="!lb"
-          cost={100}
-          cooldown="30s"
-          ev="variabel"
-          evColor="#60a5fa"
-          description="~950 Items · Titel · Karten · Sounds · Actions"
-          rows={[
-            ["LEGENDÄR 🟨", "~2%", "Jackpot", "#ffd700"],
-            ["EPISCH 🟪", "~8%", "Episch", "#a78bfa"],
-            ["SELTEN 🟦", "~15%", "Selten", "#3b82f6"],
-            ["UNGEWÖHNL. 🟩", "~25%", "Ungewöhnlich", "#22c55e"],
-            ["GEWÖHNLICH ⬜", "~50%", "Gewöhnlich", "#6b7280"],
-          ]}
-        />
-      </div>
-
-      {/* Bottom summary */}
-      <div className="max-w-7xl mx-auto px-6 pb-10">
-        <div className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <h2 className="text-center text-lg font-bold mb-4" style={{ color: "#ffd700" }}>Übersicht</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-center text-sm">
-            <MiniStat label="Flip" cost="1" ev="+10%" color="#4ade80" />
-            <MiniStat label="Slots" cost="25" ev="+16%" color="#4ade80" />
-            <MiniStat label="Rubbellos" cost="50" ev="+8%" color="#4ade80" />
-            <MiniStat label="Bingo" cost="10" ev="-50%" color="#fbbf24" />
-            <MiniStat label="Lotto" cost="50" ev="-64%" color="#f87171" />
-            <MiniStat label="Lootbox" cost="100" ev="var." color="#60a5fa" />
-          </div>
-          <p className="text-center text-xs text-gray-600 mt-4">
-            Flip, Slots & Rubbellos sind netto positiv — Viewer gewinnen langfristig.
-            Bingo & Lotto sind Event-Spiele mit Jackpot-Chance.
-          </p>
-        </div>
-      </div>
-
-      {/* Other commands */}
-      <div className="max-w-7xl mx-auto px-6 pb-16">
-        <div className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <h2 className="text-center text-lg font-bold mb-4" style={{ color: "#a78bfa" }}>Weitere Commands</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm">
-            {[
-              ["!points", "Punkte anzeigen"],
-              ["!inventory", "Inventar anzeigen"],
-              ["!equip <name>", "Titel anlegen"],
-              ["!unequip", "Titel entfernen"],
-              ["!profil", "Viewer-Profil"],
-              ["!markt", "Marktplatz"],
-              ["!trade", "Trades"],
-              ["!link", "Twitch ↔ Discord"],
-            ].map(([cmd, desc]) => (
-              <div key={cmd} className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: "rgba(255,255,255,0.04)" }}>
-                <code className="text-purple-400 font-mono text-xs">{cmd}</code>
-                <span className="text-gray-500 text-xs">{desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function GameCard({
-  emoji, name, command, aliases, cost, cooldown, ev, evColor, description, rows,
-}: {
-  emoji: string;
-  name: string;
-  command: string;
-  aliases: string;
-  cost: number;
-  cooldown: string;
-  ev: string;
-  evColor: string;
-  description?: string;
-  rows: [string, string, string, string][];
-}) {
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{
-      background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
-      border: "1px solid rgba(255,255,255,0.1)",
-      backdropFilter: "blur(8px)",
-    }}>
-      {/* Header */}
-      <div className="px-5 pt-5 pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{emoji}</span>
-            <div>
-              <h3 className="font-bold text-lg">{name}</h3>
-              <code className="text-purple-400 text-sm font-mono">{command}</code>
-              <span className="text-gray-600 text-xs ml-2">{aliases}</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-500">EV</div>
-            <div className="font-bold text-lg" style={{ color: evColor }}>{ev}</div>
-          </div>
-        </div>
-        <div className="flex gap-4 mt-3 text-xs">
-          <div>
-            <span className="text-gray-500">Kosten: </span>
-            <span className="font-semibold" style={{ color: "#ffd700" }}>{cost} Pts</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Cooldown: </span>
-            <span className="font-semibold">{cooldown}</span>
-          </div>
-        </div>
-        {description && (
-          <p className="text-xs text-gray-500 mt-2">{description}</p>
+        <p className="text-xl text-yellow-300/60 mt-2 italic">"Das Haus verliert immer"</p>
+        {!user && (
+          <a href="/api/auth/twitch/viewer" className="inline-block mt-4 casino-btn rounded-full px-8 py-3 font-bold text-lg" style={{
+            background: "linear-gradient(135deg, #9146ff, #6441a5)",
+            boxShadow: "0 4px 15px rgba(145,71,255,0.4)",
+          }}>
+            🎮 Login mit Twitch zum Spielen
+          </a>
         )}
+        {user && (
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="text-gray-400">Spieler:</span>
+            <span className="text-yellow-400 font-bold">{user.displayName}</span>
+            <span className="text-gray-600">|</span>
+            <input
+              value={channelInput}
+              onChange={(e) => setChannelInput(e.target.value)}
+              placeholder="Channel: TheCrisio"
+              className="bg-black/40 border border-yellow-500/20 rounded-lg px-3 py-1 text-xs text-center w-40"
+            />
+          </div>
+        )}
+        {message && <p className="text-red-400 mt-2 text-sm">{message}</p>}
       </div>
 
-      {/* Table */}
-      <div className="px-4 pb-4">
-        <div className="rounded-lg overflow-hidden" style={{ background: "rgba(0,0,0,0.3)" }}>
-          <div className="grid grid-cols-3 text-xs text-gray-500 px-3 py-1.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <span>Ergebnis</span>
-            <span className="text-center">Chance</span>
-            <span className="text-right">Gewinn</span>
-          </div>
-          {rows.map(([result, chance, payout, color], i) => (
-            <div
-              key={i}
-              className="grid grid-cols-3 text-xs px-3 py-1.5"
-              style={{ borderBottom: i < rows.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none" }}
-            >
-              <span style={{ color }}>{result}</span>
-              <span className="text-center text-gray-400">{chance}</span>
-              <span className="text-right font-semibold" style={{ color }}>{payout}</span>
+      {/* Game Machines */}
+      <div className="max-w-6xl mx-auto px-6 pb-12 grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+
+        {/* ═══ SLOT MACHINE ═══ */}
+        <div className="slot-machine rounded-3xl p-1" style={{
+          background: "linear-gradient(135deg, #9146ff, #6441a5, #9146ff)",
+        }}>
+          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%)" }}>
+            <h2 className="text-center text-2xl font-black text-purple-300 mb-4">🎰 SLOT MACHINE</h2>
+            <p className="text-center text-xs text-gray-500 mb-4">25 Punkte pro Spin</p>
+
+            {/* Reels */}
+            <div className="flex justify-center gap-2 mb-4">
+              {slotReels.map((sym, i) => (
+                <div key={i} className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl font-bold" style={{
+                  background: "linear-gradient(180deg, #1a1a1a, #0a0a0a)",
+                  border: "2px solid rgba(145,71,255,0.4)",
+                  boxShadow: "inset 0 0 20px rgba(0,0,0,0.8)",
+                  transition: "transform 0.1s",
+                  transform: slotSpinning ? "scaleY(0.95)" : "scaleY(1)",
+                }}>
+                  {sym}
+                </div>
+              ))}
             </div>
-          ))}
+
+            {/* Result */}
+            {slotResult && (
+              <div className={`text-center mb-4 text-sm font-bold rounded-lg py-2 px-3 ${slotResult.includes("+") ? "text-green-400 bg-green-500/10 border border-green-500/30" : slotResult.includes("-") ? "text-red-400 bg-red-500/10 border border-red-500/30" : "text-yellow-400"}`}>
+                {slotResult}
+              </div>
+            )}
+
+            <button onClick={playSlots} disabled={slotSpinning || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{
+              background: slotSpinning ? "#666" : "linear-gradient(135deg, #ffd700, #ff8c00)",
+            }}>
+              {slotSpinning ? "SPINNING..." : "🎰 SPIN!"}
+            </button>
+
+            {/* Paytable mini */}
+            <div className="mt-4 text-xs space-y-1">
+              <div className="flex justify-between text-gray-500"><span>7️⃣7️⃣7️⃣</span><span className="text-yellow-400">777 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>💎💎💎</span><span className="text-purple-400">300 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>Triple</span><span>40-150 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>Doppelt</span><span>30 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>EV</span><span className="text-green-400 font-bold">+16%</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ RUBBELLOS ═══ */}
+        <div className="rounded-3xl p-1" style={{
+          background: "linear-gradient(135deg, #00cc88, #009966, #00cc88)",
+        }}>
+          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg, #0a1a15 0%, #0d0d1a 100%)" }}>
+            <h2 className="text-center text-2xl font-black text-emerald-300 mb-4">🎟️ RUBBELLOS</h2>
+            <p className="text-center text-xs text-gray-500 mb-4">50 Punkte pro Los</p>
+
+            {/* Scratch cards */}
+            <div className="flex justify-center gap-3 mb-4">
+              {scratchCards.map((sym, i) => (
+                <div key={i} className={`w-20 h-24 rounded-xl flex items-center justify-center text-3xl font-bold cursor-default ${sym !== "❓" ? "scratch-pop" : ""}`} style={{
+                  background: sym === "❓"
+                    ? "repeating-linear-gradient(45deg, #1a3a2a, #1a3a2a 10px, #1f4535 10px, #1f4535 20px)"
+                    : "linear-gradient(180deg, #0a2a1a, #050f0a)",
+                  border: `2px solid ${sym === "❓" ? "rgba(0,204,136,0.3)" : "rgba(0,204,136,0.6)"}`,
+                  boxShadow: sym !== "❓" ? "0 0 20px rgba(0,204,136,0.3)" : "none",
+                }}>
+                  {sym}
+                </div>
+              ))}
+            </div>
+
+            {scratchResult && (
+              <div className={`text-center mb-4 text-sm font-bold rounded-lg py-2 px-3 ${scratchResult.includes("+") ? "text-green-400 bg-green-500/10 border border-green-500/30" : scratchResult.includes("-") ? "text-red-400 bg-red-500/10 border border-red-500/30" : "text-yellow-400"}`}>
+                {scratchResult}
+              </div>
+            )}
+
+            <button onClick={playScratch} disabled={!user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{
+              background: "linear-gradient(135deg, #00cc88, #009966)",
+            }}>
+              🎟️ KRATZEN!
+            </button>
+
+            <div className="mt-4 text-xs space-y-1">
+              <div className="flex justify-between text-gray-500"><span>🌟🌟🌟</span><span className="text-yellow-400">1000 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>💎💎💎</span><span className="text-purple-400">500 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>Triple</span><span>75-250 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>Zweier</span><span>45 Pts</span></div>
+              <div className="flex justify-between text-gray-500"><span>EV</span><span className="text-green-400 font-bold">+8%</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ MÜNZWURF ═══ */}
+        <div className="rounded-3xl p-1" style={{
+          background: "linear-gradient(135deg, #ffd700, #ff8c00, #ffd700)",
+        }}>
+          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg, #1a1508 0%, #0d0d1a 100%)" }}>
+            <h2 className="text-center text-2xl font-black text-yellow-300 mb-4">🪙 MÜNZWURF</h2>
+            <p className="text-center text-xs text-gray-500 mb-4">1 Punkt pro Wurf</p>
+
+            {/* Coin */}
+            <div className="flex justify-center mb-4">
+              <div className={`w-28 h-28 rounded-full flex items-center justify-center text-5xl font-black ${coinFlipping ? "coin-anim" : "float-anim"}`} style={{
+                background: coinSide ? "radial-gradient(circle, #ffd700, #b8860b)" : "radial-gradient(circle, #444, #222)",
+                border: "4px solid #ffd700",
+                boxShadow: coinSide ? "0 0 30px rgba(255,215,0,0.5)" : "0 0 10px rgba(255,215,0,0.2)",
+                perspective: "1000px",
+              }}>
+                {coinFlipping ? "🪙" : coinSide === "Kopf" ? "👑" : coinSide === "Zahl" ? "🔢" : "?"}
+              </div>
+            </div>
+
+            {coinSide && !coinFlipping && (
+              <div className="text-center text-lg font-bold mb-2 text-yellow-300">{coinSide}!</div>
+            )}
+
+            {flipResult && (
+              <div className={`text-center mb-4 text-sm font-bold rounded-lg py-2 px-3 ${flipResult.includes("GEWONNEN") ? "text-green-400 bg-green-500/10 border border-green-500/30" : "text-red-400 bg-red-500/10 border border-red-500/30"}`}>
+                {flipResult}
+              </div>
+            )}
+
+            <button onClick={playFlip} disabled={coinFlipping || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{
+              background: coinFlipping ? "#666" : "linear-gradient(135deg, #ffd700, #ff8c00)",
+            }}>
+              {coinFlipping ? "FLIEGT..." : "🪙 WERFEN!"}
+            </button>
+
+            <div className="mt-4 text-xs space-y-1">
+              <div className="flex justify-between text-gray-500"><span>Gewonnen</span><span className="text-green-400">55%</span></div>
+              <div className="flex justify-between text-gray-500"><span>Verloren</span><span className="text-red-400">45%</span></div>
+              <div className="flex justify-between text-gray-500"><span>EV</span><span className="text-green-400 font-bold">+10%</span></div>
+              <div className="flex justify-between text-gray-500"><span>Cooldown</span><span>keiner!</span></div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-function MiniStat({ label, cost, ev, color }: { label: string; cost: string; ev: string; color: string }) {
-  return (
-    <div className="rounded-xl py-3 px-2" style={{ background: "rgba(255,255,255,0.04)" }}>
-      <div className="font-semibold">{label}</div>
-      <div className="text-xs text-gray-500">{cost} Pts</div>
-      <div className="font-bold mt-1" style={{ color }}>{ev}</div>
+      {/* Bingo & Lotto */}
+      <div className="max-w-4xl mx-auto px-6 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="rounded-2xl p-5 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="text-3xl mb-2">🎱</div>
+          <h3 className="font-black text-lg text-blue-300">TÄGLICHES BINGO</h3>
+          <p className="text-xs text-gray-500 mt-1">!bingo (10 Pts) · Ziehung 07:00</p>
+          <p className="text-xs text-gray-500">5 aus 30 · 3 Treffer: 25 | 4: 100 | 5: 500 Pts</p>
+        </div>
+        <div className="rounded-2xl p-5 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="text-3xl mb-2">🍀</div>
+          <h3 className="font-black text-lg text-green-300">WÖCHENTLICHES LOTTO</h3>
+          <p className="text-xs text-gray-500 mt-1">!lotto (50 Pts) · Ziehung Sonntag 10:00</p>
+          <p className="text-xs text-gray-500">6 aus 49 · 3R: 100 | 4R: 500 | 5R: 2500 | 6R: 10.000 Pts</p>
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="text-center pb-8">
+        <p className="text-xs text-gray-700">
+          ⚠️ Kein echtes Geld. Keine echten Verluste. Das Haus verliert statistisch immer. Verantwortungsvolles Fake-Gambling™ ⚠️
+        </p>
+        <p className="text-xs text-gray-800 mt-1">
+          <a href="/status" className="hover:text-gray-600">CriStream</a> · <a href="https://ko-fi.com/thecrisio" className="hover:text-gray-600">Ko-fi</a>
+        </p>
+      </div>
     </div>
   );
 }

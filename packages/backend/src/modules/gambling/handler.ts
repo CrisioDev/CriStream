@@ -86,12 +86,12 @@ function getScratchPayout(symbols: string[]): { payout: number; label: string } 
   // 2 match
   for (const [, count] of counts) {
     if (count === 2) {
-      return { payout: 35, label: "Zweier!" };
+      return { payout: 45, label: "Zweier!" };
     }
   }
 
   // No match — consolation
-  return { payout: 15, label: "Trostpreis" };
+  return { payout: 25, label: "Trostpreis" };
 }
 
 // ── Register Handler (Priority 41 = before autoresponse) ──

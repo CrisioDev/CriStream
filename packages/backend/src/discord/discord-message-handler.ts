@@ -107,25 +107,43 @@ async function processDiscordMessage(message: Message): Promise<void> {
   const cmd = body[0]?.toLowerCase();
   if (!cmd) return;
 
-  if (cmd === "lootbox" || cmd === "lb" || cmd === "inventory" || cmd === "inv" ||
+  if (cmd === "link" || cmd === "lootbox" || cmd === "lb" || cmd === "inventory" || cmd === "inv" ||
       cmd === "equip" || cmd === "unequip" || cmd === "profil" || cmd === "profile" ||
       cmd === "markt" || cmd === "marketplace" || cmd === "marktplatz" ||
       cmd === "trade" || cmd === "trades" || cmd === "tauschen") {
     try {
       const { lootboxService } = await import("../modules/lootbox/service.js");
+      const { resolveUserId, redeemLinkCode } = await import("../modules/lootbox/account-link.js");
       const { config } = await import("../config/index.js");
-      const userId = message.author.id;
+      const discordId = message.author.id;
       const displayName = message.author.displayName ?? message.author.username;
+      const userId = await resolveUserId("discord", discordId);
+
+      // !link CODE — redeem link code from Twitch
+      if (cmd === "link") {
+        const code = body[1];
+        if (!code) {
+          await message.reply("Gib zuerst auf Twitch !link ein, dann hier !link CODE");
+          return;
+        }
+        const result = await redeemLinkCode(code, discordId);
+        if (result.success) {
+          await message.reply("Accounts erfolgreich verbunden! Dein Twitch- und Discord-Inventar sind jetzt eins.");
+        } else {
+          await message.reply(result.error!);
+        }
+        return;
+      }
 
       if (cmd === "lootbox" || cmd === "lb") {
-        const result = await lootboxService.openLootbox(channel.id, `discord:${userId}`, displayName);
+        const result = await lootboxService.openLootbox(channel.id, userId, displayName);
         if ("error" in result) {
           await message.reply(result.error);
         } else {
           await message.reply(result.message);
         }
       } else if (cmd === "inventory" || cmd === "inv") {
-        const items = await lootboxService.getInventory(channel.id, `discord:${userId}`);
+        const items = await lootboxService.getInventory(channel.id, userId);
         if (items.length === 0) {
           await message.reply("Dein Inventar ist leer! Versuch !lootbox");
         } else {
@@ -136,18 +154,18 @@ async function processDiscordMessage(message: Message): Promise<void> {
       } else if (cmd === "equip") {
         const titleName = body.slice(1).join(" ").toLowerCase().replace(/"/g, "");
         if (!titleName) { await message.reply("Nutze: !equip <Titel-Name>"); return; }
-        const items = await lootboxService.getInventory(channel.id, `discord:${userId}`);
+        const items = await lootboxService.getInventory(channel.id, userId);
         const titleItem = items.find(i => i.itemType === "title" && i.itemName.toLowerCase().startsWith(titleName));
         if (!titleItem) { await message.reply("Diesen Titel hast du nicht!"); return; }
         const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
-        await lootboxService.equipTitle(channel.id, `discord:${userId}`, titlePrefix);
+        await lootboxService.equipTitle(channel.id, userId, titlePrefix);
         await message.reply(`Titel equipped: ${titlePrefix}`);
       } else if (cmd === "unequip") {
-        await lootboxService.unequipTitle(channel.id, `discord:${userId}`);
+        await lootboxService.unequipTitle(channel.id, userId);
         await message.reply("Titel entfernt!");
       } else if (cmd === "profil" || cmd === "profile") {
         const baseUrl = config.publicUrl.replace(/\/$/, "");
-        await message.reply(`Dein Profil: ${baseUrl}/viewer/${channel.displayName}/profile/discord:${userId}`);
+        await message.reply(`Dein Profil: ${baseUrl}/viewer/${channel.displayName}/profile/${userId}`);
       } else if (cmd === "markt" || cmd === "marketplace" || cmd === "marktplatz") {
         const baseUrl = config.publicUrl.replace(/\/$/, "");
         await message.reply(`Marktplatz: ${baseUrl}/viewer/${channel.displayName}/marketplace`);

@@ -398,6 +398,15 @@ model ActiveTitle {
   @@unique([channelId, twitchUserId])
 }
 
+model AccountLink {
+  id           String @id @default(uuid())
+  twitchUserId String
+  discordUserId String
+
+  @@unique([twitchUserId])
+  @@unique([discordUserId])
+}
+
 model Stopwatch {
   id        String    @id @default(uuid())
   name      String

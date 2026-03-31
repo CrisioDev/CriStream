@@ -101,6 +101,15 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
     return;
   }
 
+  // !link — generate code to link Discord account
+  if (cmd === "link") {
+    const { createLinkCode } = await import("./account-link.js");
+    const code = await createLinkCode(ctx.msg.userInfo.userId);
+    sayInChannel(ctx.channel, `@${ctx.user} Dein Link-Code: ${code} — Gib auf Discord !link ${code} ein (5 Min gültig)`);
+    ctx.handled = true;
+    return;
+  }
+
   // !profil — link to viewer profile
   if (cmd === "profil" || cmd === "profile") {
     const baseUrl = config.publicUrl.replace(/\/$/, "");

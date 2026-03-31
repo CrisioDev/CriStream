@@ -172,14 +172,31 @@ export async function viewerRoutes(app: FastifyInstance) {
 
       const game = request.body.game;
       const { pointsService } = await import("../points/service.js");
+      const { redis } = await import("../../lib/redis.js");
+
+      const logResult = async (g: string, payout: number, cost: number, detail: string) => {
+        const entry = JSON.stringify({
+          user: channelUser.displayName,
+          game: g,
+          payout,
+          profit: payout - cost,
+          detail,
+          time: Date.now(),
+        });
+        const key = `casino:feed:${channel.id}`;
+        await redis.lpush(key, entry);
+        await redis.ltrim(key, 0, 29);
+        await redis.expire(key, 86400);
+      };
 
       // Flip
       if (game === "flip") {
         if (channelUser.points < 1) return reply.status(400).send({ success: false, error: "Nicht genug Punkte!" });
         await pointsService.deductPoints(channel.id, user.twitchId, 1);
         const win = Math.random() < 0.55;
-        if (win) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, 2);
+        if (win) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: 2 } } });
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
+        await logResult("flip", win ? 2 : 0, 1, `🪙 ${side}`);
         return { success: true, data: { result: side, win, payout: win ? 2 : 0, cost: 1 } };
       }
 
@@ -194,7 +211,8 @@ export async function viewerRoutes(app: FastifyInstance) {
         let payout=10,label="Trostpreis";
         if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[300,"DIAMANT TRIPLE!"],"⭐":[150,"STERN TRIPLE!"],"🍇":[75,"TRIPLE!"],"🍊":[60,"TRIPLE!"],"🍋":[50,"TRIPLE!"],"🍒":[40,"TRIPLE!"]};[payout,label]=p[r1]??[50,"TRIPLE!"];}
         else if(r1===r2||r2===r3||r1===r3){payout=30;label="Doppelt!";}
-        if(payout>0) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, payout);
+        if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
+        await logResult("slots", payout, 25, `🎰 ${r1}${r2}${r3} ${label}`);
         return { success: true, data: { reels: [r1,r2,r3], payout, cost: 25, label } };
       }
 
@@ -209,7 +227,8 @@ export async function viewerRoutes(app: FastifyInstance) {
         let payout=25,label="Trostpreis";
         if(s1===s2&&s2===s3){const p:any={"🌟":[1000,"MEGA GEWINN!!!"],"💎":[500,"DIAMANT!"],"👑":[250,"KÖNIGLICH!"],"🎁":[150,"GESCHENK!"],"💰":[100,"GELDREGEN!"],"🍀":[75,"GLÜCKSKLEE!"]};[payout,label]=p[s1]??[75,"DREIER!"];}
         else if(s1===s2||s2===s3||s1===s3){payout=45;label="Zweier!";}
-        if(payout>0) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, payout);
+        if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
+        await logResult("scratch", payout, 50, `🎟️ ${s1}${s2}${s3} ${label}`);
         return { success: true, data: { symbols: [s1,s2,s3], payout, cost: 50, label } };
       }
 
@@ -221,12 +240,68 @@ export async function viewerRoutes(app: FastifyInstance) {
         await pointsService.deductPoints(channel.id, user.twitchId, amount);
         const win = Math.random() < 0.48; // 48% — slight house edge on double
         if (win) {
-          await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, amount * 2);
+          await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: amount * 2 } } });
         }
+        await logResult("double", win ? amount * 2 : 0, amount, win ? `⚡ x2 → ${amount * 2}` : `💥 Verloren`);
         return { success: true, data: { win, amount, payout: win ? amount * 2 : 0 } };
       }
 
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
+    }
+  );
+
+  // ── Bingo & Lotto ticket check ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/tickets",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { redis } = await import("../../lib/redis.js");
+
+      const bingoRaw = await redis.hget(`bingo:tickets:${channel.id}`, user.twitchId);
+      const lottoRaw = await redis.hget(`lotto:tickets:${channel.id}`, user.twitchId);
+      const lastBingo = await redis.get(`bingo:lastdraw:${channel.id}`);
+      const lastLotto = await redis.get(`lotto:lastdraw:${channel.id}`);
+
+      return {
+        success: true,
+        data: {
+          bingo: bingoRaw ? JSON.parse(bingoRaw) : null,
+          lotto: lottoRaw ? JSON.parse(lottoRaw) : null,
+          lastBingoDraw: lastBingo ? JSON.parse(lastBingo) : null,
+          lastLottoDraw: lastLotto ? JSON.parse(lastLotto) : null,
+        },
+      };
+    }
+  );
+
+  // ── Casino live feed + leaderboard ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/feed",
+    async (_request, reply) => {
+      const channel = await viewerService.resolveChannel(_request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { redis } = await import("../../lib/redis.js");
+      const raw = await redis.lrange(`casino:feed:${channel.id}`, 0, 19);
+      const feed = raw.map((r: string) => JSON.parse(r));
+      return { success: true, data: feed };
+    }
+  );
+
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/leaderboard",
+    async (_request, reply) => {
+      const channel = await viewerService.resolveChannel(_request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const top = await prisma.channelUser.findMany({
+        where: { channelId: channel.id },
+        orderBy: { points: "desc" },
+        take: 15,
+        select: { displayName: true, points: true },
+      });
+      return { success: true, data: top };
     }
   );
 

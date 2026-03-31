@@ -52,6 +52,11 @@ export function CasinoPage() {
 
   const [message, setMessage] = useState<string | null>(null);
 
+  // Live feed & leaderboard
+  const [feed, setFeed] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<{ displayName: string; points: number }[]>([]);
+  const [tickets, setTickets] = useState<any>(null);
+
   // Fetch points
   const fetchPoints = useCallback(async () => {
     if (!user) return;
@@ -62,6 +67,29 @@ export function CasinoPage() {
   }, [user, channelName]);
 
   useEffect(() => { fetchPoints(); }, [fetchPoints]);
+
+  // Poll feed + leaderboard + tickets
+  useEffect(() => {
+    const fetchFeed = async () => {
+      try {
+        const [f, l] = await Promise.all([
+          api.get<any[]>(`/viewer/${channelName}/casino/feed`),
+          api.get<any[]>(`/viewer/${channelName}/casino/leaderboard`),
+        ]);
+        if (f.data) setFeed(f.data);
+        if (l.data) setLeaderboard(l.data);
+      } catch { /* */ }
+      if (user) {
+        try {
+          const t = await api.get<any>(`/viewer/${channelName}/casino/tickets`);
+          if (t.data) setTickets(t.data);
+        } catch { /* */ }
+      }
+    };
+    fetchFeed();
+    const iv = setInterval(fetchFeed, 5000);
+    return () => clearInterval(iv);
+  }, [channelName, user]);
 
   const showWin = (profit: number) => {
     setStreak(s => { const n = s + 1; if (n > maxStreak) setMaxStreak(n); return n; });
@@ -375,6 +403,76 @@ export function CasinoPage() {
           <span className="text-2xl">🍀</span>
           <h3 className="font-black text-green-300">LOTTO</h3>
           <p className="text-xs text-gray-500">!lotto (50 Pts) · Sonntag 10:00 · Bis 10.000 Pts JACKPOT</p>
+        </div>
+      </div>
+
+      {/* Tickets */}
+      {user && tickets && (tickets.bingo || tickets.lotto) && (
+        <div className="max-w-4xl mx-auto px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {tickets.bingo && (
+            <div className="rounded-2xl p-4" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.3)" }}>
+              <h4 className="font-black text-blue-300 mb-1">🎱 Dein Bingo-Ticket</h4>
+              <p className="text-lg font-mono font-bold text-white">{tickets.bingo.numbers.join(" · ")}</p>
+              <p className="text-xs text-gray-500 mt-1">Nächste Ziehung: 07:00</p>
+            </div>
+          )}
+          {tickets.lotto && (
+            <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)" }}>
+              <h4 className="font-black text-green-300 mb-1">🍀 Dein Lottoschein</h4>
+              <p className="text-lg font-mono font-bold text-white">{tickets.lotto.numbers.join(" · ")}</p>
+              <p className="text-xs text-gray-500 mt-1">Nächste Ziehung: Sonntag 10:00</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Live Feed + Leaderboard */}
+      <div className="max-w-6xl mx-auto px-6 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Activity Feed */}
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <h3 className="font-black text-lg text-yellow-400 mb-3">⚡ Live Aktivität</h3>
+          {feed.length === 0 ? (
+            <p className="text-gray-600 text-sm">Noch keine Aktivität...</p>
+          ) : (
+            <div className="space-y-1.5 max-h-80 overflow-y-auto">
+              {feed.map((entry, i) => {
+                const isWin = entry.profit > 0;
+                const ago = Math.floor((Date.now() - entry.time) / 1000);
+                const timeStr = ago < 60 ? `${ago}s` : ago < 3600 ? `${Math.floor(ago/60)}m` : `${Math.floor(ago/3600)}h`;
+                return (
+                  <div key={i} className="flex items-center gap-2 text-xs rounded-lg px-3 py-1.5" style={{ background: "rgba(255,255,255,0.02)" }}>
+                    <span className="text-gray-400 w-8 text-right shrink-0">{timeStr}</span>
+                    <span className="text-white font-semibold truncate">{entry.user}</span>
+                    <span className="text-gray-500 truncate flex-1">{entry.detail}</span>
+                    <span className={`font-bold shrink-0 ${isWin ? "text-green-400" : entry.profit < 0 ? "text-red-400" : "text-gray-500"}`}>
+                      {entry.profit >= 0 ? "+" : ""}{entry.profit}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Leaderboard */}
+        <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <h3 className="font-black text-lg text-yellow-400 mb-3">🏆 Top Spieler</h3>
+          {leaderboard.length === 0 ? (
+            <p className="text-gray-600 text-sm">Noch keine Spieler...</p>
+          ) : (
+            <div className="space-y-1">
+              {leaderboard.map((entry, i) => {
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}.`;
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm rounded-lg px-3 py-1.5" style={{ background: i < 3 ? "rgba(255,215,0,0.05)" : "rgba(255,255,255,0.02)" }}>
+                    <span className="w-8 text-center shrink-0">{medal}</span>
+                    <span className={`flex-1 truncate ${i < 3 ? "font-bold text-yellow-300" : "text-white"}`}>{entry.displayName}</span>
+                    <span className="font-bold text-yellow-400">{entry.points.toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 

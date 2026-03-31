@@ -77,7 +77,7 @@ async function processDiscordMessage(message: Message): Promise<void> {
   const isPointsChannel = settings.pointsChannelId && message.channel.id === settings.pointsChannelId;
 
   // Points/Lootbox commands work in both command channel AND points channel
-  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel", "flip", "münze", "coinflip", "bingo", "lotto"];
+  const POINTS_COMMANDS = ["points", "lootbox", "lb", "inventory", "inv", "equip", "unequip", "link", "profil", "profile", "markt", "marketplace", "marktplatz", "trade", "trades", "tauschen", "slots", "slot", "rubbellos", "scratch", "rubbel", "flip", "münze", "coinflip", "bingo", "lotto", "casino"];
 
   if (!message.content.startsWith(prefix)) return;
   const cmdCheck = message.content.slice(prefix.length).trim().split(/\s+/)[0]?.toLowerCase();
@@ -254,6 +254,15 @@ async function processDiscordMessage(message: Message): Promise<void> {
   }
 
   // ── Gambling commands on Discord ──
+  if (cmd === "casino") {
+    try {
+      const { config } = await import("../config/index.js");
+      const baseUrl = config.publicUrl.replace(/\/$/, "");
+      await replyToUser(`🎰 CriStream Casino: ${baseUrl}/casino — Flip, Slots, Rubbellos, Bingo & Lotto!`);
+    } catch { /* */ }
+    return;
+  }
+
   if (cmd === "flip" || cmd === "münze" || cmd === "coinflip") {
     try {
       const { resolveUserId } = await import("../modules/lootbox/account-link.js");

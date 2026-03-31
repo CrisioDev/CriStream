@@ -181,6 +181,15 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
     return;
   }
 
+  // ── !casino ──
+  if (cmd === "casino") {
+    const { config } = await import("../../config/index.js");
+    const baseUrl = config.publicUrl.replace(/\/$/, "");
+    sayInChannel(ctx.channel, `🎰 CriStream Casino: ${baseUrl}/casino — Flip, Slots, Rubbellos, Bingo & Lotto!`);
+    ctx.handled = true;
+    return;
+  }
+
   // ── !bingo ──
   if (cmd === "bingo") {
     const { buyTicket, getLastDraw } = await import("./bingo.js");

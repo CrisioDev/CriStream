@@ -20,6 +20,7 @@ import { SandboxPage } from "@/pages/Sandbox";
 import { CountersPage } from "@/pages/Counters";
 import { LootboxPage } from "@/pages/Lootbox";
 import { StatusPage } from "@/pages/Status";
+import { CasinoPage } from "@/pages/Casino";
 import { StopwatchPage } from "@/pages/Stopwatch";
 import { ViewerLayout } from "@/pages/viewer/ViewerLayout";
 import { ViewerProfilePage } from "@/pages/viewer/ViewerProfile";
@@ -43,8 +44,9 @@ export function App() {
 
   return (
     <Routes>
-      {/* Public status page */}
+      {/* Public pages */}
       <Route path="/status" element={<StatusPage />} />
+      <Route path="/casino" element={<CasinoPage />} />
 
       {/* Viewer section — accessible without dashboard login */}
       <Route path="/viewer/:channelName" element={<ViewerLayout />}>

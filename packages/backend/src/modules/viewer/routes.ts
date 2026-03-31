@@ -156,6 +156,67 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Gambling via Web ──
+  app.post<{ Params: { channelName: string }; Body: { game: string } }>(
+    "/:channelName/gamble",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+
+      const game = request.body.game;
+      const { pointsService } = await import("../points/service.js");
+
+      // Flip
+      if (game === "flip") {
+        if (channelUser.points < 1) return reply.status(400).send({ success: false, error: "Nicht genug Punkte!" });
+        await pointsService.deductPoints(channel.id, user.twitchId, 1);
+        const win = Math.random() < 0.55;
+        if (win) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, 2);
+        const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
+        return { success: true, data: { result: side, win, payout: win ? 2 : 0, cost: 1 } };
+      }
+
+      // Slots
+      if (game === "slots") {
+        if (channelUser.points < 25) return reply.status(400).send({ success: false, error: "Brauchst 25 Punkte!" });
+        await pointsService.deductPoints(channel.id, user.twitchId, 25);
+        const SYMS = ["🍒","🍋","🍊","🍇","⭐","💎","7️⃣"];
+        const W = [25,22,20,15,10,6,2];
+        function pick() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
+        const r1=pick(),r2=pick(),r3=pick();
+        let payout=10,label="Trostpreis";
+        if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[300,"DIAMANT TRIPLE!"],"⭐":[150,"STERN TRIPLE!"],"🍇":[75,"TRIPLE!"],"🍊":[60,"TRIPLE!"],"🍋":[50,"TRIPLE!"],"🍒":[40,"TRIPLE!"]};[payout,label]=p[r1]??[50,"TRIPLE!"];}
+        else if(r1===r2||r2===r3||r1===r3){payout=30;label="Doppelt!";}
+        if(payout>0) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, payout);
+        return { success: true, data: { reels: [r1,r2,r3], payout, cost: 25, label } };
+      }
+
+      // Scratch
+      if (game === "scratch") {
+        if (channelUser.points < 50) return reply.status(400).send({ success: false, error: "Brauchst 50 Punkte!" });
+        await pointsService.deductPoints(channel.id, user.twitchId, 50);
+        const SYMS = ["🍀","💰","🎁","👑","💎","🌟"];
+        const W = [30,25,20,12,8,5];
+        function pick() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
+        const s1=pick(),s2=pick(),s3=pick();
+        let payout=25,label="Trostpreis";
+        if(s1===s2&&s2===s3){const p:any={"🌟":[1000,"MEGA GEWINN!!!"],"💎":[500,"DIAMANT!"],"👑":[250,"KÖNIGLICH!"],"🎁":[150,"GESCHENK!"],"💰":[100,"GELDREGEN!"],"🍀":[75,"GLÜCKSKLEE!"]};[payout,label]=p[s1]??[75,"DREIER!"];}
+        else if(s1===s2||s2===s3||s1===s3){payout=45;label="Zweier!";}
+        if(payout>0) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, payout);
+        return { success: true, data: { symbols: [s1,s2,s3], payout, cost: 50, label } };
+      }
+
+      return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
+    }
+  );
+
   // ── User search ──
   app.get<{ Params: { channelName: string }; Querystring: { q: string } }>(
     "/:channelName/users",

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/api/client";
+import { useAuthStore } from "@/stores/authStore";
 import type { ViewerProfileDto } from "@cristream/shared";
 
 const RARITY_COLORS: Record<string, string> = {
@@ -31,16 +33,23 @@ const RARITY_LABEL: Record<string, string> = {
 
 export function ViewerProfilePage() {
   const { channelName, twitchUserId } = useParams<{ channelName: string; twitchUserId: string }>();
+  const { user } = useAuthStore();
   const [profile, setProfile] = useState<ViewerProfileDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [gambleResult, setGambleResult] = useState<string | null>(null);
+  const [gambling, setGambling] = useState(false);
 
-  useEffect(() => {
+  const loadProfile = () => {
     if (!channelName || !twitchUserId) return;
-    setLoading(true);
     api.get<ViewerProfileDto>(`/viewer/${channelName}/profile/${twitchUserId}`).then((r) => {
       if (r.data) setProfile(r.data);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    loadProfile();
   }, [channelName, twitchUserId]);
 
   if (loading) return <div className="text-muted-foreground">Laden...</div>;
@@ -120,6 +129,25 @@ export function ViewerProfilePage() {
         </Card>
       )}
 
+      {/* Gambling — only on own profile */}
+      {user && user.twitchId === twitchUserId && channelName && (
+        <Card>
+          <CardContent className="pt-4">
+            <h2 className="font-semibold text-lg mb-3">🎰 Quick Gamble</h2>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <GambleButton label="🪙 Flip (1)" game="flip" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
+              <GambleButton label="🎰 Slots (25)" game="slots" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
+              <GambleButton label="🎟️ Rubbellos (50)" game="scratch" channelName={channelName} onResult={(r) => { setGambleResult(r); loadProfile(); }} gambling={gambling} setGambling={setGambling} />
+            </div>
+            {gambleResult && (
+              <div className="rounded-lg bg-black/30 border border-white/10 px-4 py-3 text-sm animate-pulse">
+                {gambleResult}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Inventory */}
       <div>
         <h2 className="font-semibold text-lg mb-3">Inventar</h2>
@@ -145,5 +173,53 @@ export function ViewerProfilePage() {
         )}
       </div>
     </div>
+  );
+}
+
+function GambleButton({
+  label, game, channelName, onResult, gambling, setGambling,
+}: {
+  label: string;
+  game: string;
+  channelName: string;
+  onResult: (result: string) => void;
+  gambling: boolean;
+  setGambling: (v: boolean) => void;
+}) {
+  const play = async () => {
+    setGambling(true);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game });
+      if (!res.success) {
+        onResult((res as any).error ?? "Fehler!");
+        setGambling(false);
+        return;
+      }
+      const d = res.data;
+      if (game === "flip") {
+        onResult(`🪙 ${d.result}! ${d.win ? "Gewonnen! +1" : "Verloren! -1"}`);
+      } else if (game === "slots") {
+        const profit = d.payout - d.cost;
+        onResult(`🎰 [ ${d.reels.join(" | ")} ] → ${d.label} → ${d.payout} Pts (${profit >= 0 ? "+" : ""}${profit})`);
+      } else if (game === "scratch") {
+        const profit = d.payout - d.cost;
+        onResult(`🎟️ ${d.symbols.join(" ")} → ${d.label} → ${d.payout} Pts (${profit >= 0 ? "+" : ""}${profit})`);
+      }
+    } catch (err: any) {
+      onResult(err?.message ?? "Fehler!");
+    }
+    setGambling(false);
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={play}
+      disabled={gambling}
+      className="border-purple-500/30 hover:bg-purple-500/10"
+    >
+      {label}
+    </Button>
   );
 }

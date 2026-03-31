@@ -40,6 +40,7 @@ export function ViewerLayout() {
               {[
                 { to: "marketplace", label: "Marktplatz" },
                 { to: "trades", label: "Trades" },
+                { to: "/casino", label: "🎰 Casino" },
               ].map(({ to, label }) => (
                 <NavLink
                   key={to}

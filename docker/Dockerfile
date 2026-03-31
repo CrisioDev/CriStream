@@ -17,6 +17,7 @@ COPY packages/backend/src/ packages/backend/src/
 COPY packages/backend/tsconfig.json packages/backend/
 COPY packages/backend/prisma/ packages/backend/prisma/
 COPY packages/frontend/src/ packages/frontend/src/
+COPY packages/frontend/public/ packages/frontend/public/
 COPY packages/frontend/tsconfig.json packages/frontend/tsconfig.node.json packages/frontend/
 COPY packages/frontend/vite.config.ts packages/frontend/tailwind.config.ts packages/frontend/postcss.config.js packages/frontend/index.html packages/frontend/
 

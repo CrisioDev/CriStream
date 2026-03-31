@@ -173,15 +173,11 @@ export async function viewerRoutes(app: FastifyInstance) {
       const game = request.body.game;
       const { pointsService } = await import("../points/service.js");
       const { redis } = await import("../../lib/redis.js");
+      const { prePlaySpecials, postPlaySpecials } = await import("../gambling/specials.js");
 
       const logResult = async (g: string, payout: number, cost: number, detail: string) => {
         const entry = JSON.stringify({
-          user: channelUser.displayName,
-          game: g,
-          payout,
-          profit: payout - cost,
-          detail,
-          time: Date.now(),
+          user: channelUser.displayName, game: g, payout, profit: payout - cost, detail, time: Date.now(),
         });
         const key = `casino:feed:${channel.id}`;
         await redis.lpush(key, entry);
@@ -204,21 +200,33 @@ export async function viewerRoutes(app: FastifyInstance) {
         return 10 - (c ? parseInt(c) : 0);
       };
 
+      const specCtx = { channelId: channel.id, userId: user.twitchId, displayName: channelUser.displayName };
+
       // Flip
       if (game === "flip") {
+        const pre = await prePlaySpecials({ ...specCtx, game: "flip" });
         const free = await useFree("flip");
         const cost = free ? 0 : 1;
         if (!free && channelUser.points < 1) return reply.status(400).send({ success: false, error: "Keine Gratis-Flips mehr & keine Punkte!" });
         if (!free) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { decrement: 1 } } });
-        const win = Math.random() < 0.55;
+        const winChance = pre.winChanceOverride ?? 0.55;
+        const win = pre.forceWin || Math.random() < winChance;
         if (win) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: 2 } } });
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
-        await logResult("flip", win ? 2 : 0, cost, `🪙 ${side}`);
-        return { success: true, data: { result: side, win, payout: win ? 2 : 0, cost, free, freeLeft: await getFreeLeft("flip") } };
+        const post = await postPlaySpecials({ ...specCtx, game: "flip", win, payout: win ? 2 : 0, cost });
+        const finalPayout = post.adjustedPayout;
+        if (post.adjustedPayout > (win ? 2 : 0)) {
+          const bonus = post.adjustedPayout - (win ? 2 : 0);
+          // bonus already applied in postPlaySpecials
+        }
+        await logResult("flip", finalPayout, cost, `🪙 ${side}`);
+        const specials = [...pre.specials, ...post.specials];
+        return { success: true, data: { result: side, win, payout: finalPayout, cost, free, freeLeft: await getFreeLeft("flip"), specials } };
       }
 
       // Slots (cost: 20)
       if (game === "slots") {
+        const pre = await prePlaySpecials({ ...specCtx, game: "slots" });
         const free = await useFree("slots");
         const cost = free ? 0 : 20;
         if (!free && channelUser.points < 20) return reply.status(400).send({ success: false, error: "Keine Gratis-Spins mehr & brauchst 20 Punkte!" });
@@ -226,17 +234,29 @@ export async function viewerRoutes(app: FastifyInstance) {
         const SYMS = ["🍒","🍋","🍊","🍇","⭐","💎","7️⃣"];
         const W = [22,20,18,15,12,8,5];
         function pickSlot() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
-        const r1=pickSlot(),r2=pickSlot(),r3=pickSlot();
+        let r1: string, r2: string, r3: string;
+        if (pre.forceWin) {
+          const forced = ["🍇","🍊","🍋","⭐"][Math.floor(Math.random()*4)]!;
+          r1 = r2 = r3 = forced;
+        } else {
+          r1=pickSlot(); r2=pickSlot(); r3=pickSlot();
+        }
         let payout=12,label="Trostpreis";
         if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};[payout,label]=p[r1]??[55,"TRIPLE!"];}
         else if(r1===r2||r2===r3||r1===r3){payout=30;label="Doppelt!";}
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
-        await logResult("slots", payout, cost, `🎰 ${r1}${r2}${r3} ${label}`);
-        return { success: true, data: { reels: [r1,r2,r3], payout, cost, label, free, freeLeft: await getFreeLeft("slots") } };
+        const isTriple = r1===r2&&r2===r3;
+        const is777 = isTriple && r1==="7️⃣";
+        const post = await postPlaySpecials({ ...specCtx, game: "slots", win: payout > cost, payout, cost, reels: [r1,r2,r3], isTriple, is777 });
+        const finalPayout = post.adjustedPayout;
+        await logResult("slots", finalPayout, cost, `🎰 ${r1}${r2}${r3} ${label}`);
+        const specials = [...pre.specials, ...post.specials];
+        return { success: true, data: { reels: [r1,r2,r3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("slots"), specials } };
       }
 
       // Scratch (cost: 40)
       if (game === "scratch") {
+        const pre = await prePlaySpecials({ ...specCtx, game: "scratch" });
         const free = await useFree("scratch");
         const cost = free ? 0 : 40;
         if (!free && channelUser.points < 40) return reply.status(400).send({ success: false, error: "Keine Gratis-Lose mehr & brauchst 40 Punkte!" });
@@ -244,13 +264,23 @@ export async function viewerRoutes(app: FastifyInstance) {
         const SYMS = ["🍀","💰","🎁","👑","💎","🌟"];
         const W = [28,24,20,14,9,5];
         function pickScratch() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
-        const s1=pickScratch(),s2=pickScratch(),s3=pickScratch();
+        let s1: string, s2: string, s3: string;
+        if (pre.forceWin) {
+          const forced = ["🎁","💰","👑","🍀"][Math.floor(Math.random()*4)]!;
+          s1 = s2 = s3 = forced;
+        } else {
+          s1=pickScratch(); s2=pickScratch(); s3=pickScratch();
+        }
         let payout=20,label="Trostpreis";
         if(s1===s2&&s2===s3){const p:any={"🌟":[1000,"MEGA GEWINN!!!"],"💎":[500,"DIAMANT!"],"👑":[300,"KÖNIGLICH!"],"🎁":[175,"GESCHENK!"],"💰":[120,"GELDREGEN!"],"🍀":[85,"GLÜCKSKLEE!"]};[payout,label]=p[s1]??[85,"DREIER!"];}
         else if(s1===s2||s2===s3||s1===s3){payout=40;label="Zweier!";}
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
-        await logResult("scratch", payout, cost, `🎟️ ${s1}${s2}${s3} ${label}`);
-        return { success: true, data: { symbols: [s1,s2,s3], payout, cost, label, free, freeLeft: await getFreeLeft("scratch") } };
+        const isTriple = s1===s2&&s2===s3;
+        const post = await postPlaySpecials({ ...specCtx, game: "scratch", win: payout > cost, payout, cost, reels: [s1,s2,s3], isTriple });
+        const finalPayout = post.adjustedPayout;
+        await logResult("scratch", finalPayout, cost, `🎟️ ${s1}${s2}${s3} ${label}`);
+        const specials = [...pre.specials, ...post.specials];
+        return { success: true, data: { symbols: [s1,s2,s3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("scratch"), specials } };
       }
 
       // Double or Nothing
@@ -258,16 +288,45 @@ export async function viewerRoutes(app: FastifyInstance) {
         const amount = request.body.amount as number | undefined;
         if (!amount || amount < 1) return reply.status(400).send({ success: false, error: "Ungültiger Betrag" });
         if (channelUser.points < amount) return reply.status(400).send({ success: false, error: `Nicht genug Punkte! Hast ${channelUser.points}.` });
+        const pre = await prePlaySpecials({ ...specCtx, game: "double" });
         await pointsService.deductPoints(channel.id, user.twitchId, amount);
-        const win = Math.random() < 0.48; // 48% — slight house edge on double
+        const win = pre.forceWin || Math.random() < 0.48;
         if (win) {
           await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: amount * 2 } } });
         }
+        const post = await postPlaySpecials({ ...specCtx, game: "double", win, payout: win ? amount * 2 : 0, cost: amount });
         await logResult("double", win ? amount * 2 : 0, amount, win ? `⚡ x2 → ${amount * 2}` : `💥 Verloren`);
-        return { success: true, data: { win, amount, payout: win ? amount * 2 : 0 } };
+        const specials = [...pre.specials, ...post.specials];
+        return { success: true, data: { win, amount, payout: win ? amount * 2 : 0, specials } };
       }
 
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
+    }
+  );
+
+  // ── Glücksrad (daily free wheel) ──
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/gluecksrad",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { spinGluecksrad } = await import("../gambling/specials.js");
+      const result = await spinGluecksrad(channel.id, user.twitchId, user.sub);
+      if (!result.success) return reply.status(400).send({ success: false, error: (result as any).error });
+      return { success: true, data: result };
+    }
+  );
+
+  // ── Boss Fight status ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/boss",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getBossStatus } = await import("../gambling/specials.js");
+      return { success: true, data: await getBossStatus(channel.id) };
     }
   );
 

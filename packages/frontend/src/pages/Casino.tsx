@@ -2,8 +2,17 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 
-function spawnConfetti(container: HTMLDivElement, count = 60) {
-  const colors = ["#ffd700", "#ff6b6b", "#4ade80", "#60a5fa", "#f472b6", "#a78bfa", "#ff8c00"];
+interface CasinoSpecial {
+  type: string;
+  points?: number;
+  message: string;
+  animationData?: Record<string, any>;
+}
+
+function spawnConfetti(container: HTMLDivElement, count = 60, goldOnly = false) {
+  const colors = goldOnly
+    ? ["#ffd700", "#ffb300", "#ff8c00", "#ffe066", "#fff2a0"]
+    : ["#ffd700", "#ff6b6b", "#4ade80", "#60a5fa", "#f472b6", "#a78bfa", "#ff8c00"];
   for (let i = 0; i < count; i++) {
     const el = document.createElement("div");
     el.style.cssText = `position:absolute;width:${4+Math.random()*8}px;height:${4+Math.random()*8}px;background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}%;top:-10px;border-radius:${Math.random()>0.5?"50%":"2px"};pointer-events:none;z-index:100;animation:confetti-fall ${1.5+Math.random()*2}s ease-out forwards;opacity:0.9;`;
@@ -18,19 +27,16 @@ export function CasinoPage() {
   const confettiRef = useRef<HTMLDivElement>(null);
   const channelName = channelInput || "TheCrisio";
 
-  // Points
   const [points, setPoints] = useState<number | null>(null);
 
   // Slots
   const [slotReels, setSlotReels] = useState(["❓", "❓", "❓"]);
   const [slotSpinning, setSlotSpinning] = useState(false);
   const [slotResult, setSlotResult] = useState<{ text: string; win: boolean } | null>(null);
-  const [slotLastPayout, setSlotLastPayout] = useState(0);
 
   // Scratch
   const [scratchCards, setScratchCards] = useState(["❓", "❓", "❓"]);
   const [scratchResult, setScratchResult] = useState<{ text: string; win: boolean } | null>(null);
-  const [scratchLastPayout, setScratchLastPayout] = useState(0);
 
   // Flip
   const [coinSide, setCoinSide] = useState<string | null>(null);
@@ -51,16 +57,55 @@ export function CasinoPage() {
   const [multiplierAnim, setMultiplierAnim] = useState<string | null>(null);
 
   const [message, setMessage] = useState<string | null>(null);
-
-  // Free plays
   const [freePlays, setFreePlays] = useState<{ flip: number; slots: number; scratch: number } | null>(null);
-
-  // Live feed & leaderboard
   const [feed, setFeed] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<{ displayName: string; points: number }[]>([]);
   const [tickets, setTickets] = useState<any>(null);
 
-  // Fetch points
+  // ── Specials ──
+  const [activeSpecial, setActiveSpecial] = useState<CasinoSpecial | null>(null);
+  const specialsQueueRef = useRef<CasinoSpecial[]>([]);
+  const [sirenActive, setSirenActive] = useState(false);
+  const [cursedCoin, setCursedCoin] = useState(false);
+  const [catWalk, setCatWalk] = useState(false);
+
+  // Glucksrad
+  const [wheelSpinning, setWheelSpinning] = useState(false);
+  const [wheelResult, setWheelResult] = useState<string | null>(null);
+  const [wheelUsed, setWheelUsed] = useState(false);
+
+  // Boss Fight
+  const [boss, setBoss] = useState<{ active: boolean; name?: string; hp?: number; maxHp?: number; participants?: number } | null>(null);
+
+  // ── Process specials queue ──
+  const processSpecial = useCallback((special: CasinoSpecial) => {
+    setActiveSpecial(special);
+    const t = special.type;
+    if (t === "goldener_regen" && confettiRef.current) spawnConfetti(confettiRef.current, 100, true);
+    if (t === "jackpot_sirene") { setSirenActive(true); setTimeout(() => setSirenActive(false), 3000); }
+    if (t === "verfluchte_muenze") { setCursedCoin(true); setTimeout(() => setCursedCoin(false), 4000); }
+    if (t === "schwarze_katze") { setCatWalk(true); setTimeout(() => setCatWalk(false), 3000); }
+    if (t === "multiplikator" && confettiRef.current) spawnConfetti(confettiRef.current, 80);
+    if (t === "mystery_box" && confettiRef.current) spawnConfetti(confettiRef.current, 40);
+    if (t === "boss_kill" && confettiRef.current) spawnConfetti(confettiRef.current, 150);
+    if (t === "geschenk_an_chat" && confettiRef.current) spawnConfetti(confettiRef.current, 60);
+    setTimeout(() => {
+      setActiveSpecial(null);
+      const next = specialsQueueRef.current.shift();
+      if (next) processSpecial(next);
+    }, t === "multiplikator" ? 4000 : 3000);
+  }, []);
+
+  const enqueueSpecials = useCallback((specials: CasinoSpecial[]) => {
+    if (!specials?.length) return;
+    for (const s of specials) specialsQueueRef.current.push(s);
+    if (!activeSpecial) {
+      const next = specialsQueueRef.current.shift();
+      if (next) processSpecial(next);
+    }
+  }, [activeSpecial, processSpecial]);
+
+  // ── Fetches ──
   const fetchPoints = useCallback(async () => {
     if (!user) return;
     try {
@@ -81,16 +126,17 @@ export function CasinoPage() {
 
   useEffect(() => { fetchFree(); }, [fetchFree]);
 
-  // Poll feed + leaderboard + tickets
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const [f, l] = await Promise.all([
+        const [f, l, b] = await Promise.all([
           api.get<any[]>(`/viewer/${channelName}/casino/feed`),
           api.get<any[]>(`/viewer/${channelName}/casino/leaderboard`),
+          api.get<any>(`/viewer/${channelName}/casino/boss`),
         ]);
         if (f.data) setFeed(f.data);
         if (l.data) setLeaderboard(l.data);
+        if (b.data) setBoss(b.data);
       } catch { /* */ }
       if (user) {
         try {
@@ -113,32 +159,21 @@ export function CasinoPage() {
     else if (profit >= 10) showMultiplier("WIN!");
   };
 
-  const showLoss = (loss: number) => {
-    setStreak(0);
-    setTotalLost(t => t + loss);
-  };
-
-  const showMultiplier = (text: string) => {
-    setMultiplierAnim(text);
-    setTimeout(() => setMultiplierAnim(null), 2000);
-  };
+  const showLoss = (loss: number) => { setStreak(0); setTotalLost(t => t + loss); };
+  const showMultiplier = (text: string) => { setMultiplierAnim(text); setTimeout(() => setMultiplierAnim(null), 2000); };
 
   // ── Double or Nothing ──
-  const startDouble = (amount: number) => {
-    setDoubleAmount(amount);
-    setDoubleActive(true);
-    setDoubleResult(null);
-  };
+  const startDouble = (amount: number) => { setDoubleAmount(amount); setDoubleActive(true); setDoubleResult(null); };
 
   const playDouble = async () => {
     if (!user || doubleAmount <= 0) return;
-    setDoubleFlipping(true);
-    setDoubleResult(null);
+    setDoubleFlipping(true); setDoubleResult(null);
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "double", amount: doubleAmount }) as any;
       setTimeout(() => {
         setDoubleFlipping(false);
         if (!res.success) { setDoubleResult(res.error ?? "Fehler!"); setDoubleActive(false); fetchPoints(); return; }
+        if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         if (res.data.win) {
           const newAmount = doubleAmount * 2;
           setDoubleResult(`✅ VERDOPPELT! ${newAmount} Punkte!`);
@@ -148,20 +183,14 @@ export function CasinoPage() {
         } else {
           setDoubleResult(`❌ VERLOREN! ${doubleAmount} Punkte weg!`);
           showLoss(doubleAmount);
-          setDoubleAmount(0);
-          setDoubleActive(false);
+          setDoubleAmount(0); setDoubleActive(false);
         }
         fetchPoints();
       }, 800);
     } catch { setDoubleFlipping(false); setDoubleResult("Fehler!"); setDoubleActive(false); }
   };
 
-  const cashOut = () => {
-    setDoubleActive(false);
-    setDoubleResult(`💰 Eingesackt: ${doubleAmount} Punkte!`);
-    setDoubleAmount(0);
-    fetchPoints();
-  };
+  const cashOut = () => { setDoubleActive(false); setDoubleResult(`💰 Eingesackt: ${doubleAmount} Punkte!`); setDoubleAmount(0); fetchPoints(); };
 
   // ── Game handlers ──
   const playSlots = async () => {
@@ -178,9 +207,8 @@ export function CasinoPage() {
         const profit = res.data.payout - res.data.cost;
         setSlotResult({ text: `${res.data.label} → ${res.data.payout} Pts (${profit>=0?"+":""}${profit})${res.data.free ? " [GRATIS]" : ""}`, win: profit > 0 });
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, slots: res.data.freeLeft } : f);
-        setSlotLastPayout(res.data.payout);
-        if (profit > 0) { showWin(profit); startDouble(res.data.payout); }
-        else showLoss(-profit);
+        if (profit > 0) { showWin(profit); startDouble(res.data.payout); } else showLoss(-profit);
+        if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         setSlotSpinning(false); fetchPoints();
       }, 1500);
     } catch { clearInterval(iv); setSlotResult({ text: "Fehler!", win: false }); setSlotSpinning(false); }
@@ -199,9 +227,8 @@ export function CasinoPage() {
         const profit = res.data.payout - res.data.cost;
         setScratchResult({ text: `${res.data.label} → ${res.data.payout} Pts (${profit>=0?"+":""}${profit})${res.data.free ? " [GRATIS]" : ""}`, win: profit > 0 });
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, scratch: res.data.freeLeft } : f);
-        setScratchLastPayout(res.data.payout);
-        if (profit > 0) { showWin(profit); startDouble(res.data.payout); }
-        else showLoss(-profit);
+        if (profit > 0) { showWin(profit); startDouble(res.data.payout); } else showLoss(-profit);
+        if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         fetchPoints();
       }, 1400);
     } catch { setScratchResult({ text: "Fehler!", win: false }); }
@@ -219,9 +246,27 @@ export function CasinoPage() {
         setFlipResult({ text: `${res.data.win ? "GEWONNEN!" : "Verloren!"} ${res.data.payout - res.data.cost >= 0 ? "+" : ""}${res.data.payout - res.data.cost}${res.data.free ? " [GRATIS]" : ""}`, win: res.data.win });
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, flip: res.data.freeLeft } : f);
         if (res.data.win) showWin(1); else showLoss(1);
+        if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         fetchPoints();
       }, 1000);
     } catch { setCoinFlipping(false); setFlipResult({ text: "Fehler!", win: false }); }
+  };
+
+  // ── Glucksrad ──
+  const spinWheel = async () => {
+    if (!user || wheelSpinning) return;
+    setWheelSpinning(true); setWheelResult(null);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/gluecksrad`, {}) as any;
+      setTimeout(() => {
+        setWheelSpinning(false);
+        if (!res.success) { setWheelResult(res.error ?? "Fehler!"); setWheelUsed(true); return; }
+        setWheelResult(`🎡 +${res.data.points} Punkte!`);
+        setWheelUsed(true);
+        if (confettiRef.current && res.data.points >= 50) spawnConfetti(confettiRef.current, 60);
+        fetchPoints();
+      }, 2000);
+    } catch { setWheelSpinning(false); setWheelResult("Fehler!"); }
   };
 
   const resultClass = (r: { win: boolean } | null) => !r ? "" : r.win
@@ -244,6 +289,15 @@ export function CasinoPage() {
         @keyframes streak-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
         @keyframes double-glow { 0%,100% { box-shadow: 0 0 20px rgba(255,215,0,0.3); } 50% { box-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 60px rgba(255,100,0,0.4); } }
         @keyframes points-flash { 0% { transform: scale(1); } 50% { transform: scale(1.2); color: #ffd700; } 100% { transform: scale(1); } }
+        @keyframes siren-flash { 0%,20%,40%,60%,80%,100% { box-shadow: inset 0 0 60px rgba(255,0,0,0.6); } 10%,30%,50%,70%,90% { box-shadow: inset 0 0 60px rgba(255,215,0,0.6); } }
+        @keyframes fire-flicker { 0%,100% { text-shadow: 0 0 10px #ff4500, 0 0 20px #ff6600, 0 0 40px #ff0000; transform: scale(1); } 50% { text-shadow: 0 0 20px #ff4500, 0 0 40px #ff6600, 0 0 60px #ff0000; transform: scale(1.1); } }
+        @keyframes cat-walk { 0% { transform: translateX(-100px); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateX(calc(100vw + 100px)); opacity: 0; } }
+        @keyframes wheel-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1440deg); } }
+        @keyframes special-float { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.2); opacity: 0; } }
+        @keyframes special-slide { 0% { transform: translateY(-100%); opacity: 0; } 20% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
+        @keyframes boss-hit { 0% { transform: scale(1); } 30% { transform: scale(0.95); filter: brightness(2); } 100% { transform: scale(1); filter: brightness(1); } }
+        @keyframes mystery-open { 0% { transform: scale(0.5) rotate(-5deg); opacity: 0; } 50% { transform: scale(1.3) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        @keyframes near-miss-shake { 0%,100% { transform: translateX(0); } 10%,30%,50%,70%,90% { transform: translateX(-4px); } 20%,40%,60%,80% { transform: translateX(4px); } }
         .neon-text { animation: neon-pulse 2s ease-in-out infinite; }
         .slot-machine { animation: slot-glow 2s ease-in-out infinite; }
         .coin-anim { animation: coin-flip 1s ease-in-out; }
@@ -261,13 +315,104 @@ export function CasinoPage() {
 
       <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-50" />
 
+      {/* Siren flash overlay */}
+      {sirenActive && (
+        <div className="fixed inset-0 pointer-events-none z-40" style={{ animation: "siren-flash 0.3s ease-in-out infinite" }} />
+      )}
+
+      {/* Cat walk */}
+      {catWalk && (
+        <div className="fixed top-1/2 left-0 pointer-events-none z-40 text-8xl" style={{ animation: "cat-walk 3s linear forwards" }}>
+          🐈‍⬛✨
+        </div>
+      )}
+
       {/* Multiplier popup */}
       {multiplierAnim && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
           <div className="multiplier-anim text-7xl font-black" style={{
-            color: "#ffd700",
-            textShadow: "0 0 30px #ffd700, 0 0 60px #ff6600, 0 0 90px #ff0000",
+            color: "#ffd700", textShadow: "0 0 30px #ffd700, 0 0 60px #ff6600, 0 0 90px #ff0000",
           }}>{multiplierAnim}</div>
+        </div>
+      )}
+
+      {/* Active Special Overlay */}
+      {activeSpecial && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-45">
+          {activeSpecial.type === "mitleid" && (
+            <div className="text-3xl font-black text-blue-400" style={{ animation: "special-float 3s ease-out forwards", textShadow: "0 0 20px rgba(96,165,250,0.8)" }}>
+              😢 +5 Mitleids-Punkte!
+            </div>
+          )}
+          {activeSpecial.type === "ragequit" && (
+            <div className="px-8 py-4 rounded-2xl font-black text-2xl text-yellow-300" style={{ animation: "special-slide 3s ease-out forwards", background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,100,0,0.1))", border: "2px solid rgba(255,215,0,0.5)", textShadow: "0 0 20px rgba(255,215,0,0.8)" }}>
+              🎁 WILLKOMMEN ZURUCK! +25
+            </div>
+          )}
+          {activeSpecial.type === "beinahe_jackpot" && (
+            <div className="text-4xl font-black text-orange-400" style={{ animation: "near-miss-shake 0.5s ease-in-out 3", textShadow: "0 0 20px rgba(251,146,60,0.8)" }}>
+              😱 SO KNAPP!
+            </div>
+          )}
+          {activeSpecial.type === "verfluchte_muenze" && (
+            <div className="text-6xl" style={{ animation: "fire-flicker 0.5s ease-in-out infinite" }}>
+              🔥🪙🔥
+            </div>
+          )}
+          {activeSpecial.type === "schwarze_katze" && (
+            <div className="text-2xl font-black text-purple-300" style={{ animation: "special-float 3s ease-out forwards", textShadow: "0 0 20px rgba(168,85,247,0.8)" }}>
+              🐈‍⬛ Schwarze Katze! Nächster = Gewinn!
+            </div>
+          )}
+          {activeSpecial.type === "goldener_regen" && (
+            <div className="text-5xl font-black text-yellow-300" style={{ animation: "multiplier-pop 3s ease-out forwards", textShadow: "0 0 40px rgba(255,215,0,0.9)" }}>
+              🌟 GOLDENER REGEN! 🌟
+            </div>
+          )}
+          {activeSpecial.type === "multiplikator" && (
+            <div className="text-center">
+              <div className="text-6xl mb-2" style={{ animation: "wheel-spin 2s ease-out forwards" }}>🎡</div>
+              <div className="text-4xl font-black text-yellow-300" style={{ animation: "multiplier-pop 4s ease-out forwards", textShadow: "0 0 30px rgba(255,215,0,0.9)" }}>
+                x{activeSpecial.animationData?.multiplier}! +{activeSpecial.animationData?.bonus} BONUS!
+              </div>
+            </div>
+          )}
+          {activeSpecial.type === "jackpot_sirene" && (
+            <div className="text-5xl font-black" style={{ animation: "multiplier-pop 3s ease-out forwards", color: "#ff0000", textShadow: "0 0 40px #ff0000, 0 0 80px #ffd700" }}>
+              🚨 JACKPOT SIRENE! 🚨
+            </div>
+          )}
+          {activeSpecial.type === "geschenk_an_chat" && (
+            <div className="text-center">
+              <div className="text-4xl font-black text-pink-400 mb-2" style={{ animation: "multiplier-pop 3s ease-out forwards" }}>
+                🎁 GESCHENK AN CHAT! 🎁
+              </div>
+              <div className="text-lg text-pink-300">
+                {activeSpecial.animationData?.recipients?.join(", ")} bekommen je +10!
+              </div>
+            </div>
+          )}
+          {activeSpecial.type === "mystery_box" && (
+            <div className="text-center" style={{ animation: "mystery-open 3s ease-out forwards" }}>
+              <div className="text-6xl mb-2">📦</div>
+              <div className="text-3xl font-black text-cyan-300" style={{ textShadow: "0 0 20px rgba(34,211,238,0.8)" }}>
+                MYSTERY BOX! +{activeSpecial.points}!
+              </div>
+            </div>
+          )}
+          {activeSpecial.type === "boss_damage" && (
+            <div className="text-3xl font-black text-red-400" style={{ animation: "special-float 3s ease-out forwards", textShadow: "0 0 20px rgba(239,68,68,0.8)" }}>
+              ⚔️ -{activeSpecial.animationData?.damage} HP!
+            </div>
+          )}
+          {activeSpecial.type === "boss_kill" && (
+            <div className="text-center">
+              <div className="text-5xl font-black text-red-500 mb-2" style={{ animation: "multiplier-pop 3s ease-out forwards", textShadow: "0 0 40px rgba(239,68,68,0.8)" }}>
+                💀 BOSS BESIEGT!
+              </div>
+              <div className="text-xl text-yellow-300">+50 Bonus an alle Teilnehmer!</div>
+            </div>
+          )}
         </div>
       )}
 
@@ -278,7 +423,7 @@ export function CasinoPage() {
           <span className="text-green-400 mx-8">💰 DAS HAUS VERLIERT IMMER 💰</span>
           <span className="text-purple-400 mx-8">🃏 VERANTWORTUNGSVOLLES FAKE-GAMBLING™ 🃏</span>
           <span className="text-pink-400 mx-8">⚠️ KEINE ECHTEN VERLUSTE ⚠️</span>
-          <span className="text-blue-400 mx-8">🔥 DOPPELT ODER NICHTS NACH JEDEM GEWINN 🔥</span>
+          <span className="text-blue-400 mx-8">🔥 SPECIALS, BOSS FIGHTS & MYSTERY BOXEN 🔥</span>
         </div>
       </div>
 
@@ -300,11 +445,8 @@ export function CasinoPage() {
               </div>
               <input value={channelInput} onChange={(e) => setChannelInput(e.target.value)} placeholder="Channel" className="bg-black/40 border border-yellow-500/20 rounded-lg px-2 py-1 text-xs text-center w-28" />
             </div>
-            {/* Streak & Stats bar */}
             <div className="flex justify-center gap-4 text-xs">
-              {streak > 0 && (
-                <span className="streak-anim text-yellow-400 font-bold" key={streak}>🔥 Streak: {streak}</span>
-              )}
+              {streak > 0 && <span className="streak-anim text-yellow-400 font-bold" key={streak}>🔥 Streak: {streak}</span>}
               {maxStreak > 0 && <span className="text-gray-600">Best: {maxStreak}</span>}
               {totalWon > 0 && <span className="text-green-500">+{totalWon}</span>}
               {totalLost > 0 && <span className="text-red-500">-{totalLost}</span>}
@@ -339,6 +481,27 @@ export function CasinoPage() {
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">48% Chance zu verdoppeln · 52% alles weg</p>
+          </div>
+        </div>
+      )}
+
+      {/* Boss Fight */}
+      {boss?.active && (
+        <div className="max-w-2xl mx-auto px-6 pb-4">
+          <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(239,68,68,0.1), rgba(0,0,0,0.3))", border: "2px solid rgba(239,68,68,0.4)" }}>
+            <h3 className="text-2xl font-black text-red-400 mb-2">⚔️ BOSS FIGHT ⚔️</h3>
+            <div className="text-4xl mb-2">{boss.name}</div>
+            <div className="relative h-6 rounded-full overflow-hidden mb-2" style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(239,68,68,0.3)" }}>
+              <div className="h-full rounded-full transition-all duration-500" style={{
+                width: `${boss.maxHp ? Math.max(0, (boss.hp! / boss.maxHp) * 100) : 0}%`,
+                background: "linear-gradient(90deg, #ef4444, #f97316)",
+              }} />
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+                {boss.hp}/{boss.maxHp} HP
+              </div>
+            </div>
+            <p className="text-xs text-gray-400">👥 {boss.participants} Kämpfer · Jeder Gewinn schadet dem Boss!</p>
+            <p className="text-xs text-yellow-400 mt-1">Boss besiegt = +50 Bonus für alle Teilnehmer!</p>
           </div>
         </div>
       )}
@@ -398,8 +561,9 @@ export function CasinoPage() {
             <div className="flex justify-center mb-4">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black ${coinFlipping ? "coin-anim" : "float-anim"}`} style={{
                 background: coinSide ? "radial-gradient(circle,#ffd700,#b8860b)" : "radial-gradient(circle,#444,#222)",
-                border: "4px solid #ffd700",
-                boxShadow: coinSide ? "0 0 30px rgba(255,215,0,0.5)" : "0 0 10px rgba(255,215,0,0.2)",
+                border: `4px solid ${cursedCoin ? "#ff4500" : "#ffd700"}`,
+                boxShadow: cursedCoin ? "0 0 30px rgba(255,69,0,0.8), 0 0 60px rgba(255,0,0,0.4)" : coinSide ? "0 0 30px rgba(255,215,0,0.5)" : "0 0 10px rgba(255,215,0,0.2)",
+                ...(cursedCoin ? { animation: "fire-flicker 0.5s ease-in-out infinite" } : {}),
               }}>{coinFlipping ? "🪙" : coinSide === "Kopf" ? "👑" : coinSide === "Zahl" ? "🔢" : "?"}</div>
             </div>
             {coinSide && !coinFlipping && <div className="text-center text-lg font-bold mb-1 text-yellow-300">{coinSide}!</div>}
@@ -410,6 +574,25 @@ export function CasinoPage() {
           </div>
         </div>
       </div>
+
+      {/* Glucksrad */}
+      {user && (
+        <div className="max-w-md mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.08), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
+            <div className="text-5xl mb-2" style={wheelSpinning ? { animation: "wheel-spin 2s ease-out forwards" } : {}}>🎡</div>
+            <h3 className="font-black text-lg text-cyan-300 mb-1">GLÜCKSRAD</h3>
+            <p className="text-xs text-gray-500 mb-3">Einmal am Tag gratis drehen · 1-100 Punkte</p>
+            {wheelResult && (
+              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${wheelResult.includes("+") ? "text-cyan-300 bg-cyan-500/10" : "text-gray-400"}`}>
+                {wheelResult}
+              </div>
+            )}
+            <button onClick={spinWheel} disabled={wheelSpinning || wheelUsed} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: wheelSpinning || wheelUsed ? "#666" : "linear-gradient(135deg,#22d3ee,#0891b2)" }}>
+              {wheelSpinning ? "DREHT..." : wheelUsed ? "MORGEN WIEDER" : "🎡 DREHEN!"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bingo & Lotto */}
       <div className="max-w-4xl mx-auto px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -447,7 +630,6 @@ export function CasinoPage() {
 
       {/* Live Feed + Leaderboard */}
       <div className="max-w-6xl mx-auto px-6 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Activity Feed */}
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <h3 className="font-black text-lg text-yellow-400 mb-3">⚡ Live Aktivität</h3>
           {feed.length === 0 ? (
@@ -473,7 +655,6 @@ export function CasinoPage() {
           )}
         </div>
 
-        {/* Leaderboard */}
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <h3 className="font-black text-lg text-yellow-400 mb-3">🏆 Top Spieler</h3>
           {leaderboard.length === 0 ? (
@@ -492,6 +673,24 @@ export function CasinoPage() {
               })}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Specials Legend */}
+      <div className="max-w-4xl mx-auto px-6 pb-6">
+        <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <h3 className="font-black text-sm text-gray-500 mb-2">🎁 CASINO SPECIALS</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 text-xs text-gray-600">
+            <span>😢 3x Pech → +5 Mitleid</span>
+            <span>🔥 5x Flip-Pech → Verfluchte Münze</span>
+            <span>🐈‍⬛ 3% Schwarze Katze → Garantie-Win</span>
+            <span>🎡 x2-x5 Multiplikator bei 100+ Win</span>
+            <span>🚨 Jackpot-Sirene bei 777</span>
+            <span>🎁 500+ Win → Geschenk an Chat</span>
+            <span>📦 Mystery Box alle 20 Spins</span>
+            <span>⚔️ Boss Fights mit Community</span>
+            <span>🎡 Tägliches Gratis-Glücksrad</span>
+          </div>
         </div>
       </div>
 

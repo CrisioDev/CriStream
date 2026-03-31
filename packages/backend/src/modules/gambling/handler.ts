@@ -130,7 +130,9 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
     const cdSet = await redis.set(cdKey, "1", "EX", SLOT_COOLDOWN, "NX");
     if (!cdSet) { sayInChannel(ctx.channel, `@${ctx.user} Slots auf Cooldown!`); ctx.handled = true; return; }
 
-    // Free play or paid
+    const { prePlaySpecials, postPlaySpecials } = await import("./specials.js");
+    const pre = await prePlaySpecials({ channelId: ctx.channelId, userId, displayName: ctx.user, game: "slots" });
+
     const free = await useFreePlay(ctx.channelId, userId, "slots");
     if (!free) {
       const user = await pointsService.getUserPoints(ctx.channelId, userId);
@@ -142,16 +144,27 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
       await pointsService.deductPoints(ctx.channelId, userId, SLOT_COST);
     }
 
-    const r1 = spinReel(), r2 = spinReel(), r3 = spinReel();
+    let r1: string, r2: string, r3: string;
+    if (pre.forceWin) {
+      const forced = ["🍇","🍊","🍋","⭐"][Math.floor(Math.random()*4)]!;
+      r1 = r2 = r3 = forced;
+    } else {
+      r1 = spinReel(); r2 = spinReel(); r3 = spinReel();
+    }
     const { payout, label } = getSlotPayout(r1, r2, r3);
     if (payout > 0) await pointsService.addMessagePoints(ctx.channelId, userId, ctx.user, payout);
 
+    const isTriple = r1===r2&&r2===r3;
+    const is777 = isTriple && r1==="7️⃣";
     const cost = free ? 0 : SLOT_COST;
-    const profit = payout - cost;
+    const post = await postPlaySpecials({ channelId: ctx.channelId, userId, displayName: ctx.user, game: "slots", win: payout > cost, payout, cost, reels: [r1,r2,r3], isTriple, is777 });
+    const finalPayout = post.adjustedPayout;
+    const profit = finalPayout - cost;
     const freeLeft = await getFreeCount(ctx.channelId, userId, "slots");
     const freeTag = free ? ` [GRATIS · ${freeLeft} übrig]` : "";
+    const specText = [...pre.specials, ...post.specials].map(s => s.message).join(" | ");
 
-    sayInChannel(ctx.channel, `🎰 ${ctx.user} ▸ [ ${r1} | ${r2} | ${r3} ] ▸ ${label} → ${payout} Punkte (${profit >= 0 ? "+" : ""}${profit})${freeTag}`);
+    sayInChannel(ctx.channel, `🎰 ${ctx.user} ▸ [ ${r1} | ${r2} | ${r3} ] ▸ ${label} → ${finalPayout} Punkte (${profit >= 0 ? "+" : ""}${profit})${freeTag}${specText ? ` 🎁 ${specText}` : ""}`);
     ctx.handled = true;
     return;
   }
@@ -161,6 +174,9 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
     const cdKey = `cd:${ctx.channelId}:scratch:${userId}`;
     const cdSet = await redis.set(cdKey, "1", "EX", SCRATCH_COOLDOWN, "NX");
     if (!cdSet) { sayInChannel(ctx.channel, `@${ctx.user} Rubbellos auf Cooldown!`); ctx.handled = true; return; }
+
+    const { prePlaySpecials, postPlaySpecials } = await import("./specials.js");
+    const pre = await prePlaySpecials({ channelId: ctx.channelId, userId, displayName: ctx.user, game: "scratch" });
 
     const free = await useFreePlay(ctx.channelId, userId, "scratch");
     if (!free) {
@@ -173,16 +189,26 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
       await pointsService.deductPoints(ctx.channelId, userId, SCRATCH_COST);
     }
 
-    const s1 = pickScratchSymbol(), s2 = pickScratchSymbol(), s3 = pickScratchSymbol();
+    let s1: string, s2: string, s3: string;
+    if (pre.forceWin) {
+      const forced = ["🎁","💰","👑","🍀"][Math.floor(Math.random()*4)]!;
+      s1 = s2 = s3 = forced;
+    } else {
+      s1 = pickScratchSymbol(); s2 = pickScratchSymbol(); s3 = pickScratchSymbol();
+    }
     const { payout, label } = getScratchPayout([s1, s2, s3]);
     if (payout > 0) await pointsService.addMessagePoints(ctx.channelId, userId, ctx.user, payout);
 
+    const isTriple = s1===s2&&s2===s3;
     const cost = free ? 0 : SCRATCH_COST;
-    const profit = payout - cost;
+    const post = await postPlaySpecials({ channelId: ctx.channelId, userId, displayName: ctx.user, game: "scratch", win: payout > cost, payout, cost, reels: [s1,s2,s3], isTriple });
+    const finalPayout = post.adjustedPayout;
+    const profit = finalPayout - cost;
     const freeLeft = await getFreeCount(ctx.channelId, userId, "scratch");
     const freeTag = free ? ` [GRATIS · ${freeLeft} übrig]` : "";
+    const specText = [...pre.specials, ...post.specials].map(s => s.message).join(" | ");
 
-    sayInChannel(ctx.channel, `🎟️ ${ctx.user} kratzt... ${s1} ${s2} ${s3} ▸ ${label} → ${payout} Punkte (${profit >= 0 ? "+" : ""}${profit})${freeTag}`);
+    sayInChannel(ctx.channel, `🎟️ ${ctx.user} kratzt... ${s1} ${s2} ${s3} ▸ ${label} → ${finalPayout} Punkte (${profit >= 0 ? "+" : ""}${profit})${freeTag}${specText ? ` 🎁 ${specText}` : ""}`);
     ctx.handled = true;
     return;
   }
@@ -238,6 +264,9 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
 
   // ── !flip ──
   if (cmd === "flip" || cmd === "münze" || cmd === "coinflip") {
+    const { prePlaySpecials, postPlaySpecials } = await import("./specials.js");
+    const pre = await prePlaySpecials({ channelId: ctx.channelId, userId, displayName: ctx.user, game: "flip" });
+
     const free = await useFreePlay(ctx.channelId, userId, "flip");
     if (!free) {
       const user = await pointsService.getUserPoints(ctx.channelId, userId);
@@ -248,17 +277,21 @@ registerHandler("gambling", 41, async (ctx: MessageContext) => {
       await pointsService.deductPoints(ctx.channelId, userId, 1);
     }
 
-    const win = Math.random() < 0.55;
+    const winChance = pre.winChanceOverride ?? 0.55;
+    const win = pre.forceWin || Math.random() < winChance;
     if (win) await pointsService.addMessagePoints(ctx.channelId, userId, ctx.user, 2);
 
     const cost = free ? 0 : 1;
     const payout = win ? 2 : 0;
-    const profit = payout - cost;
+    const post = await postPlaySpecials({ channelId: ctx.channelId, userId, displayName: ctx.user, game: "flip", win, payout, cost });
+    const finalPayout = post.adjustedPayout;
+    const profit = finalPayout - cost;
     const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
     const freeLeft = await getFreeCount(ctx.channelId, userId, "flip");
     const freeTag = free ? ` [GRATIS · ${freeLeft} übrig]` : "";
+    const specText = [...pre.specials, ...post.specials].map(s => s.message).join(" | ");
 
-    sayInChannel(ctx.channel, `🪙 ${ctx.user} wirft... ${side}! ${win ? "Gewonnen!" : "Verloren!"} ${profit >= 0 ? "+" : ""}${profit} Punkt${freeTag}`);
+    sayInChannel(ctx.channel, `🪙 ${ctx.user} wirft... ${side}! ${win ? "Gewonnen!" : "Verloren!"} ${profit >= 0 ? "+" : ""}${profit} Punkt${freeTag}${specText ? ` 🎁 ${specText}` : ""}`);
     ctx.handled = true;
     return;
   }

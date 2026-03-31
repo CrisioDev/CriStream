@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, NavLink, useParams, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/utils";
@@ -5,6 +6,19 @@ import { cn } from "@/lib/utils";
 export function ViewerLayout() {
   const { channelName } = useParams<{ channelName: string }>();
   const { user, login, logout } = useAuthStore();
+
+  // Handle token from viewer OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const refresh = params.get("refresh");
+    if (token && refresh) {
+      localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refresh);
+      window.history.replaceState({}, "", window.location.pathname);
+      window.location.reload();
+    }
+  }, []);
 
   if (!channelName) return <Navigate to="/" />;
 
@@ -64,12 +78,12 @@ export function ViewerLayout() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={login}
-                className="rounded-md bg-purple-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-purple-700"
+              <a
+                href="/api/auth/twitch/viewer"
+                className="rounded-md bg-purple-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-purple-700 inline-block"
               >
                 Login mit Twitch
-              </button>
+              </a>
             )}
           </div>
         </div>

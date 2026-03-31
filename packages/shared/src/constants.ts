@@ -13,6 +13,7 @@ export const DEFAULT_TIMER_INTERVAL = 15;
 export const DEFAULT_TIMER_MIN_LINES = 5;
 export const DEFAULT_COMMAND_PREFIX = "!";
 
+// Full scopes for broadcasters/bot owners
 export const TWITCH_SCOPES = [
   "chat:read",
   "chat:edit",
@@ -29,6 +30,11 @@ export const TWITCH_SCOPES = [
   "user:read:moderated_channels",
   "channel:read:polls",
   "channel:read:predictions",
+];
+
+// Minimal scopes for viewers (just need to identify them)
+export const TWITCH_VIEWER_SCOPES = [
+  "user:read:email",
 ];
 
 // Custom API Variables

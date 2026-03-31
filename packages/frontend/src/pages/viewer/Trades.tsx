@@ -42,7 +42,9 @@ export function TradesPage() {
     return (
       <div className="text-center py-12 space-y-4">
         <p className="text-muted-foreground">Du musst eingeloggt sein um Trades zu sehen.</p>
-        <Button onClick={login}>Login mit Twitch</Button>
+        <a href="/api/auth/twitch/viewer" className="rounded-md bg-purple-600 px-6 py-2 text-sm font-medium text-white hover:bg-purple-700 inline-block">
+          Login mit Twitch
+        </a>
       </div>
     );
   }

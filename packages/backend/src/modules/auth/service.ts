@@ -3,20 +3,21 @@ import { config } from "../../config/index.js";
 import { prisma } from "../../lib/prisma.js";
 import { encrypt, decrypt } from "../../lib/crypto.js";
 import { logger } from "../../lib/logger.js";
-import { TWITCH_SCOPES } from "@cristream/shared";
+import { TWITCH_SCOPES, TWITCH_VIEWER_SCOPES } from "@cristream/shared";
 import type { JwtPayload } from "../../middleware/jwt-auth.js";
 import type { AuthUser, AuthTokens } from "@cristream/shared";
 import { addUserToAuthProvider } from "../../twitch/twitch-auth.js";
 import { getTwitchApi } from "../../twitch/twitch-api.js";
 
 class AuthService {
-  getAuthUrl(): string {
+  getAuthUrl(viewer = false): string {
     const params = new URLSearchParams({
       client_id: config.twitchClientId,
       redirect_uri: config.twitchRedirectUri,
       response_type: "code",
-      scope: TWITCH_SCOPES.join(" "),
+      scope: (viewer ? TWITCH_VIEWER_SCOPES : TWITCH_SCOPES).join(" "),
     });
+    if (viewer) params.set("state", "viewer");
     return `https://id.twitch.tv/oauth2/authorize?${params}`;
   }
 

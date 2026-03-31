@@ -101,4 +101,62 @@ async function processDiscordMessage(message: Message): Promise<void> {
   };
 
   await handleCommand(cmdCtx, channel);
+
+  // Handle lootbox commands (not in the command DB, handled by dedicated handler)
+  const body = message.content.slice(prefix.length).trim().split(/\s+/);
+  const cmd = body[0]?.toLowerCase();
+  if (!cmd) return;
+
+  if (cmd === "lootbox" || cmd === "lb" || cmd === "inventory" || cmd === "inv" ||
+      cmd === "equip" || cmd === "unequip" || cmd === "profil" || cmd === "profile" ||
+      cmd === "markt" || cmd === "marketplace" || cmd === "marktplatz" ||
+      cmd === "trade" || cmd === "trades" || cmd === "tauschen") {
+    try {
+      const { lootboxService } = await import("../modules/lootbox/service.js");
+      const { config } = await import("../config/index.js");
+      const userId = message.author.id;
+      const displayName = message.author.displayName ?? message.author.username;
+
+      if (cmd === "lootbox" || cmd === "lb") {
+        const result = await lootboxService.openLootbox(channel.id, `discord:${userId}`, displayName);
+        if ("error" in result) {
+          await message.reply(result.error);
+        } else {
+          await message.reply(result.message);
+        }
+      } else if (cmd === "inventory" || cmd === "inv") {
+        const items = await lootboxService.getInventory(channel.id, `discord:${userId}`);
+        if (items.length === 0) {
+          await message.reply("Dein Inventar ist leer! Versuch !lootbox");
+        } else {
+          const summary = items.slice(0, 5).map(i => `${i.itemName} x${i.quantity}`).join(", ");
+          const more = items.length > 5 ? ` (+${items.length - 5} mehr)` : "";
+          await message.reply(`Inventar: ${summary}${more}`);
+        }
+      } else if (cmd === "equip") {
+        const titleName = body.slice(1).join(" ").toLowerCase().replace(/"/g, "");
+        if (!titleName) { await message.reply("Nutze: !equip <Titel-Name>"); return; }
+        const items = await lootboxService.getInventory(channel.id, `discord:${userId}`);
+        const titleItem = items.find(i => i.itemType === "title" && i.itemName.toLowerCase().startsWith(titleName));
+        if (!titleItem) { await message.reply("Diesen Titel hast du nicht!"); return; }
+        const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
+        await lootboxService.equipTitle(channel.id, `discord:${userId}`, titlePrefix);
+        await message.reply(`Titel equipped: ${titlePrefix}`);
+      } else if (cmd === "unequip") {
+        await lootboxService.unequipTitle(channel.id, `discord:${userId}`);
+        await message.reply("Titel entfernt!");
+      } else if (cmd === "profil" || cmd === "profile") {
+        const baseUrl = config.publicUrl.replace(/\/$/, "");
+        await message.reply(`Dein Profil: ${baseUrl}/viewer/${channel.displayName}/profile/discord:${userId}`);
+      } else if (cmd === "markt" || cmd === "marketplace" || cmd === "marktplatz") {
+        const baseUrl = config.publicUrl.replace(/\/$/, "");
+        await message.reply(`Marktplatz: ${baseUrl}/viewer/${channel.displayName}/marketplace`);
+      } else if (cmd === "trade" || cmd === "trades" || cmd === "tauschen") {
+        const baseUrl = config.publicUrl.replace(/\/$/, "");
+        await message.reply(`Trades: ${baseUrl}/viewer/${channel.displayName}/trades`);
+      }
+    } catch (err) {
+      logger.error({ err }, "Discord lootbox command error");
+    }
+  }
 }

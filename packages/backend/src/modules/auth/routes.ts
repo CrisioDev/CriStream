@@ -3,24 +3,31 @@ import { authService } from "./service.js";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 
 export async function authRoutes(app: FastifyInstance) {
-  // Redirect to Twitch OAuth
+  // Redirect to Twitch OAuth (full scopes for broadcasters)
   app.get("/twitch", async (_request, reply) => {
-    const url = authService.getAuthUrl();
+    const url = authService.getAuthUrl(false);
+    return reply.redirect(url);
+  });
+
+  // Redirect to Twitch OAuth (minimal scopes for viewers)
+  app.get("/twitch/viewer", async (_request, reply) => {
+    const url = authService.getAuthUrl(true);
     return reply.redirect(url);
   });
 
   // OAuth callback
-  app.get<{ Querystring: { code?: string; error?: string } }>(
+  app.get<{ Querystring: { code?: string; error?: string; state?: string } }>(
     "/twitch/callback",
     async (request, reply) => {
-      const { code, error } = request.query;
+      const { code, error, state } = request.query;
       if (error || !code) {
         return reply.redirect("/?error=auth_denied");
       }
 
       const tokens = await authService.handleCallback(code);
-      // Redirect to frontend with token
-      return reply.redirect(`/?token=${tokens.accessToken}&refresh=${tokens.refreshToken}`);
+      // Redirect back — viewer goes to returnTo or /, broadcaster goes to /
+      const redirectBase = state === "viewer" ? "/viewer" : "/";
+      return reply.redirect(`${redirectBase}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}`);
     }
   );
 

@@ -157,7 +157,7 @@ export async function viewerRoutes(app: FastifyInstance) {
   );
 
   // ── Gambling via Web ──
-  app.post<{ Params: { channelName: string }; Body: { game: string } }>(
+  app.post<{ Params: { channelName: string }; Body: { game: string; amount?: number } }>(
     "/:channelName/gamble",
     async (request, reply) => {
       const user = getUser(request);
@@ -211,6 +211,19 @@ export async function viewerRoutes(app: FastifyInstance) {
         else if(s1===s2||s2===s3||s1===s3){payout=45;label="Zweier!";}
         if(payout>0) await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, payout);
         return { success: true, data: { symbols: [s1,s2,s3], payout, cost: 50, label } };
+      }
+
+      // Double or Nothing
+      if (game === "double") {
+        const amount = request.body.amount as number | undefined;
+        if (!amount || amount < 1) return reply.status(400).send({ success: false, error: "Ungültiger Betrag" });
+        if (channelUser.points < amount) return reply.status(400).send({ success: false, error: `Nicht genug Punkte! Hast ${channelUser.points}.` });
+        await pointsService.deductPoints(channel.id, user.twitchId, amount);
+        const win = Math.random() < 0.48; // 48% — slight house edge on double
+        if (win) {
+          await pointsService.addMessagePoints(channel.id, user.twitchId, channelUser.displayName, amount * 2);
+        }
+        return { success: true, data: { win, amount, payout: win ? amount * 2 : 0 } };
       }
 
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });

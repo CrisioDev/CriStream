@@ -85,6 +85,28 @@ async function processDiscordMessage(message: Message): Promise<void> {
   // Allow if: in command channel, or in points channel for points commands
   if (!isCommandChannel && !(isPointsChannel && isPointsCommand)) return;
 
+  // If points command used outside points channel, redirect reply there
+  const pointsRedirectChannel = (isPointsCommand && !isPointsChannel && settings.pointsChannelId)
+    ? settings.pointsChannelId
+    : null;
+
+  async function replyToUser(text: string) {
+    if (pointsRedirectChannel) {
+      try {
+        const { getDiscordClientRaw } = await import("./discord-client.js");
+        const client = getDiscordClientRaw();
+        if (client?.isReady()) {
+          const targetCh = await client.channels.fetch(pointsRedirectChannel);
+          if (targetCh && "send" in targetCh) {
+            await (targetCh as any).send(`<@${message.author.id}> ${text}`);
+            return;
+          }
+        }
+      } catch { /* fallback to reply */ }
+    }
+    await message.reply(text);
+  }
+
   // Handle !gib requests
   if (message.content.startsWith(`${prefix}gib `)) {
     const requestMsg = message.content.slice(prefix.length + 4).trim();
@@ -148,9 +170,9 @@ async function processDiscordMessage(message: Message): Promise<void> {
       const points = user?.points ?? 0;
       const watchH = Math.floor((user?.watchMinutes ?? 0) / 60);
       const watchM = (user?.watchMinutes ?? 0) % 60;
-      await message.reply(`${message.author.displayName} hat ${points} Punkte (Watchtime: ${watchH}h ${watchM}m)`);
+      await replyToUser(`${message.author.displayName} hat ${points} Punkte (Watchtime: ${watchH}h ${watchM}m)`);
     } catch {
-      await message.reply("Punkte konnten nicht abgefragt werden.");
+      await replyToUser("Punkte konnten nicht abgefragt werden.");
     }
     return;
   }
@@ -167,28 +189,25 @@ async function processDiscordMessage(message: Message): Promise<void> {
       const displayName = message.author.displayName ?? message.author.username;
       const userId = await resolveUserId("discord", discordId);
 
-      // !link [CODE] — link Discord ↔ Twitch
+      // !link [CODE] — link Discord ↔ Twitch (DMs stay private)
       if (cmd === "link") {
         const { createLinkCode } = await import("../modules/lootbox/account-link.js");
         const codeArg = body[1];
 
         if (codeArg) {
-          // Redeeming a code from Twitch
           const result = await redeemLinkCode("discord", discordId, codeArg);
           if (result.success) {
-            await message.reply("Accounts verbunden! Dein Twitch- und Discord-Inventar sind jetzt eins.");
+            await replyToUser("Accounts verbunden! Dein Twitch- und Discord-Inventar sind jetzt eins.");
           } else {
-            await message.reply(result.error!);
+            await replyToUser(result.error!);
           }
         } else {
-          // Generate code — send as DM
           const code = await createLinkCode("discord", discordId);
           try {
             await message.author.send(`Dein Link-Code: **${code}** — Gib auf Twitch \`!link ${code}\` ein (5 Min gültig)`);
-            await message.reply("Link-Code per DM gesendet!");
+            await replyToUser("Link-Code per DM gesendet!");
           } catch {
-            // DMs disabled fallback
-            await message.reply(`Dein Link-Code: ${code} — Gib auf Twitch !link ${code} ein (5 Min gültig)`);
+            await replyToUser(`Dein Link-Code: ${code} — Gib auf Twitch !link ${code} ein (5 Min gültig)`);
           }
         }
         return;
@@ -196,41 +215,37 @@ async function processDiscordMessage(message: Message): Promise<void> {
 
       if (cmd === "lootbox" || cmd === "lb") {
         const result = await lootboxService.openLootbox(channel.id, userId, displayName);
-        if ("error" in result) {
-          await message.reply(result.error);
-        } else {
-          await message.reply(result.message);
-        }
+        await replyToUser("error" in result ? result.error : result.message);
       } else if (cmd === "inventory" || cmd === "inv") {
         const items = await lootboxService.getInventory(channel.id, userId);
         if (items.length === 0) {
-          await message.reply("Dein Inventar ist leer! Versuch !lootbox");
+          await replyToUser("Dein Inventar ist leer! Versuch !lootbox");
         } else {
           const summary = items.slice(0, 5).map(i => `${i.itemName} x${i.quantity}`).join(", ");
           const more = items.length > 5 ? ` (+${items.length - 5} mehr)` : "";
-          await message.reply(`Inventar: ${summary}${more}`);
+          await replyToUser(`Inventar: ${summary}${more}`);
         }
       } else if (cmd === "equip") {
         const titleName = body.slice(1).join(" ").toLowerCase().replace(/"/g, "");
-        if (!titleName) { await message.reply("Nutze: !equip <Titel-Name>"); return; }
+        if (!titleName) { await replyToUser("Nutze: !equip <Titel-Name>"); return; }
         const items = await lootboxService.getInventory(channel.id, userId);
         const titleItem = items.find(i => i.itemType === "title" && i.itemName.toLowerCase().startsWith(titleName));
-        if (!titleItem) { await message.reply("Diesen Titel hast du nicht!"); return; }
+        if (!titleItem) { await replyToUser("Diesen Titel hast du nicht!"); return; }
         const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
         await lootboxService.equipTitle(channel.id, userId, titlePrefix);
-        await message.reply(`Titel equipped: ${titlePrefix}`);
+        await replyToUser(`Titel equipped: ${titlePrefix}`);
       } else if (cmd === "unequip") {
         await lootboxService.unequipTitle(channel.id, userId);
-        await message.reply("Titel entfernt!");
+        await replyToUser("Titel entfernt!");
       } else if (cmd === "profil" || cmd === "profile") {
         const baseUrl = config.publicUrl.replace(/\/$/, "");
-        await message.reply(`Dein Profil: ${baseUrl}/viewer/${channel.displayName}/profile/${userId}`);
+        await replyToUser(`Dein Profil: ${baseUrl}/viewer/${channel.displayName}/profile/${userId}`);
       } else if (cmd === "markt" || cmd === "marketplace" || cmd === "marktplatz") {
         const baseUrl = config.publicUrl.replace(/\/$/, "");
-        await message.reply(`Marktplatz: ${baseUrl}/viewer/${channel.displayName}/marketplace`);
+        await replyToUser(`Marktplatz: ${baseUrl}/viewer/${channel.displayName}/marketplace`);
       } else if (cmd === "trade" || cmd === "trades" || cmd === "tauschen") {
         const baseUrl = config.publicUrl.replace(/\/$/, "");
-        await message.reply(`Trades: ${baseUrl}/viewer/${channel.displayName}/trades`);
+        await replyToUser(`Trades: ${baseUrl}/viewer/${channel.displayName}/trades`);
       }
     } catch (err) {
       logger.error({ err }, "Discord lootbox command error");

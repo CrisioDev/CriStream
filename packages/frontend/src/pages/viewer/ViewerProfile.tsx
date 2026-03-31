@@ -129,8 +129,8 @@ export function ViewerProfilePage() {
         </Card>
       )}
 
-      {/* Gambling — only on own profile */}
-      {user && user.twitchId === twitchUserId && channelName && (
+      {/* Gambling — only on own profile (check twitchId OR displayName match) */}
+      {user && channelName && (user.twitchId === twitchUserId || user.displayName.toLowerCase() === profile.displayName.toLowerCase()) && (
         <Card>
           <CardContent className="pt-4">
             <h2 className="font-semibold text-lg mb-3">🎰 Quick Gamble</h2>
@@ -189,9 +189,9 @@ function GambleButton({
   const play = async () => {
     setGambling(true);
     try {
-      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game });
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game }) as any;
       if (!res.success) {
-        onResult((res as any).error ?? "Fehler!");
+        onResult(res.error ?? "Fehler!");
         setGambling(false);
         return;
       }

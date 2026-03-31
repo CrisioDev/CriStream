@@ -1,4 +1,30 @@
+import { useState } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import { api } from "@/api/client";
+
 export function CasinoPage() {
+  const { user } = useAuthStore();
+  const [result, setResult] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [channelInput, setChannelInput] = useState("");
+
+  // Try to guess channel from URL referrer or use input
+  const channelName = channelInput || "TheCrisio";
+
+  const play = async (game: string) => {
+    if (!user) { setResult("Bitte zuerst einloggen!"); return; }
+    setPlaying(true);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game }) as any;
+      if (!res.success) { setResult(res.error ?? "Fehler!"); setPlaying(false); return; }
+      const d = res.data;
+      if (game === "flip") setResult(`🪙 ${d.result}! ${d.win ? "Gewonnen! +1 Punkt" : "Verloren! -1 Punkt"}`);
+      else if (game === "slots") { const p = d.payout-d.cost; setResult(`🎰 [ ${d.reels.join(" | ")} ] → ${d.label} → ${d.payout} Pts (${p>=0?"+":""}${p})`); }
+      else if (game === "scratch") { const p = d.payout-d.cost; setResult(`🎟️ ${d.symbols.join(" ")} → ${d.label} → ${d.payout} Pts (${p>=0?"+":""}${p})`); }
+    } catch { setResult("Fehler — bist du eingeloggt?"); }
+    setPlaying(false);
+  };
+
   return (
     <div className="min-h-screen text-white overflow-auto" style={{
       background: "radial-gradient(ellipse at top, #1a0a2e 0%, #0d0d1a 50%, #050508 100%)",
@@ -15,6 +41,43 @@ export function CasinoPage() {
           CriStream Casino
         </h1>
         <p className="text-gray-400 mt-2 text-lg">Punkte einsetzen. Spaß haben. Gewinnen.</p>
+      </div>
+
+      {/* Play Section */}
+      <div className="max-w-2xl mx-auto px-6 pb-8">
+        <div className="rounded-2xl p-6 text-center" style={{
+          background: "linear-gradient(180deg, rgba(255,215,0,0.08) 0%, rgba(255,215,0,0.02) 100%)",
+          border: "1px solid rgba(255,215,0,0.2)",
+        }}>
+          {user ? (
+            <>
+              <p className="text-sm text-gray-400 mb-1">Eingeloggt als <span className="text-white font-semibold">{user.displayName}</span></p>
+              <div className="flex flex-wrap justify-center gap-3 mb-4 mt-3">
+                <button onClick={() => play("flip")} disabled={playing} className="rounded-xl px-5 py-2.5 font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>🪙 Flip (1 Pt)</button>
+                <button onClick={() => play("slots")} disabled={playing} className="rounded-xl px-5 py-2.5 font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>🎰 Slots (25 Pts)</button>
+                <button onClick={() => play("scratch")} disabled={playing} className="rounded-xl px-5 py-2.5 font-semibold text-sm transition-all hover:scale-105 disabled:opacity-50" style={{ background: "linear-gradient(135deg, #00cc88, #009966)", color: "#fff" }}>🎟️ Rubbellos (50 Pts)</button>
+              </div>
+              {result && (
+                <div className="rounded-lg px-4 py-3 text-lg font-bold" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,215,0,0.3)" }}>
+                  {result}
+                </div>
+              )}
+              <div className="mt-3">
+                <input
+                  value={channelInput}
+                  onChange={(e) => setChannelInput(e.target.value)}
+                  placeholder="Channel (default: TheCrisio)"
+                  className="rounded-lg bg-black/30 border border-white/10 px-3 py-1.5 text-xs text-center text-gray-400 w-48"
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <p className="text-gray-400 mb-3">Logge dich ein um zu spielen</p>
+              <a href="/api/auth/twitch/viewer" className="rounded-xl px-6 py-2.5 font-semibold text-sm inline-block" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>Login mit Twitch</a>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Grid */}

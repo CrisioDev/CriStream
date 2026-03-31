@@ -199,6 +199,10 @@ export async function viewerRoutes(app: FastifyInstance) {
         if (ttl < 0) { const now = new Date(); const tom = new Date(now); tom.setHours(24,0,0,0); await redis.expire(k, Math.floor((tom.getTime()-now.getTime())/1000)); }
         return true;
       };
+      const getFreeLeft = async (g: string) => {
+        const c = await redis.get(`free:${g}:${channel.id}:${user.twitchId}`);
+        return 10 - (c ? parseInt(c) : 0);
+      };
 
       // Flip
       if (game === "flip") {
@@ -210,7 +214,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         if (win) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: 2 } } });
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
         await logResult("flip", win ? 2 : 0, cost, `🪙 ${side}`);
-        return { success: true, data: { result: side, win, payout: win ? 2 : 0, cost, free } };
+        return { success: true, data: { result: side, win, payout: win ? 2 : 0, cost, free, freeLeft: await getFreeLeft("flip") } };
       }
 
       // Slots (cost: 20)
@@ -228,7 +232,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         else if(r1===r2||r2===r3||r1===r3){payout=30;label="Doppelt!";}
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         await logResult("slots", payout, cost, `🎰 ${r1}${r2}${r3} ${label}`);
-        return { success: true, data: { reels: [r1,r2,r3], payout, cost, label, free } };
+        return { success: true, data: { reels: [r1,r2,r3], payout, cost, label, free, freeLeft: await getFreeLeft("slots") } };
       }
 
       // Scratch (cost: 40)
@@ -246,7 +250,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         else if(s1===s2||s2===s3||s1===s3){payout=40;label="Zweier!";}
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         await logResult("scratch", payout, cost, `🎟️ ${s1}${s2}${s3} ${label}`);
-        return { success: true, data: { symbols: [s1,s2,s3], payout, cost, label, free } };
+        return { success: true, data: { symbols: [s1,s2,s3], payout, cost, label, free, freeLeft: await getFreeLeft("scratch") } };
       }
 
       // Double or Nothing
@@ -264,6 +268,20 @@ export async function viewerRoutes(app: FastifyInstance) {
       }
 
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
+    }
+  );
+
+  // ── Free plays remaining ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/free",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { redis } = await import("../../lib/redis.js");
+      const get = async (g: string) => { const c = await redis.get(`free:${g}:${channel.id}:${user.twitchId}`); return 10 - (c ? parseInt(c) : 0); };
+      return { success: true, data: { flip: await get("flip"), slots: await get("slots"), scratch: await get("scratch") } };
     }
   );
 

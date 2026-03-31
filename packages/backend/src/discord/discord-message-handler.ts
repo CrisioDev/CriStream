@@ -5,6 +5,7 @@ import { handleCommand } from "../modules/commands/executor.js";
 import { viewerRequestService } from "../modules/requests/service.js";
 import { incrementDiscordLines } from "../modules/timers/timer-scheduler.js";
 import { chatLogService } from "../modules/chatlogs/service.js";
+import { pointsService } from "../modules/points/service.js";
 import type { CommandContext } from "../modules/commands/executor.js";
 
 export function setupDiscordMessageHandler(client: Client): void {
@@ -44,6 +45,26 @@ async function processDiscordMessage(message: Message): Promise<void> {
     channelId: settings.channelId,
     createdAt: new Date(),
   });
+
+  // Award points for Discord messages (creates ChannelUser entry if needed)
+  try {
+    const { resolveUserId } = await import("../modules/lootbox/account-link.js");
+    const resolvedId = await resolveUserId("discord", message.author.id);
+    const displayName = message.author.displayName ?? message.author.username;
+    const ps = await prisma.pointsSettings.findUnique({ where: { channelId: settings.channelId } });
+    if (ps?.enabled) {
+      await pointsService.addMessagePoints(settings.channelId, resolvedId, displayName, ps.pointsPerMessage);
+    } else {
+      // Still ensure ChannelUser exists even without points enabled
+      await prisma.channelUser.upsert({
+        where: { channelId_twitchUserId: { channelId: settings.channelId, twitchUserId: resolvedId } },
+        create: { channelId: settings.channelId, twitchUserId: resolvedId, displayName },
+        update: { displayName },
+      });
+    }
+  } catch {
+    // Non-critical, don't block message processing
+  }
 
   if (!settings.commandsEnabled) return;
 
@@ -106,6 +127,22 @@ async function processDiscordMessage(message: Message): Promise<void> {
   const body = message.content.slice(prefix.length).trim().split(/\s+/);
   const cmd = body[0]?.toLowerCase();
   if (!cmd) return;
+
+  // !points on Discord
+  if (cmd === "points") {
+    try {
+      const { resolveUserId } = await import("../modules/lootbox/account-link.js");
+      const resolvedId = await resolveUserId("discord", message.author.id);
+      const user = await pointsService.getUserPoints(channel.id, resolvedId);
+      const points = user?.points ?? 0;
+      const watchH = Math.floor((user?.watchMinutes ?? 0) / 60);
+      const watchM = (user?.watchMinutes ?? 0) % 60;
+      await message.reply(`${message.author.displayName} hat ${points} Punkte (Watchtime: ${watchH}h ${watchM}m)`);
+    } catch {
+      await message.reply("Punkte konnten nicht abgefragt werden.");
+    }
+    return;
+  }
 
   if (cmd === "link" || cmd === "lootbox" || cmd === "lb" || cmd === "inventory" || cmd === "inv" ||
       cmd === "equip" || cmd === "unequip" || cmd === "profil" || cmd === "profile" ||

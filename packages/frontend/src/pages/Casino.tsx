@@ -442,9 +442,7 @@ export function CasinoPage() {
 
       {/* Header + Points */}
       <div className="text-center pt-8 pb-2">
-        <h1 className="text-6xl md:text-7xl font-black tracking-wider neon-text" style={{ fontFamily: "'Impact','Arial Black',sans-serif", color: "#ffd700", letterSpacing: "0.1em" }}>
-          ★ CASINO ★
-        </h1>
+        <img src="/crisino-header.webp" alt="WILLKOMMEN IM CRISINO" className="mx-auto max-w-xl w-full px-4" style={{ filter: "drop-shadow(0 0 30px rgba(168,85,247,0.5))" }} />
         {!user ? (
           <a href="/api/auth/twitch/viewer?returnTo=/casino" className="inline-block mt-4 casino-btn rounded-full px-8 py-3 font-bold text-lg" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5)", boxShadow: "0 4px 15px rgba(145,71,255,0.4)" }}>
             🎮 Login mit Twitch

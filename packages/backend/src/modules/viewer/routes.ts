@@ -312,8 +312,12 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
       const { spinGluecksrad } = await import("../gambling/specials.js");
-      const result = await spinGluecksrad(channel.id, user.twitchId, user.sub);
+      const result = await spinGluecksrad(channel.id, user.twitchId, channelUser.displayName);
       if (!result.success) return reply.status(400).send({ success: false, error: (result as any).error });
       return { success: true, data: result };
     }

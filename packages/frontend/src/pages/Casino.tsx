@@ -273,6 +273,15 @@ export function CasinoPage() {
   const [memoryPoints, setMemoryPoints] = useState(0);
   const memoryLockRef = useRef(false);
 
+  // Sudoku
+  const [sudokuPuzzle, setSudokuPuzzle] = useState<(number | 0)[][] | null>(null);
+  const [sudokuSolution, setSudokuSolution] = useState<number[][] | null>(null);
+  const [sudokuGrid, setSudokuGrid] = useState<number[][]>([]);
+  const [sudokuDiff, setSudokuDiff] = useState<"easy" | "medium" | "hard">("easy");
+  const [sudokuStart, setSudokuStart] = useState(0);
+  const [sudokuDone, setSudokuDone] = useState(false);
+  const [sudokuMsg, setSudokuMsg] = useState<string | null>(null);
+
   // Dice 21
   const [d21, setD21] = useState<{ total: number; rolls: number[]; bet: number; finished: boolean } | null>(null);
   const [d21Bet, setD21Bet] = useState(20);
@@ -1933,6 +1942,24 @@ export function CasinoPage() {
               <div className="text-xs text-gray-500 mt-1">Triff 21! Bis x3</div>
               <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(251,146,60,0.2)", color: "#fb923c" }}>Spielen</div>
             </button>
+            {/* Sudoku */}
+            <button onClick={() => {
+              setActiveMinigame("sudoku" as any);
+              setSudokuDone(false); setSudokuMsg(null);
+              api.get<any>(`/viewer/${channelName}/casino/minigame/sudoku?difficulty=${sudokuDiff}`).then((r: any) => {
+                if (r.data) {
+                  setSudokuPuzzle(r.data.puzzle);
+                  setSudokuSolution(r.data.solution);
+                  setSudokuGrid(r.data.puzzle.map((row: number[]) => [...row]));
+                  setSudokuStart(Date.now());
+                }
+              });
+            }} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(59,130,246,0.3)" }}>
+              <div className="text-4xl mb-2">🔢</div>
+              <div className="font-black text-blue-400">Sudoku</div>
+              <div className="text-xs text-gray-500 mt-1">4x4 · Bis zu 75 Pts</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(59,130,246,0.2)", color: "#60a5fa" }}>Spielen</div>
+            </button>
             {/* Over/Under */}
             <button onClick={() => setActiveMinigame("overunder" as any)} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
               <div className="text-4xl mb-2">🎯</div>
@@ -2097,6 +2124,90 @@ export function CasinoPage() {
                 {memoryPoints > 0 && <div className="text-sm text-purple-400 font-bold">+{memoryPoints} Punkte erhalten!</div>}
                 <button onClick={startMemory} className="px-6 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.4)" }}>Nochmal</button>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sudoku Modal */}
+      {activeMinigame === ("sudoku" as any) && sudokuPuzzle && (
+        <div className="fixed inset-0 z-[35] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-6 text-center max-w-sm w-full mx-4" style={{ background: "linear-gradient(180deg, #0a0a1a, #000)", border: "2px solid rgba(59,130,246,0.4)" }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-black text-lg text-blue-400">🔢 Sudoku 4x4</h3>
+              <button onClick={() => { setActiveMinigame(null); setSudokuPuzzle(null); }} className="text-gray-500 hover:text-white text-lg">✕</button>
+            </div>
+            {/* Difficulty selector */}
+            {!sudokuDone && (
+              <div className="flex justify-center gap-2 mb-3">
+                {(["easy", "medium", "hard"] as const).map(d => (
+                  <button key={d} onClick={() => {
+                    setSudokuDiff(d); setSudokuDone(false); setSudokuMsg(null);
+                    api.get<any>(`/viewer/${channelName}/casino/minigame/sudoku?difficulty=${d}`).then((r: any) => {
+                      if (r.data) { setSudokuPuzzle(r.data.puzzle); setSudokuSolution(r.data.solution); setSudokuGrid(r.data.puzzle.map((row: number[]) => [...row])); setSudokuStart(Date.now()); }
+                    });
+                  }} className={`text-xs px-3 py-1 rounded-full font-bold ${sudokuDiff === d ? "bg-blue-500 text-white" : "bg-blue-500/20 text-blue-300"}`}>
+                    {d === "easy" ? "Leicht (10)" : d === "medium" ? "Mittel (25)" : "Schwer (50)"}
+                  </button>
+                ))}
+              </div>
+            )}
+            {sudokuMsg && <p className={`text-sm mb-2 font-bold ${sudokuMsg.includes("+") ? "text-green-400" : sudokuMsg.includes("Falsch") ? "text-red-400" : "text-blue-400"}`}>{sudokuMsg}</p>}
+            {/* Grid */}
+            <div className="inline-grid gap-0.5 mx-auto mb-3" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+              {sudokuGrid.map((row, r) => row.map((val, c) => {
+                const isOriginal = sudokuPuzzle![r]![c] !== 0;
+                return (
+                  <div key={`${r}-${c}`} className={`w-12 h-12 flex items-center justify-center text-lg font-black rounded-lg ${isOriginal ? "bg-blue-500/20 text-blue-300" : val > 0 ? "bg-white/10 text-white" : "bg-white/5 text-gray-600"}`}
+                    style={{ border: `2px solid ${isOriginal ? "rgba(59,130,246,0.4)" : val > 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)"}`,
+                      borderRight: c === 1 ? "3px solid rgba(59,130,246,0.5)" : undefined,
+                      borderBottom: r === 1 ? "3px solid rgba(59,130,246,0.5)" : undefined,
+                    }}>
+                    {isOriginal ? val : (
+                      <select value={val || ""} onChange={e => {
+                        const newGrid = sudokuGrid.map(row => [...row]);
+                        newGrid[r]![c] = parseInt(e.target.value) || 0;
+                        setSudokuGrid(newGrid);
+                      }} className="w-full h-full bg-transparent text-center text-lg font-black appearance-none cursor-pointer" style={{ color: val > 0 ? "#fff" : "#666" }}>
+                        <option value="">-</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                      </select>
+                    )}
+                  </div>
+                );
+              }))}
+            </div>
+            {!sudokuDone ? (
+              <button onClick={async () => {
+                // Check if all filled
+                const allFilled = sudokuGrid.every(row => row.every(v => v > 0));
+                if (!allFilled) { setSudokuMsg("Fülle alle Felder aus!"); return; }
+                // Validate
+                const correct = sudokuSolution && sudokuGrid.every((row, r) => row.every((v, c) => v === sudokuSolution[r]![c]));
+                if (!correct) { setSudokuMsg("❌ Falsch! Versuche es nochmal."); casinoSounds.loss(); return; }
+                // Submit
+                const timeMs = Date.now() - sudokuStart;
+                const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/sudoku/submit`, { difficulty: sudokuDiff, timeMs }) as any;
+                if (res.success) {
+                  setSudokuDone(true);
+                  setSudokuMsg(`✅ Gelöst in ${(timeMs/1000).toFixed(1)}s! +${res.data.points} Pts!`);
+                  casinoSounds.questComplete(); fetchPoints();
+                } else { setSudokuMsg(res.error ?? "Fehler!"); }
+              }} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: "linear-gradient(135deg, #60a5fa, #3b82f6)" }}>
+                ✅ Prüfen
+              </button>
+            ) : (
+              <button onClick={() => {
+                setSudokuDone(false); setSudokuMsg(null);
+                api.get<any>(`/viewer/${channelName}/casino/minigame/sudoku?difficulty=${sudokuDiff}`).then((r: any) => {
+                  if (r.data) { setSudokuPuzzle(r.data.puzzle); setSudokuSolution(r.data.solution); setSudokuGrid(r.data.puzzle.map((row: number[]) => [...row])); setSudokuStart(Date.now()); }
+                });
+              }} className="casino-btn px-8 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(59,130,246,0.2)", border: "1px solid rgba(59,130,246,0.4)" }}>
+                🔄 Nochmal
+              </button>
             )}
           </div>
         </div>

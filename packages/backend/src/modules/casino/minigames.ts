@@ -472,3 +472,100 @@ export async function playOverUnder(
 
   return { dice: [d1, d2], total, win, payout, guess: guessLabel };
 }
+
+// ── Sudoku ──
+// 4x4 mini-sudoku with point rewards based on difficulty + time
+
+const SUDOKU_SOLUTIONS: number[][][] = [
+  [[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]],
+  [[2,1,4,3],[4,3,2,1],[1,2,3,4],[3,4,1,2]],
+  [[3,4,1,2],[1,2,3,4],[4,3,2,1],[2,1,4,3]],
+  [[4,3,2,1],[2,1,4,3],[3,4,1,2],[1,2,3,4]],
+  [[1,3,2,4],[4,2,1,3],[2,4,3,1],[3,1,4,2]],
+  [[2,4,3,1],[3,1,4,2],[1,3,2,4],[4,2,1,3]],
+  [[4,1,3,2],[2,3,4,1],[3,4,1,2],[1,2,2,4]], // intentionally replaced below
+  [[3,2,4,1],[1,4,2,3],[4,1,3,2],[2,3,1,4]],
+];
+
+function shuffleSudoku(base: number[][]): { solution: number[][]; puzzle: number[][]; blanks: number } {
+  // Randomly permute digits 1-4
+  const perm = [1,2,3,4].sort(() => Math.random() - 0.5);
+  const solution = base.map(row => row.map(v => perm[v - 1]!));
+
+  // Randomly shuffle rows within band and cols within stack
+  if (Math.random() > 0.5) { [solution[0], solution[1]] = [solution[1]!, solution[0]!]; }
+  if (Math.random() > 0.5) { [solution[2], solution[3]] = [solution[3]!, solution[2]!]; }
+
+  return { solution, puzzle: solution.map(r => [...r]), blanks: 0 };
+}
+
+export function generateSudoku(difficulty: "easy" | "medium" | "hard"): {
+  puzzle: (number | 0)[][];
+  solution: number[][];
+  blanks: number;
+  difficulty: string;
+  reward: number;
+} {
+  const base = SUDOKU_SOLUTIONS[Math.floor(Math.random() * 6)]!; // use first 6 valid ones
+  const { solution } = shuffleSudoku(base);
+
+  const blanksCount = difficulty === "easy" ? 6 : difficulty === "medium" ? 8 : 10;
+  const reward = difficulty === "easy" ? 10 : difficulty === "medium" ? 25 : 50;
+
+  // Create puzzle by removing cells
+  const puzzle: (number | 0)[][] = solution.map(r => [...r]);
+  const positions: [number, number][] = [];
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) positions.push([r, c]);
+  positions.sort(() => Math.random() - 0.5);
+  for (let i = 0; i < blanksCount && i < positions.length; i++) {
+    const [r, c] = positions[i]!;
+    puzzle[r]![c!] = 0;
+  }
+
+  return { puzzle, solution, blanks: blanksCount, difficulty, reward };
+}
+
+export function validateSudoku(solution: number[][], submitted: number[][]): boolean {
+  // Check all cells match
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      if (solution[r]![c] !== submitted[r]?.[c]) return false;
+    }
+  }
+  return true;
+}
+
+export async function submitSudoku(
+  channelId: string, userId: string, displayName: string,
+  difficulty: "easy" | "medium" | "hard", timeMs: number,
+): Promise<{ points: number } | { error: string }> {
+  // Cooldown 30s
+  const cdKey = `casino:sudoku:cd:${channelId}:${userId}`;
+  const cd = await redis.get(cdKey);
+  if (cd) return { error: "Sudoku Cooldown! Warte 30 Sekunden." };
+
+  const baseReward = difficulty === "easy" ? 10 : difficulty === "medium" ? 25 : 50;
+  // Time bonus: under 30s +50%, under 60s +25%
+  let timeBonus = 0;
+  if (timeMs < 30000) timeBonus = Math.round(baseReward * 0.5);
+  else if (timeMs < 60000) timeBonus = Math.round(baseReward * 0.25);
+
+  const pts = baseReward + timeBonus;
+
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { increment: pts } },
+  });
+
+  await redis.set(cdKey, "1", "EX", 30);
+
+  const entry = JSON.stringify({
+    user: displayName, game: "sudoku", payout: pts, profit: pts,
+    detail: `🔢 Sudoku (${difficulty}) gelöst! +${pts} (${(timeMs/1000).toFixed(1)}s)`,
+    time: Date.now(),
+  });
+  await redis.lpush(`casino:feed:${channelId}`, entry);
+  await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+  return { points: pts };
+}

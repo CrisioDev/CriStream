@@ -116,18 +116,31 @@ export async function getFullBonusSummary(channelId: string, userId: string): Pr
     }
   }
 
+  // Diminishing returns caps
+  const { applyDiminishing } = await import("./diminishing.js");
+  const CAPS_DISPLAY: Record<string, string> = {
+    luck_flip: "max 25%", luck_slots: "max 25%", luck_scratch: "max 25%",
+    payout: "max 40%", specials: "max 20%", boss_dmg: "max 50%",
+    shield: "max 15", free_plays: "max 10",
+  };
+
   for (const [cat, info] of Object.entries(totals)) {
     let sum = lines.filter(l => l.category === cat).reduce((s, l) => s + l.value, 0);
-    // Add universal "all" bonus to each category
     if (cat !== "all" && cat !== "shield" && cat !== "free_plays" && cat !== "care" && allBonus > 0) {
       sum += allBonus;
     }
+    // Apply diminishing returns for display
+    const raw = cat === "shield" || cat === "free_plays" ? sum : sum / 100;
+    const effective = applyDiminishing(cat, raw);
+    const effectiveDisplay = cat === "shield" || cat === "free_plays" ? Math.floor(effective) : +(effective * 100).toFixed(1);
+    const capInfo = CAPS_DISPLAY[cat] ?? "";
+
     if (cat === "shield" || cat === "free_plays") {
-      info.total = `+${Math.floor(sum)}`;
+      info.total = `+${effectiveDisplay}${capInfo ? ` (${capInfo})` : ""}`;
     } else if (cat === "care") {
       info.total = `+${sum.toFixed(0)}`;
     } else {
-      info.total = `+${sum.toFixed(1)}%`;
+      info.total = `+${effectiveDisplay}%${capInfo ? ` (${capInfo})` : ""}`;
     }
   }
 

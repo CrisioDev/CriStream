@@ -1820,33 +1820,24 @@ export function CasinoPage() {
           </h2>
           <p className="text-center text-xs text-gray-500 mb-4">Investiere in Skills & Pets um Premium-Maschinen freizuschalten</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {tierSlots.tiers.map(tier => {
+            {tierSlots.tiers.map((tier: any, idx: number) => {
               const reels = tierReels[tier.id] || ["❓","❓","❓"];
               const result = tierResult[tier.id];
               const spinning = tierSpinning === tier.id;
               const locked = !tier.unlocked;
-              const gradients: Record<string, string> = {
-                diamond_slots: "linear-gradient(135deg, #60a5fa, #3b82f6, #60a5fa)",
-                royal_slots: "linear-gradient(135deg, #ffd700, #f59e0b, #ffd700)",
-                cosmic_slots: "linear-gradient(135deg, #a78bfa, #7c3aed, #a78bfa)",
-                infinity_slots: "linear-gradient(135deg, #f472b6, #ec4899, #f472b6)",
-              };
-              const textColors: Record<string, string> = {
-                diamond_slots: "text-blue-300",
-                royal_slots: "text-yellow-300",
-                cosmic_slots: "text-purple-300",
-                infinity_slots: "text-pink-300",
-              };
+              const colors = ["#60a5fa","#ffd700","#a78bfa","#f472b6","#22d3ee","#4ade80","#f97316","#e879f9","#fbbf24","#6ee7b7"];
+              const c = colors[idx % colors.length]!;
+              const fmt = (n: number) => n >= 1e9 ? `${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(0)}K` : String(n);
               return (
-                <div key={tier.id} className="rounded-2xl p-[2px]" style={{ background: gradients[tier.id] || gradients.diamond_slots, opacity: locked ? 0.5 : 1 }}>
+                <div key={tier.id} className="rounded-2xl p-[2px]" style={{ background: `linear-gradient(135deg, ${c}, ${c}88, ${c})`, opacity: locked ? 0.5 : 1 }}>
                   <div className="rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
-                    <h3 className={`text-center text-lg font-black ${textColors[tier.id] || "text-white"} mb-1`}>{tier.emoji} {tier.name.replace(" Slots", "")}</h3>
-                    <p className="text-center text-xs text-gray-500 mb-2">{tier.cost.toLocaleString()} Punkte</p>
+                    <h3 className="text-center text-lg font-black mb-1" style={{ color: c }}>{tier.emoji} {tier.name}</h3>
+                    <p className="text-center text-xs text-gray-500 mb-1">{fmt(tier.cost)} Pts · 777 = {fmt(tier.jackpot ?? 0)}</p>
                     {locked ? (
-                      <div className="text-center py-6">
+                      <div className="text-center py-4">
                         <div className="text-3xl mb-2">🔒</div>
-                        <p className="text-xs text-gray-400">Investiere {tier.requirement >= 1000000 ? `${(tier.requirement / 1000000).toFixed(0)}M` : tier.requirement >= 1000 ? `${(tier.requirement / 1000).toFixed(0)}K` : tier.requirement} in Skills/Pets</p>
-                        <p className="text-[10px] text-gray-600 mt-1">Aktuell: {tierSlots.totalInvested.toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">Investiere {fmt(tier.requirement)}</p>
+                        <p className="text-[10px] text-gray-600 mt-1">Aktuell: {fmt(tierSlots.totalInvested)}</p>
                       </div>
                     ) : (
                       <>
@@ -1864,7 +1855,7 @@ export function CasinoPage() {
                         {result && <div className={`text-center mb-2 text-xs font-bold rounded-lg py-1.5 px-2 ${resultClass(result)}`}>{result.text}</div>}
                         <button onClick={() => playTierSlots(tier.id)} disabled={spinning || !user}
                           className="casino-btn w-full py-2 rounded-xl font-black text-sm text-black"
-                          style={{ background: spinning ? "#666" : (gradients[tier.id] || gradients.diamond_slots) }}>
+                          style={{ background: spinning ? "#666" : `linear-gradient(135deg, ${c}, ${c}88)` }}>
                           {spinning ? "SPINNING..." : `${tier.emoji} SPIN!`}
                         </button>
                       </>

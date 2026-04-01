@@ -619,28 +619,33 @@ export async function viewerRoutes(app: FastifyInstance) {
         };
       }
 
-      // ── Tiered Slot Machines ──
-      const TIER_SLOTS: Record<string, { cost: number; multiplier: number; requirement: number; label: string }> = {
-        diamond_slots:  { cost: 500,    multiplier: 25,    requirement: 10000,    label: "Diamond" },
-        royal_slots:    { cost: 5000,   multiplier: 250,   requirement: 100000,   label: "Royal" },
-        cosmic_slots:   { cost: 50000,  multiplier: 2500,  requirement: 1000000,  label: "Cosmic" },
-        infinity_slots: { cost: 500000, multiplier: 25000, requirement: 10000000, label: "Infinity" },
-      };
+      // ── Dynamic Tier Slots (infinite tiers) ──
+      // tier_slots_N where N = tier level (1, 2, 3, ...)
+      // Cost = 20 * 25^N, Multiplier = 25^N, Requirement = cost * 20
+      const tierMatch = game.match(/^tier_slots_(\d+)$/);
+      if (tierMatch) {
+        const tierLevel = parseInt(tierMatch[1]!);
+        if (tierLevel < 1 || tierLevel > 100) return reply.status(400).send({ success: false, error: "Ungültiger Tier!" });
+        const multiplier = Math.pow(25, tierLevel);
+        const cost = Math.round(20 * multiplier);
+        const requirement = Math.round(cost * 20);
+        const TIER_NAMES = ["", "💎 Diamond", "👑 Royal", "🌌 Cosmic", "♾️ Infinity", "🔮 Mythic", "⚛️ Quantum", "🌀 Void", "💫 Stellar", "🪐 Galactic", "🌠 Celestial"];
+        const tierLabel = TIER_NAMES[tierLevel] ?? `⭐ Tier ${tierLevel}`;
 
-      const tierDef = TIER_SLOTS[game];
-      if (tierDef) {
         // Check requirement: total invested in skills + pets
         const petData = await getPet(channel.id, user.twitchId);
         const skillInvested = getTotalInvested(skills);
         const petInvested = petData?.totalSpent ?? 0;
         const totalInvested = skillInvested + petInvested;
 
-        if (totalInvested < tierDef.requirement) {
+        if (totalInvested < requirement) {
           return reply.status(400).send({
             success: false,
-            error: `Investiere mindestens ${tierDef.requirement.toLocaleString("de-DE")} Punkte in Skills/Pets! (Aktuell: ${totalInvested.toLocaleString("de-DE")})`,
+            error: `Investiere mindestens ${requirement.toLocaleString("de-DE")} Punkte! (Aktuell: ${totalInvested.toLocaleString("de-DE")})`,
           });
         }
+
+        const tierDef = { cost, multiplier, requirement, label: tierLabel };
 
         const pre = await prePlaySpecials({ ...specCtx, game: "slots" });
         if (channelUser.points < tierDef.cost) {
@@ -1214,12 +1219,27 @@ export async function viewerRoutes(app: FastifyInstance) {
       const skills = await getSkills(channel.id, user.twitchId);
       const petData = await getPet(channel.id, user.twitchId);
       const totalInvested = getTotalInvested(skills) + (petData?.totalSpent ?? 0);
-      const tiers = [
-        { id: "diamond_slots", name: "Diamond Slots", emoji: "💎", cost: 500, requirement: 10000 },
-        { id: "royal_slots", name: "Royal Slots", emoji: "👑", cost: 5000, requirement: 100000 },
-        { id: "cosmic_slots", name: "Cosmic Slots", emoji: "🌌", cost: 50000, requirement: 1000000 },
-        { id: "infinity_slots", name: "Infinity Slots", emoji: "♾️", cost: 500000, requirement: 10000000 },
-      ].map(t => ({ ...t, unlocked: totalInvested >= t.requirement }));
+      const NAMES = ["💎 Diamond", "👑 Royal", "🌌 Cosmic", "♾️ Infinity", "🔮 Mythic", "⚛️ Quantum", "🌀 Void", "💫 Stellar", "🪐 Galactic", "🌠 Celestial"];
+      const EMOJIS = ["💎", "👑", "🌌", "♾️", "🔮", "⚛️", "🌀", "💫", "🪐", "🌠"];
+      // Show all unlocked tiers + next 2 locked ones
+      const tiers = [];
+      for (let i = 1; i <= 100; i++) {
+        const mult = Math.pow(25, i);
+        const cost = Math.round(20 * mult);
+        const req = Math.round(cost * 20);
+        const unlocked = totalInvested >= req;
+        tiers.push({
+          id: `tier_slots_${i}`,
+          name: NAMES[i - 1] ?? `Tier ${i}`,
+          emoji: EMOJIS[i - 1] ?? "⭐",
+          cost,
+          requirement: req,
+          jackpot: Math.round(777 * mult),
+          unlocked,
+        });
+        // Stop after showing 2 locked tiers beyond what's unlocked
+        if (!unlocked && tiers.filter(t => !t.unlocked).length >= 2) break;
+      }
       return { success: true, data: { tiers, totalInvested } };
     }
   );

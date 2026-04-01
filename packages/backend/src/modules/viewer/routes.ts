@@ -490,7 +490,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
       const { redis } = await import("../../lib/redis.js");
-      const get = async (g: string) => { const c = await redis.get(`free:${g}:${channel.id}:${user.twitchId}`); return 10 - (c ? parseInt(c) : 0); };
+      const get = async (g: string) => { const c = await redis.get(`free:${g}:${channel.id}:${user.twitchId}`); return Math.max(0, 10 - (c ? parseInt(c) : 0)); };
       return { success: true, data: { flip: await get("flip"), slots: await get("slots"), scratch: await get("scratch") } };
     }
   );

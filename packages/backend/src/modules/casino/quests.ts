@@ -193,6 +193,22 @@ export async function getDailyQuests(channelId: string, userId: string): Promise
     ),
   ];
 
+  // Pre-check: if user already did Glücksrad today, mark spin_wheel quests as done
+  const wheelUsed = await redis.get(`casino:gluecksrad:${channelId}:${userId}`);
+  if (wheelUsed) {
+    for (const q of quests) {
+      if (q.trackKey === "spin_wheel" && !q.done) {
+        q.progress = q.target;
+        q.done = true;
+        // Award reward
+        await prisma.channelUser.update({
+          where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+          data: { points: { increment: q.reward } },
+        }).catch(() => {});
+      }
+    }
+  }
+
   const ttl = ttlUntilMidnight();
   await redis.set(key, JSON.stringify(quests), "EX", ttl);
   return quests;

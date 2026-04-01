@@ -164,7 +164,7 @@ model ChannelUser {
   id           String   @id @default(uuid())
   twitchUserId String
   displayName  String
-  points       Int      @default(0)
+  points       BigInt   @default(0)
   watchMinutes Int      @default(0)
   lastSeen     DateTime @default(now())
   channelId    String

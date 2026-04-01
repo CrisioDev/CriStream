@@ -23,6 +23,12 @@ export const PET_CATALOG = [
   { id: "robot", name: "Roboter", emoji: "🤖", price: 5000000, bonus: "xp", bonusDesc: "+3% XP/LVL", perLevel: 0.03 },
   { id: "kraken", name: "Kraken", emoji: "🦑", price: 15000000, bonus: "heist", bonusDesc: "+2% Heist-Pot/LVL", perLevel: 0.02 },
   { id: "void", name: "Void Entity", emoji: "🕳️", price: 50000000, bonus: "all", bonusDesc: "+1% auf ALLES/LVL", perLevel: 0.01 },
+  // Lootbox-exclusive legendary pets (not buyable, only from drops)
+  { id: "ghost_cat", name: "Geister-Katze", emoji: "👻🐱", price: 0, bonus: "all", bonusDesc: "+1.5% auf ALLES/LVL", perLevel: 0.015 },
+  { id: "golden_dragon", name: "Goldener Drache", emoji: "✨🐉", price: 0, bonus: "payout", bonusDesc: "+4% Payout/LVL", perLevel: 0.04 },
+  { id: "crystal_wolf", name: "Kristall-Wolf", emoji: "💎🐺", price: 0, bonus: "boss_dmg", bonusDesc: "+6% Boss-DMG/LVL", perLevel: 0.06 },
+  { id: "shadow_phoenix", name: "Schatten-Phoenix", emoji: "🌑🔥", price: 0, bonus: "specials", bonusDesc: "+2% Special-Rate/LVL", perLevel: 0.02 },
+  { id: "cosmic_bunny", name: "Kosmischer Hase", emoji: "🌌🐰", price: 0, bonus: "xp", bonusDesc: "+5% XP/LVL", perLevel: 0.05 },
 ];
 
 // ── Item Categories with tier-based pricing ──

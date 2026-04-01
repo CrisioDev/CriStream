@@ -1821,7 +1821,7 @@ export function CasinoPage() {
                         <button onClick={async () => {
                           setGuildLoading(true);
                           try {
-                            const res = await api.post<any>(`/viewer/${channelName}/casino/guild/join`, { guildId: g.id ?? g.name }) as any;
+                            const res = await api.post<any>(`/viewer/${channelName}/casino/guild/join`, { guildId: g.guildId }) as any;
                             if (res.success) fetchGuilds();
                             else setMessage(res.error ?? "Fehler!");
                           } catch { setMessage("Fehler!"); }

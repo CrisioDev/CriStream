@@ -230,11 +230,50 @@ async function processDiscordMessage(message: Message): Promise<void> {
         const titleName = body.slice(1).join(" ").toLowerCase().replace(/"/g, "");
         if (!titleName) { await replyToUser("Nutze: !equip <Titel-Name>"); return; }
         const items = await lootboxService.getInventory(channel.id, userId);
-        const titleItem = items.find(i => i.itemType === "title" && i.itemName.toLowerCase().startsWith(titleName));
-        if (!titleItem) { await replyToUser("Diesen Titel hast du nicht!"); return; }
-        const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
-        await lootboxService.equipTitle(channel.id, userId, titlePrefix);
-        await replyToUser(`Titel equipped: ${titlePrefix}`);
+
+        // Collect all title sources: lootbox + season pass + prestige + achievements
+        const allTitles: string[] = items.filter(i => i.itemType === "title").map(i => i.itemName);
+        try {
+          const { getSeasonProgress } = await import("../modules/casino/battlepass.js");
+          const sd = await getSeasonProgress(channel.id, userId);
+          for (const r of ((sd.season.rewards as any[]) ?? [])) {
+            if (r.type === "title" && sd.progress.claimedLevels.includes(r.level) && !allTitles.includes(r.value)) allTitles.push(r.value);
+          }
+        } catch {}
+        try {
+          const prestige = await redis.get(`casino:prestige:${channel.id}:${userId}`);
+          if (prestige) {
+            for (let i = 1; i <= parseInt(prestige); i++) {
+              const t = i <= 10 ? ["Prestige I","Prestige II","Prestige III","Prestige IV","Prestige V","Prestige VI","Prestige VII","Prestige VIII","Prestige IX","Prestige X"][i-1]! : `Prestige ${i}`;
+              if (!allTitles.includes(t)) allTitles.push(t);
+            }
+          }
+        } catch {}
+        try {
+          const { prisma } = await import("../lib/prisma.js");
+          const achList = await prisma.viewerAchievement.findMany({ where: { channelId: channel.id, twitchUserId: userId }, select: { achievementId: true } });
+          const { ACHIEVEMENTS } = await import("../modules/casino/achievements.js");
+          for (const a of achList) {
+            const def = ACHIEVEMENTS.find((d: any) => d.id === a.achievementId);
+            if (def?.reward?.title && !allTitles.includes(def.reward.title)) allTitles.push(def.reward.title);
+          }
+        } catch {}
+
+        let matched = allTitles.find(t => t.toLowerCase() === titleName) || allTitles.find(t => t.toLowerCase().startsWith(titleName));
+        if (!matched) {
+          // Check lootbox items with config prefix
+          const titleItem = items.find(i => i.itemType === "title" && (i.itemName.toLowerCase() === titleName || i.itemName.toLowerCase().startsWith(titleName)));
+          if (titleItem) {
+            const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
+            await lootboxService.equipTitle(channel.id, userId, titlePrefix);
+            await replyToUser(`Titel equipped: ${titlePrefix}`);
+            return;
+          }
+          await replyToUser(allTitles.length > 0 ? `Diesen Titel hast du nicht! Deine Titel: ${allTitles.join(", ")}` : "Du hast noch keine Titel!");
+          return;
+        }
+        await lootboxService.equipTitle(channel.id, userId, `[${matched}]`);
+        await replyToUser(`Titel equipped: [${matched}]`);
       } else if (cmd === "unequip") {
         await lootboxService.unequipTitle(channel.id, userId);
         await replyToUser("Titel entfernt!");

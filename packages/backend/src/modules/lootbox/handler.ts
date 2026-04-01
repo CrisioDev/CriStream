@@ -69,24 +69,74 @@ registerHandler("lootbox", 44, async (ctx: MessageContext) => {
       return;
     }
 
-    // Find title - exact match first, then partial match
+    // Collect all available titles: lootbox inventory + earned (season pass, achievements, prestige)
     const titles = items.filter((i) => i.itemType === "title");
-    let titleItem = titles.find((i) => i.itemName.toLowerCase() === titleName);
-    if (!titleItem) {
-      titleItem = titles.find((i) => i.itemName.toLowerCase().startsWith(titleName));
-    }
+    const allTitleNames = titles.map(t => t.itemName);
 
-    if (!titleItem) {
-      const ownedTitles = titles.map((i) => i.itemName).join(", ");
-      if (ownedTitles) {
-        sayInChannel(ctx.channel, `@${ctx.user} Diesen Titel hast du nicht! Deine Titel: ${ownedTitles}`);
+    // Add earned titles from season pass
+    try {
+      const { getSeasonProgress } = await import("../casino/battlepass.js");
+      const sd = await getSeasonProgress(ctx.channelId, ctx.msg.userInfo.userId);
+      const rewards = (sd.season.rewards as any[]) ?? [];
+      for (const r of rewards) {
+        if (r.type === "title" && sd.progress.claimedLevels.includes(r.level) && !allTitleNames.includes(r.value)) {
+          allTitleNames.push(r.value);
+        }
+      }
+    } catch { /* non-critical */ }
+
+    // Add prestige titles
+    try {
+      const { redis } = await import("../../lib/redis.js");
+      const prestige = await redis.get(`casino:prestige:${ctx.channelId}:${ctx.msg.userInfo.userId}`);
+      if (prestige) {
+        for (let i = 1; i <= parseInt(prestige); i++) {
+          const t = i <= 10 ? ["Prestige I","Prestige II","Prestige III","Prestige IV","Prestige V","Prestige VI","Prestige VII","Prestige VIII","Prestige IX","Prestige X"][i-1]! : `Prestige ${i}`;
+          if (!allTitleNames.includes(t)) allTitleNames.push(t);
+        }
+      }
+    } catch { /* non-critical */ }
+
+    // Add achievement-based titles
+    try {
+      const { prisma } = await import("../../lib/prisma.js");
+      const achTitles = await prisma.viewerAchievement.findMany({
+        where: { channelId: ctx.channelId, twitchUserId: ctx.msg.userInfo.userId },
+        select: { achievementId: true },
+      });
+      const { ACHIEVEMENTS } = await import("../casino/achievements.js");
+      for (const a of achTitles) {
+        const def = ACHIEVEMENTS.find((d: any) => d.id === a.achievementId);
+        if (def?.reward?.title && !allTitleNames.includes(def.reward.title)) {
+          allTitleNames.push(def.reward.title);
+        }
+      }
+    } catch { /* non-critical */ }
+
+    // Find matching title
+    let matchedTitle = allTitleNames.find(t => t.toLowerCase() === titleName);
+    if (!matchedTitle) matchedTitle = allTitleNames.find(t => t.toLowerCase().startsWith(titleName));
+
+    if (!matchedTitle) {
+      // Check lootbox items for title with config prefix
+      const titleItem = titles.find((i) => i.itemName.toLowerCase() === titleName || i.itemName.toLowerCase().startsWith(titleName));
+      if (titleItem) {
+        const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
+        await lootboxService.equipTitle(ctx.channelId, ctx.msg.userInfo.userId, titlePrefix);
+        sayInChannel(ctx.channel, `@${ctx.user} Titel equipped: ${titlePrefix}`);
+        ctx.handled = true;
+        return;
+      }
+      if (allTitleNames.length > 0) {
+        sayInChannel(ctx.channel, `@${ctx.user} Diesen Titel hast du nicht! Deine Titel: ${allTitleNames.join(", ")}`);
       } else {
         sayInChannel(ctx.channel, `@${ctx.user} Du hast noch keine Titel! Öffne Lootboxen mit !lootbox`);
       }
       ctx.handled = true;
       return;
     }
-    const titlePrefix = (titleItem.itemConfig as any)?.prefix ?? `[${titleItem.itemName}]`;
+
+    const titlePrefix = `[${matchedTitle}]`;
     await lootboxService.equipTitle(ctx.channelId, ctx.msg.userInfo.userId, titlePrefix);
     sayInChannel(ctx.channel, `@${ctx.user} Titel equipped: ${titlePrefix}`);
     ctx.handled = true;

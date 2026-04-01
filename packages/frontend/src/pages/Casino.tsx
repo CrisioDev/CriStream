@@ -262,6 +262,9 @@ export function CasinoPage() {
   const [buyingPet, setBuyingPet] = useState(false);
   const [petWalkAnim, setPetWalkAnim] = useState(false);
 
+  // Lootbox Drop
+  const [lootboxDropAnim, setLootboxDropAnim] = useState<{ type: string; data: any } | null>(null);
+
   // Bonus Sidebar
   const [bonusSidebar, setBonusSidebar] = useState(false);
   const [bonusData, setBonusData] = useState<{ lines: any[]; totals: Record<string, { label: string; total: string }>; mood: number } | null>(null);
@@ -393,6 +396,16 @@ export function CasinoPage() {
     // Login streak from gamble response
     if ((progression as any).loginStreak) {
       setLoginStreak((progression as any).loginStreak);
+    }
+
+    // Lootbox drop!
+    if ((progression as any).lootboxDrop) {
+      const drop = (progression as any).lootboxDrop;
+      setLootboxDropAnim(drop);
+      if (confettiRef.current) spawnConfetti(confettiRef.current, drop.type === "pet" ? 200 : 100, true);
+      setTimeout(() => setLootboxDropAnim(null), 5000);
+      // Refresh pet data
+      fetchSeason();
     }
   }, [season]);
 
@@ -1020,6 +1033,37 @@ export function CasinoPage() {
       {petCleanAnim && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           <div className="text-7xl" style={{ animation: "clean-wipe 0.5s ease-in-out 3" }}>🧹✨</div>
+        </div>
+      )}
+
+      {/* Lootbox Drop Animation */}
+      {lootboxDropAnim && (
+        <div className="fixed inset-0 flex items-center justify-center z-[55] pointer-events-none">
+          <div className="text-center" style={{ animation: "mystery-open 5s ease-out forwards" }}>
+            {lootboxDropAnim.type === "pet" ? (
+              <>
+                <div className="text-8xl mb-4" style={{ animation: "multiplier-pop 3s ease-out", textShadow: "0 0 40px rgba(255,215,0,0.8), 0 0 80px rgba(255,215,0,0.4)" }}>
+                  {lootboxDropAnim.data.emoji}
+                </div>
+                <div className="text-3xl font-black text-yellow-300 mb-2" style={{ textShadow: "0 0 20px rgba(255,215,0,0.8)" }}>
+                  LEGENDÄRES PET!
+                </div>
+                <div className="text-xl font-bold text-white">{lootboxDropAnim.data.name}</div>
+                <div className="text-sm text-purple-300 mt-1">Bonus: {lootboxDropAnim.data.bonus} +{(lootboxDropAnim.data.perLevel * 100).toFixed(1)}%/LVL</div>
+              </>
+            ) : (
+              <>
+                <div className="text-7xl mb-4" style={{ animation: "multiplier-pop 3s ease-out", textShadow: "0 0 30px rgba(168,85,247,0.8)" }}>
+                  {lootboxDropAnim.data.emoji}
+                </div>
+                <div className="text-2xl font-black text-purple-300 mb-2" style={{ textShadow: "0 0 20px rgba(168,85,247,0.8)" }}>
+                  EPISCHES ITEM!
+                </div>
+                <div className="text-lg font-bold text-white">{lootboxDropAnim.data.name}</div>
+                <div className="text-sm text-purple-400 mt-1">+{lootboxDropAnim.data.bonusValue} Bonus</div>
+              </>
+            )}
+          </div>
         </div>
       )}
 

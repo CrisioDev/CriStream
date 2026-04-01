@@ -43,16 +43,16 @@ export const LOOTBOX_ITEMS: LootboxItem[] = [
   { category: "food", name: "Ambrosia", emoji: "🏺", bonusValue: 60, rarity: "epic" },
 ];
 
-/** Roll for a lootbox-exclusive pet (1/300 chance = 0.33%) */
+/** Roll for a lootbox-exclusive pet (1/1000 chance = 0.1%) */
 export function rollLootboxPet(): { pet: LootboxPet } | null {
-  if (Math.random() >= 1 / 300) return null;
+  if (Math.random() >= 1 / 1000) return null;
   const pet = LOOTBOX_PETS[Math.floor(Math.random() * LOOTBOX_PETS.length)]!;
   return { pet };
 }
 
-/** Roll for a lootbox-exclusive item (1/50 chance = 2%) */
+/** Roll for a lootbox-exclusive item (1/200 chance = 0.5%) */
 export function rollLootboxItem(): { item: LootboxItem } | null {
-  if (Math.random() >= 1 / 50) return null;
+  if (Math.random() >= 1 / 200) return null;
   const item = LOOTBOX_ITEMS[Math.floor(Math.random() * LOOTBOX_ITEMS.length)]!;
   return { item };
 }

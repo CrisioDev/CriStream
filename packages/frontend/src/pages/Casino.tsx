@@ -509,10 +509,18 @@ export function CasinoPage() {
       const lobbyTimeLeft = h.status === "lobby" ? Math.max(0, Math.ceil(((h.createdAt + 120000) - now) / 1000)) : 0;
       const betrayalTimeLeft = h.status === "betrayal" && h.betrayalStartedAt ? Math.max(0, Math.ceil(((h.betrayalStartedAt + 30000) - now) / 1000)) : 0;
 
+      // Enrich players with round counts
+      const rounds = h.rounds ?? [];
+      const enrichedPlayers = (h.players ?? []).map((p: any) => ({
+        ...p,
+        roundsPlayed: rounds.filter((r: any) => r.userId === p.userId).length,
+        roundResults: rounds.filter((r: any) => r.userId === p.userId).map((r: any) => ({ game: r.game, payout: r.payout })),
+      }));
+
       setHeist({
         active: h.status !== "finished",
         phase: h.status,
-        players: h.players ?? [],
+        players: enrichedPlayers,
         pot: h.pot ?? 0,
         round: myRounds,
         totalRounds: totalRoundsPerPlayer,
@@ -621,12 +629,12 @@ export function CasinoPage() {
     return () => clearInterval(iv);
   }, [channelName, user]);
 
-  // Heist polling when active
+  // Heist polling — always poll so new heists appear without F5
   useEffect(() => {
-    if (!heist?.active) return;
-    const iv = setInterval(fetchHeist, 3000);
+    if (!user) return;
+    const iv = setInterval(fetchHeist, heist?.active ? 3000 : 10000);
     return () => clearInterval(iv);
-  }, [heist?.active, fetchHeist]);
+  }, [user, heist?.active, fetchHeist]);
 
   // All-In cooldown timer
   useEffect(() => {
@@ -2590,20 +2598,42 @@ export function CasinoPage() {
 
             {/* Playing phase */}
             {heist?.active && heist.phase === "playing" && (
-              <div className="text-center">
-                <p className="text-sm text-gray-400 mb-2">Deine Runde: {heist.round}/{heist.totalRounds} · Pot: {heist.pot} Pts</p>
-                <div className="flex flex-wrap justify-center gap-2 mb-3">
-                  {heist.players?.map((p, i) => (
-                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-gray-300 border border-red-500/20">
-                      {p.displayName} {p.result ? (p.result.win ? "✅" : "❌") : "⏳"}
-                    </span>
-                  ))}
+              <div>
+                <p className="text-sm text-gray-400 mb-3 text-center">Pot: <span className="text-yellow-400 font-bold">{heist.pot} Pts</span></p>
+                {/* Player round status */}
+                <div className="space-y-2 mb-4">
+                  {heist.players?.map((p: any, i: number) => {
+                    const isMe = p.userId === user?.twitchId;
+                    const done = (p.roundsPlayed ?? 0) >= 3;
+                    return (
+                      <div key={i} className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isMe ? "bg-yellow-500/10 border border-yellow-500/20" : "bg-white/3"}`}>
+                        <span className={`font-bold text-sm ${isMe ? "text-yellow-300" : "text-white"}`}>{p.displayName}{isMe ? " (Du)" : ""}</span>
+                        <div className="flex gap-1 flex-1">
+                          {[0, 1, 2].map(r => {
+                            const result = p.roundResults?.[r];
+                            return (
+                              <div key={r} className={`flex-1 h-6 rounded flex items-center justify-center text-xs font-bold ${result ? (result.payout > 0 ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400") : "bg-white/5 text-gray-600"}`}>
+                                {result ? `${result.payout}` : `R${r + 1}`}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <span className="text-xs text-gray-500">{p.roundsPlayed ?? 0}/3</span>
+                        {done && <span className="text-green-400 text-xs">✅</span>}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex justify-center gap-2">
-                  <button onClick={() => playHeistRound("slots")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>🎰 Slots</button>
-                  <button onClick={() => playHeistRound("flip")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>🪙 Flip</button>
-                  <button onClick={() => playHeistRound("scratch")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #00cc88, #009966)", color: "#000" }}>🎟️ Scratch</button>
-                </div>
+                {/* Play buttons (only if my rounds not done) */}
+                {(heist.round ?? 0) < 3 ? (
+                  <div className="flex justify-center gap-2">
+                    <button onClick={() => playHeistRound("slots")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>🎰 Slots</button>
+                    <button onClick={() => playHeistRound("flip")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>🪙 Flip</button>
+                    <button onClick={() => playHeistRound("scratch")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #00cc88, #009966)", color: "#000" }}>🎟️ Scratch</button>
+                  </div>
+                ) : (
+                  <p className="text-center text-sm text-green-400 font-bold">✅ Deine Runden fertig! Warte auf andere...</p>
+                )}
               </div>
             )}
 

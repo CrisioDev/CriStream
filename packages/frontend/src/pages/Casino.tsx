@@ -1376,8 +1376,8 @@ export function CasinoPage() {
           DOUBLE OR NOTHING
          ══════════════════════════════════════════════════════════════════ */}
       {doubleActive && doubleAmount > 0 && (
-        <div className="max-w-lg mx-auto px-6 py-4 mb-4">
-          <div className="double-glow rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(255,215,0,0.1), rgba(255,100,0,0.05))", border: "2px solid rgba(255,215,0,0.4)" }}>
+        <div className="fixed inset-0 z-30 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
+          <div className="double-glow rounded-2xl p-5 text-center max-w-lg w-full mx-4" style={{ background: "linear-gradient(180deg, rgba(20,10,0,0.95), rgba(10,5,0,0.98))", border: "2px solid rgba(255,215,0,0.4)" }}>
             <h3 className="text-2xl font-black text-yellow-400 mb-1">DOPPELT ODER NICHTS</h3>
             <p className="text-4xl font-black text-white mb-3">{doubleAmount.toLocaleString()} PTS</p>
             {doubleResult && (

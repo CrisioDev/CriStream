@@ -1210,6 +1210,136 @@ export function CasinoPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
+          GAME MACHINES (3 existing + All-In below)
+         ══════════════════════════════════════════════════════════════════ */}
+      <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* SLOT MACHINE */}
+        <div className="slot-machine rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
+          {pet?.careState?.needsPoop && <div className="absolute -top-3 -right-3 text-3xl z-10" style={{ animation: "poop-wobble 1s ease-in-out infinite" }}>💩</div>}
+          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
+            <h2 className="text-center text-2xl font-black text-purple-300 mb-1">🎰 SLOTS</h2>
+            <p className="text-center text-xs text-gray-500 mb-1">20 Punkte + Specials</p>
+            {freePlays && <p className="text-center text-xs mb-4">{freePlays.slots > 0 ? <span className="text-green-400 font-bold">{freePlays.slots} Gratis-Spins</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
+            <div className="flex justify-center gap-2 mb-4">
+              {slotReels.map((sym, i) => (
+                <div key={i} className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl" style={{
+                  background: "linear-gradient(180deg,#1a1a1a,#0a0a0a)", border: "2px solid rgba(145,71,255,0.4)",
+                  boxShadow: "inset 0 0 20px rgba(0,0,0,0.8)", transition: "transform 0.1s",
+                  transform: slotSpinning ? "scaleY(0.95)" : "scaleY(1)",
+                }}>{sym}</div>
+              ))}
+            </div>
+            {slotResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(slotResult)}`}>{slotResult.text}</div>}
+            <button onClick={playSlots} disabled={slotSpinning || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: slotSpinning ? "#666" : "linear-gradient(135deg,#9146ff,#6441a5)" }}>
+              {slotSpinning ? "SPINNING..." : "🎰 SPIN!"}
+            </button>
+          </div>
+        </div>
+
+        {/* RUBBELLOS */}
+        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
+          {pet?.careState?.needsPoop && <div className="absolute -top-2 left-1/2 text-2xl z-10" style={{ animation: "poop-wobble 1.2s ease-in-out infinite" }}>💩</div>}
+          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#0a1a15,#0d0d1a)" }}>
+            <h2 className="text-center text-2xl font-black text-emerald-300 mb-1">🎟️ RUBBELLOS</h2>
+            <p className="text-center text-xs text-gray-500 mb-1">40 Punkte + Specials</p>
+            {freePlays && <p className="text-center text-xs mb-4">{freePlays.scratch > 0 ? <span className="text-green-400 font-bold">{freePlays.scratch} Gratis-Lose</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
+            <div className="flex justify-center gap-3 mb-4">
+              {scratchCards.map((sym, i) => (
+                <div key={i} className={`w-20 h-24 rounded-xl flex items-center justify-center text-3xl ${sym !== "❓" ? "scratch-pop" : ""}`} style={{
+                  background: sym === "❓" ? "repeating-linear-gradient(45deg,#1a3a2a,#1a3a2a 10px,#1f4535 10px,#1f4535 20px)" : "linear-gradient(180deg,#0a2a1a,#050f0a)",
+                  border: `2px solid ${sym !== "❓" ? "rgba(0,204,136,0.6)" : "rgba(0,204,136,0.3)"}`,
+                  boxShadow: sym !== "❓" ? "0 0 20px rgba(0,204,136,0.3)" : "none",
+                }}>{sym}</div>
+              ))}
+            </div>
+            {scratchResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(scratchResult)}`}>{scratchResult.text}</div>}
+            <button onClick={playScratch} disabled={!user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: "linear-gradient(135deg,#00cc88,#009966)" }}>
+              🎟️ KRATZEN!
+            </button>
+          </div>
+        </div>
+
+        {/* MÜNZWURF */}
+        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
+          {pet?.careState?.needsPoop && <div className="absolute -top-3 -left-2 text-2xl z-10" style={{ animation: "poop-wobble 0.8s ease-in-out infinite", animationDelay: "0.3s" }}>💩</div>}
+          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1508,#0d0d1a)" }}>
+            <h2 className="text-center text-2xl font-black text-yellow-300 mb-1">🪙 MÜNZWURF</h2>
+            <p className="text-center text-xs text-gray-500 mb-1">1 Punkt · 50/50 + Specials</p>
+            {freePlays && <p className="text-center text-xs mb-4">{freePlays.flip > 0 ? <span className="text-green-400 font-bold">{freePlays.flip} Gratis-Flips</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
+            <div className="flex justify-center mb-4">
+              <div className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black ${coinFlipping ? "coin-anim" : "float-anim"}`} style={{
+                background: coinSide ? "radial-gradient(circle,#ffd700,#b8860b)" : "radial-gradient(circle,#444,#222)",
+                border: `4px solid ${cursedCoin ? "#ff4500" : "#ffd700"}`,
+                boxShadow: cursedCoin ? "0 0 30px rgba(255,69,0,0.8), 0 0 60px rgba(255,0,0,0.4)" : coinSide ? "0 0 30px rgba(255,215,0,0.5)" : "0 0 10px rgba(255,215,0,0.2)",
+                ...(cursedCoin ? { animation: "fire-flicker 0.5s ease-in-out infinite" } : {}),
+              }}>{coinFlipping ? "🪙" : coinSide === "Kopf" ? "👑" : coinSide === "Zahl" ? "🔢" : "?"}</div>
+            </div>
+            {coinSide && !coinFlipping && <div className="text-center text-lg font-bold mb-1 text-yellow-300">{coinSide}!</div>}
+            {flipResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(flipResult)}`}>{flipResult.text}</div>}
+            <button onClick={playFlip} disabled={coinFlipping || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: coinFlipping ? "#666" : "linear-gradient(135deg,#ffd700,#ff8c00)" }}>
+              {coinFlipping ? "FLIEGT..." : "🪙 WERFEN!"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          2. ALL-IN BUTTON
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && (
+        <div className="max-w-lg mx-auto px-6 pb-6">
+          <div className={`rounded-2xl p-6 text-center ${allInPlaying ? "" : "allin-btn-pulse"}`} style={{
+            background: "linear-gradient(180deg, rgba(220,38,38,0.15), rgba(0,0,0,0.4))",
+            border: "2px solid rgba(220,38,38,0.5)",
+          }}>
+            <h3 className="text-2xl font-black text-red-400 mb-1">💀 ALL-IN 💀</h3>
+            <p className="text-xs text-gray-500 mb-1">40% Chance · 2.5x Auszahlung · Alles oder Nichts!</p>
+            <p className="text-3xl font-black text-white mb-3">
+              {points !== null && points > 0 ? `${points.toLocaleString()} PUNKTE` : "---"}
+            </p>
+            {allInResult && (
+              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${allInResult.win ? "text-green-400 bg-green-500/10 border border-green-500/30" : "text-red-400 bg-red-500/10 border border-red-500/30"}`}>
+                {allInResult.text}
+              </div>
+            )}
+            {allInCooldown > 0 ? (
+              <div className="text-sm text-gray-400">
+                Cooldown: {Math.floor(allInCooldown / 60)}m {allInCooldown % 60}s
+              </div>
+            ) : (
+              <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
+                className="casino-btn px-10 py-4 rounded-xl font-black text-xl text-white"
+                style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #7f1d1d, #dc2626)" }}>
+                {allInPlaying ? "..." : `💀 ALL-IN! (${points?.toLocaleString() || 0} Pts)`}
+              </button>
+            )}
+            <p className="text-xs text-gray-600 mt-2">1 Stunde Cooldown nach jedem Versuch</p>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          GLUCKSRAD
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && (
+        <div className="max-w-md mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.08), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
+            <div className="text-5xl mb-2" style={wheelSpinning ? { animation: "wheel-spin 2s ease-out forwards" } : {}}>🎡</div>
+            <h3 className="font-black text-lg text-cyan-300 mb-1">GLÜCKSRAD</h3>
+            <p className="text-xs text-gray-500 mb-3">Einmal am Tag gratis drehen · 1-100 Punkte</p>
+            {wheelResult && (
+              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${wheelResult.includes("+") ? "text-cyan-300 bg-cyan-500/10" : "text-gray-400"}`}>
+                {wheelResult}
+              </div>
+            )}
+            <button onClick={spinWheel} disabled={wheelSpinning || wheelUsed} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: wheelSpinning || wheelUsed ? "#666" : "linear-gradient(135deg,#22d3ee,#0891b2)" }}>
+              {wheelSpinning ? "DREHT..." : wheelUsed ? "MORGEN WIEDER" : "🎡 DREHEN!"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
           1. DAILY QUESTS
          ══════════════════════════════════════════════════════════════════ */}
       {user && quests.length > 0 && (
@@ -1367,136 +1497,6 @@ export function CasinoPage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════
-          GAME MACHINES (3 existing + All-In below)
-         ══════════════════════════════════════════════════════════════════ */}
-      <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* SLOT MACHINE */}
-        <div className="slot-machine rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
-          {pet?.careState?.needsPoop && <div className="absolute -top-3 -right-3 text-3xl z-10" style={{ animation: "poop-wobble 1s ease-in-out infinite" }}>💩</div>}
-          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
-            <h2 className="text-center text-2xl font-black text-purple-300 mb-1">🎰 SLOTS</h2>
-            <p className="text-center text-xs text-gray-500 mb-1">20 Punkte + Specials</p>
-            {freePlays && <p className="text-center text-xs mb-4">{freePlays.slots > 0 ? <span className="text-green-400 font-bold">{freePlays.slots} Gratis-Spins</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
-            <div className="flex justify-center gap-2 mb-4">
-              {slotReels.map((sym, i) => (
-                <div key={i} className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl" style={{
-                  background: "linear-gradient(180deg,#1a1a1a,#0a0a0a)", border: "2px solid rgba(145,71,255,0.4)",
-                  boxShadow: "inset 0 0 20px rgba(0,0,0,0.8)", transition: "transform 0.1s",
-                  transform: slotSpinning ? "scaleY(0.95)" : "scaleY(1)",
-                }}>{sym}</div>
-              ))}
-            </div>
-            {slotResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(slotResult)}`}>{slotResult.text}</div>}
-            <button onClick={playSlots} disabled={slotSpinning || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: slotSpinning ? "#666" : "linear-gradient(135deg,#9146ff,#6441a5)" }}>
-              {slotSpinning ? "SPINNING..." : "🎰 SPIN!"}
-            </button>
-          </div>
-        </div>
-
-        {/* RUBBELLOS */}
-        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
-          {pet?.careState?.needsPoop && <div className="absolute -top-2 left-1/2 text-2xl z-10" style={{ animation: "poop-wobble 1.2s ease-in-out infinite" }}>💩</div>}
-          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#0a1a15,#0d0d1a)" }}>
-            <h2 className="text-center text-2xl font-black text-emerald-300 mb-1">🎟️ RUBBELLOS</h2>
-            <p className="text-center text-xs text-gray-500 mb-1">40 Punkte + Specials</p>
-            {freePlays && <p className="text-center text-xs mb-4">{freePlays.scratch > 0 ? <span className="text-green-400 font-bold">{freePlays.scratch} Gratis-Lose</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
-            <div className="flex justify-center gap-3 mb-4">
-              {scratchCards.map((sym, i) => (
-                <div key={i} className={`w-20 h-24 rounded-xl flex items-center justify-center text-3xl ${sym !== "❓" ? "scratch-pop" : ""}`} style={{
-                  background: sym === "❓" ? "repeating-linear-gradient(45deg,#1a3a2a,#1a3a2a 10px,#1f4535 10px,#1f4535 20px)" : "linear-gradient(180deg,#0a2a1a,#050f0a)",
-                  border: `2px solid ${sym !== "❓" ? "rgba(0,204,136,0.6)" : "rgba(0,204,136,0.3)"}`,
-                  boxShadow: sym !== "❓" ? "0 0 20px rgba(0,204,136,0.3)" : "none",
-                }}>{sym}</div>
-              ))}
-            </div>
-            {scratchResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(scratchResult)}`}>{scratchResult.text}</div>}
-            <button onClick={playScratch} disabled={!user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: "linear-gradient(135deg,#00cc88,#009966)" }}>
-              🎟️ KRATZEN!
-            </button>
-          </div>
-        </div>
-
-        {/* MÜNZWURF */}
-        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
-          {pet?.careState?.needsPoop && <div className="absolute -top-3 -left-2 text-2xl z-10" style={{ animation: "poop-wobble 0.8s ease-in-out infinite", animationDelay: "0.3s" }}>💩</div>}
-          <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1508,#0d0d1a)" }}>
-            <h2 className="text-center text-2xl font-black text-yellow-300 mb-1">🪙 MÜNZWURF</h2>
-            <p className="text-center text-xs text-gray-500 mb-1">1 Punkt · 50/50 + Specials</p>
-            {freePlays && <p className="text-center text-xs mb-4">{freePlays.flip > 0 ? <span className="text-green-400 font-bold">{freePlays.flip} Gratis-Flips</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
-            <div className="flex justify-center mb-4">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center text-4xl font-black ${coinFlipping ? "coin-anim" : "float-anim"}`} style={{
-                background: coinSide ? "radial-gradient(circle,#ffd700,#b8860b)" : "radial-gradient(circle,#444,#222)",
-                border: `4px solid ${cursedCoin ? "#ff4500" : "#ffd700"}`,
-                boxShadow: cursedCoin ? "0 0 30px rgba(255,69,0,0.8), 0 0 60px rgba(255,0,0,0.4)" : coinSide ? "0 0 30px rgba(255,215,0,0.5)" : "0 0 10px rgba(255,215,0,0.2)",
-                ...(cursedCoin ? { animation: "fire-flicker 0.5s ease-in-out infinite" } : {}),
-              }}>{coinFlipping ? "🪙" : coinSide === "Kopf" ? "👑" : coinSide === "Zahl" ? "🔢" : "?"}</div>
-            </div>
-            {coinSide && !coinFlipping && <div className="text-center text-lg font-bold mb-1 text-yellow-300">{coinSide}!</div>}
-            {flipResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(flipResult)}`}>{flipResult.text}</div>}
-            <button onClick={playFlip} disabled={coinFlipping || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: coinFlipping ? "#666" : "linear-gradient(135deg,#ffd700,#ff8c00)" }}>
-              {coinFlipping ? "FLIEGT..." : "🪙 WERFEN!"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════
-          2. ALL-IN BUTTON
-         ══════════════════════════════════════════════════════════════════ */}
-      {user && (
-        <div className="max-w-lg mx-auto px-6 pb-6">
-          <div className={`rounded-2xl p-6 text-center ${allInPlaying ? "" : "allin-btn-pulse"}`} style={{
-            background: "linear-gradient(180deg, rgba(220,38,38,0.15), rgba(0,0,0,0.4))",
-            border: "2px solid rgba(220,38,38,0.5)",
-          }}>
-            <h3 className="text-2xl font-black text-red-400 mb-1">💀 ALL-IN 💀</h3>
-            <p className="text-xs text-gray-500 mb-1">40% Chance · 2.5x Auszahlung · Alles oder Nichts!</p>
-            <p className="text-3xl font-black text-white mb-3">
-              {points !== null && points > 0 ? `${points.toLocaleString()} PUNKTE` : "---"}
-            </p>
-            {allInResult && (
-              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${allInResult.win ? "text-green-400 bg-green-500/10 border border-green-500/30" : "text-red-400 bg-red-500/10 border border-red-500/30"}`}>
-                {allInResult.text}
-              </div>
-            )}
-            {allInCooldown > 0 ? (
-              <div className="text-sm text-gray-400">
-                Cooldown: {Math.floor(allInCooldown / 60)}m {allInCooldown % 60}s
-              </div>
-            ) : (
-              <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
-                className="casino-btn px-10 py-4 rounded-xl font-black text-xl text-white"
-                style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #7f1d1d, #dc2626)" }}>
-                {allInPlaying ? "..." : `💀 ALL-IN! (${points?.toLocaleString() || 0} Pts)`}
-              </button>
-            )}
-            <p className="text-xs text-gray-600 mt-2">1 Stunde Cooldown nach jedem Versuch</p>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════
-          GLUCKSRAD
-         ══════════════════════════════════════════════════════════════════ */}
-      {user && (
-        <div className="max-w-md mx-auto px-6 pb-6">
-          <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.08), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
-            <div className="text-5xl mb-2" style={wheelSpinning ? { animation: "wheel-spin 2s ease-out forwards" } : {}}>🎡</div>
-            <h3 className="font-black text-lg text-cyan-300 mb-1">GLÜCKSRAD</h3>
-            <p className="text-xs text-gray-500 mb-3">Einmal am Tag gratis drehen · 1-100 Punkte</p>
-            {wheelResult && (
-              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${wheelResult.includes("+") ? "text-cyan-300 bg-cyan-500/10" : "text-gray-400"}`}>
-                {wheelResult}
-              </div>
-            )}
-            <button onClick={spinWheel} disabled={wheelSpinning || wheelUsed} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: wheelSpinning || wheelUsed ? "#666" : "linear-gradient(135deg,#22d3ee,#0891b2)" }}>
-              {wheelSpinning ? "DREHT..." : wheelUsed ? "MORGEN WIEDER" : "🎡 DREHEN!"}
-            </button>
           </div>
         </div>
       )}

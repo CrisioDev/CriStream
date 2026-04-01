@@ -265,6 +265,24 @@ export function CasinoPage() {
   // Lootbox Drop
   const [lootboxDropAnim, setLootboxDropAnim] = useState<{ type: string; data: any } | null>(null);
 
+  // Auto-Flip Widget
+  const [autoFlipTick, setAutoFlipTick] = useState(0);
+
+  // Poll auto-flip stats every interval seconds
+  useEffect(() => {
+    if (!autoFlip?.active || !user) return;
+    const iv = setInterval(async () => {
+      try {
+        const res = await api.get<any>(`/viewer/${channelName}/casino/autoflip`) as any;
+        if (res.data) {
+          setAutoFlip(res.data);
+          setAutoFlipTick(t => t + 1);
+        }
+      } catch {}
+    }, (autoFlip.interval || 50) * 1000);
+    return () => clearInterval(iv);
+  }, [autoFlip?.active, autoFlip?.interval, user, channelName]);
+
   // Bonus Sidebar
   const [bonusSidebar, setBonusSidebar] = useState(false);
   const [bonusData, setBonusData] = useState<{ lines: any[]; totals: Record<string, { label: string; total: string }>; mood: number } | null>(null);
@@ -926,6 +944,8 @@ export function CasinoPage() {
         @keyframes poop-splat { 0% { transform: scale(0) rotate(0); opacity: 0; } 50% { transform: scale(1.3) rotate(10deg); opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
         @keyframes clean-wipe { 0% { transform: translateX(0) rotate(0); opacity: 1; } 50% { transform: translateX(30px) rotate(15deg); opacity: 0.8; } 100% { transform: translateX(0) rotate(0); opacity: 0; } }
         @keyframes paw-print { 0% { opacity: 0; transform: scale(0); } 30% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(0.8); } }
+        @keyframes autoflip-spin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(720deg); } }
+        @keyframes autoflip-result { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
         .allin-shake { animation: allin-screen-shake 0.5s ease-in-out infinite; }
         .allin-btn-pulse { animation: allin-pulse 1.5s ease-in-out infinite; }
         .quest-bonus-anim { animation: quest-bonus-float 2.5s ease-out forwards; }
@@ -1002,6 +1022,35 @@ export function CasinoPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Auto-Flip Widget (fixed bottom-left) */}
+      {autoFlip?.active && (
+        <div className="fixed bottom-4 left-4 z-20 rounded-2xl p-3" style={{
+          background: "linear-gradient(135deg, rgba(255,215,0,0.1), rgba(0,0,0,0.8))",
+          border: "1px solid rgba(255,215,0,0.3)",
+          backdropFilter: "blur(8px)",
+          minWidth: "140px",
+        }}>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="text-2xl" key={autoFlipTick} style={{ animation: "autoflip-spin 1s ease-out" }}>🪙</div>
+            <div>
+              <div className="text-xs font-bold text-yellow-300">Auto-Flip</div>
+              <div className="text-[10px] text-gray-400">P{autoFlip.prestige} · alle {autoFlip.interval}s</div>
+            </div>
+          </div>
+          <div className="flex justify-between text-[10px]">
+            <span className="text-green-400">{autoFlip.totalWon}W</span>
+            <span className="text-red-400">{autoFlip.totalFlips - autoFlip.totalWon}L</span>
+            <span className="text-gray-400">{autoFlip.totalFlips} total</span>
+          </div>
+          <div className="h-1 rounded-full bg-black/40 mt-1 overflow-hidden">
+            <div className="h-full rounded-full transition-all" style={{
+              width: `${autoFlip.totalFlips > 0 ? (autoFlip.totalWon / autoFlip.totalFlips) * 100 : 50}%`,
+              background: "linear-gradient(90deg, #4ade80, #fbbf24)",
+            }} />
+          </div>
+        </div>
       )}
 
       {/* Siren flash overlay */}

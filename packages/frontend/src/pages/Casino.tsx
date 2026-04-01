@@ -1278,7 +1278,7 @@ export function CasinoPage() {
       {user && (
         <>
           <button onClick={async () => {
-            if (!bonusSidebar && !bonusData) {
+            if (!bonusSidebar) {
               try {
                 const res = await api.get<any>(`/viewer/${channelName}/casino/bonuses`) as any;
                 if (res.data) setBonusData(res.data);

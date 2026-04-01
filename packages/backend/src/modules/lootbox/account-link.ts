@@ -127,5 +127,18 @@ async function migrateInventory(discordUserId: string, twitchUserId: string): Pr
     }
   }
 
-  logger.info({ discordUserId, twitchUserId, migratedItems: discordItems.length }, "Discord inventory migrated to Twitch");
+  // Migrate points: add discord points to twitch account, then delete discord ChannelUser
+  const discordUsers = await prisma.channelUser.findMany({ where: { twitchUserId: discordId } });
+  for (const du of discordUsers) {
+    if (du.points > 0) {
+      await prisma.channelUser.updateMany({
+        where: { channelId: du.channelId, twitchUserId: twitchUserId },
+        data: { points: { increment: du.points } },
+      });
+    }
+    // Delete the discord: ChannelUser entry completely
+    await prisma.channelUser.delete({ where: { id: du.id } }).catch(() => {});
+  }
+
+  logger.info({ discordUserId, twitchUserId, migratedItems: discordItems.length, migratedUsers: discordUsers.length }, "Discord account fully migrated to Twitch");
 }

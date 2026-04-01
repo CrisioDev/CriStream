@@ -1420,7 +1420,6 @@ export function CasinoPage() {
             border: "2px solid rgba(220,38,38,0.5)",
           }}>
             <h3 className="text-2xl font-black text-red-400 mb-1">💀 ALL-IN 💀</h3>
-            <p className="text-xs text-gray-500 mb-1">40% Chance · 2.5x Auszahlung · Setzt 90% deiner Punkte!</p>
             <p className="text-3xl font-black text-white mb-3">
               {points !== null && points > 0 ? `${points.toLocaleString()} PUNKTE` : "---"}
             </p>
@@ -1429,12 +1428,45 @@ export function CasinoPage() {
                 {allInResult.text}
               </div>
             )}
-            <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
-              className="casino-btn px-10 py-4 rounded-xl font-black text-xl text-white"
-              style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #7f1d1d, #dc2626)" }}>
-              {allInPlaying ? "..." : `💀 ALL-IN! (${points?.toLocaleString() || 0} Pts)`}
-            </button>
-            <p className="text-xs text-gray-600 mt-2">Kein Cooldown · Jederzeit spielbar</p>
+            <div className="flex justify-center gap-3 mb-2">
+              <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
+                className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
+                style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #991b1b)" }}>
+                {allInPlaying ? "..." : `💀 90% ALL-IN (${points ? Math.floor(points * 0.9).toLocaleString() : 0})`}
+              </button>
+              <button onClick={async () => {
+                if (!user || allInPlaying || !points || points <= 0) return;
+                setAllInPlaying(true); setAllInResult(null); setAllInShake(true);
+                try {
+                  const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "deadlyallin" }) as any;
+                  setTimeout(() => {
+                    setAllInShake(false); setAllInPlaying(false);
+                    if (!res.success) { setAllInResult({ text: res.error ?? "Fehler!", win: false }); return; }
+                    if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+                    processProgression(res.data.progression);
+                    if (res.data.win) {
+                      setAllInResult({ text: `DEADLY WIN! x3! +${res.data.payout.toLocaleString()}!`, win: true });
+                      showWin(res.data.payout);
+                      if (confettiRef.current) spawnConfetti(confettiRef.current, 300, true);
+                      showMultiplier("DEADLY WIN x3!");
+                    } else {
+                      setAllInResult({ text: `☠️ ALLES WEG! ${res.data.amount.toLocaleString()} Punkte verloren!`, win: false });
+                      showLoss(res.data.amount || 0);
+                    }
+                    fetchPoints();
+                  }, 2500);
+                } catch { setAllInPlaying(false); setAllInShake(false); }
+              }} disabled={allInPlaying || !points || points <= 0}
+                className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
+                style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #000, #4a0000, #000)", border: "2px solid rgba(220,38,38,0.8)" }}>
+                {allInPlaying ? "..." : `☠️ DEADLY (${points?.toLocaleString() || 0})`}
+              </button>
+            </div>
+            <div className="flex justify-center gap-4 text-[10px] text-gray-600">
+              <span>90%: 40% Chance · 2.5x</span>
+              <span>|</span>
+              <span>Deadly: 35% Chance · 3x · ALLES oder NICHTS</span>
+            </div>
           </div>
         </div>
       )}

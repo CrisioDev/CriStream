@@ -568,6 +568,48 @@ export async function viewerRoutes(app: FastifyInstance) {
         };
       }
 
+      // ── Deadly All-In (100%) ──
+      if (game === "deadlyallin") {
+        if (channelUser.points < 10) return reply.status(400).send({ success: false, error: "Brauchst mindestens 10 Punkte!" });
+
+        const allInAmount = channelUser.points;
+        await prisma.channelUser.update({
+          where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+          data: { points: 0 },
+        });
+
+        const win = Math.random() < 0.35; // 35% — harder than normal all-in
+        const payout = win ? Math.floor(allInAmount * 3) : 0; // 3x reward for the risk
+
+        if (win) {
+          await prisma.channelUser.update({
+            where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+            data: { points: payout },
+          });
+        }
+
+        const detail = win
+          ? `☠️ DEADLY ALL-IN x3! ${allInAmount} → ${payout}!!!`
+          : `💀 DEADLY ALL-IN VERLOREN! ALLES WEG!`;
+        await logResult("deadlyallin", payout, allInAmount, detail);
+
+        const specials: any[] = [];
+        const progression = await runProgression("allin", win, payout, allInAmount, specials);
+        broadcastAfterGame();
+        return {
+          success: true,
+          data: {
+            win,
+            amount: allInAmount,
+            payout,
+            multiplier: 3,
+            deadly: true,
+            specials,
+            ...progression,
+          },
+        };
+      }
+
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
     }
   );

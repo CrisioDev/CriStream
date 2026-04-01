@@ -31,65 +31,71 @@ export const PET_CATALOG = [
 export const ITEM_CATEGORIES = [
   {
     category: "hat", name: "Hüte", emoji: "🎩",
+    bonusType: "xp" as const, bonusDesc: "+XP pro Spiel",
     tiers: [
-      { name: "Mütze", emoji: "🧢", basePrice: 200 },
-      { name: "Zylinder", emoji: "🎩", basePrice: 1000 },
-      { name: "Cowboyhut", emoji: "🤠", basePrice: 5000 },
-      { name: "Krone", emoji: "👑", basePrice: 25000 },
-      { name: "Heiligenschein", emoji: "😇", basePrice: 100000 },
-      { name: "Dornenkrone", emoji: "⚜️", basePrice: 500000 },
+      { name: "Mütze", emoji: "🧢", basePrice: 200, bonusValue: 1 },
+      { name: "Zylinder", emoji: "🎩", basePrice: 1000, bonusValue: 3 },
+      { name: "Cowboyhut", emoji: "🤠", basePrice: 5000, bonusValue: 5 },
+      { name: "Krone", emoji: "👑", basePrice: 25000, bonusValue: 8 },
+      { name: "Heiligenschein", emoji: "😇", basePrice: 100000, bonusValue: 12 },
+      { name: "Dornenkrone", emoji: "⚜️", basePrice: 500000, bonusValue: 20 },
     ],
   },
   {
     category: "glasses", name: "Brillen", emoji: "🕶️",
+    bonusType: "shield" as const, bonusDesc: "+Trostpreis",
     tiers: [
-      { name: "Sonnenbrille", emoji: "🕶️", basePrice: 200 },
-      { name: "Nerdbrille", emoji: "🤓", basePrice: 1000 },
-      { name: "Schutzbrille", emoji: "🥽", basePrice: 5000 },
-      { name: "Monokel", emoji: "🧐", basePrice: 25000 },
-      { name: "Laservisier", emoji: "🔴", basePrice: 200000 },
+      { name: "Sonnenbrille", emoji: "🕶️", basePrice: 200, bonusValue: 1 },
+      { name: "Nerdbrille", emoji: "🤓", basePrice: 1000, bonusValue: 2 },
+      { name: "Schutzbrille", emoji: "🥽", basePrice: 5000, bonusValue: 4 },
+      { name: "Monokel", emoji: "🧐", basePrice: 25000, bonusValue: 6 },
+      { name: "Laservisier", emoji: "🔴", basePrice: 200000, bonusValue: 10 },
     ],
   },
   {
     category: "cape", name: "Umhänge", emoji: "🧣",
+    bonusType: "specials" as const, bonusDesc: "+Special-Rate %",
     tiers: [
-      { name: "Schal", emoji: "🧣", basePrice: 300 },
-      { name: "Umhang", emoji: "🦸", basePrice: 2000 },
-      { name: "Flügel", emoji: "🪽", basePrice: 10000 },
-      { name: "Flammenumhang", emoji: "🔥", basePrice: 75000 },
-      { name: "Void-Mantel", emoji: "🌑", basePrice: 500000 },
+      { name: "Schal", emoji: "🧣", basePrice: 300, bonusValue: 0.5 },
+      { name: "Umhang", emoji: "🦸", basePrice: 2000, bonusValue: 1 },
+      { name: "Flügel", emoji: "🪽", basePrice: 10000, bonusValue: 2 },
+      { name: "Flammenumhang", emoji: "🔥", basePrice: 75000, bonusValue: 3 },
+      { name: "Void-Mantel", emoji: "🌑", basePrice: 500000, bonusValue: 5 },
     ],
   },
   {
     category: "weapon", name: "Accessoires", emoji: "⚔️",
+    bonusType: "boss_dmg" as const, bonusDesc: "+Boss-Schaden %",
     tiers: [
-      { name: "Holzschwert", emoji: "🗡️", basePrice: 500 },
-      { name: "Zauberstab", emoji: "🪄", basePrice: 3000 },
-      { name: "Gitarre", emoji: "🎸", basePrice: 15000 },
-      { name: "Diamantschwert", emoji: "💎", basePrice: 75000 },
-      { name: "Dreizack", emoji: "🔱", basePrice: 500000 },
-      { name: "Infinity-Klinge", emoji: "♾️", basePrice: 5000000 },
+      { name: "Holzschwert", emoji: "🗡️", basePrice: 500, bonusValue: 3 },
+      { name: "Zauberstab", emoji: "🪄", basePrice: 3000, bonusValue: 5 },
+      { name: "Gitarre", emoji: "🎸", basePrice: 15000, bonusValue: 8 },
+      { name: "Diamantschwert", emoji: "💎", basePrice: 75000, bonusValue: 12 },
+      { name: "Dreizack", emoji: "🔱", basePrice: 500000, bonusValue: 20 },
+      { name: "Infinity-Klinge", emoji: "♾️", basePrice: 5000000, bonusValue: 35 },
     ],
   },
   {
     category: "aura", name: "Auren", emoji: "✨",
+    bonusType: "payout" as const, bonusDesc: "+Payout %",
     tiers: [
-      { name: "Funkeln", emoji: "✨", basePrice: 1000 },
-      { name: "Flamme", emoji: "🔥", basePrice: 10000 },
-      { name: "Blitz", emoji: "⚡", basePrice: 50000 },
-      { name: "Regenbogen", emoji: "🌈", basePrice: 250000 },
-      { name: "Galaxie", emoji: "🌌", basePrice: 1000000 },
-      { name: "Supernova", emoji: "💥", basePrice: 10000000 },
+      { name: "Funkeln", emoji: "✨", basePrice: 1000, bonusValue: 1 },
+      { name: "Flamme", emoji: "🔥", basePrice: 10000, bonusValue: 2 },
+      { name: "Blitz", emoji: "⚡", basePrice: 50000, bonusValue: 3 },
+      { name: "Regenbogen", emoji: "🌈", basePrice: 250000, bonusValue: 5 },
+      { name: "Galaxie", emoji: "🌌", basePrice: 1000000, bonusValue: 8 },
+      { name: "Supernova", emoji: "💥", basePrice: 10000000, bonusValue: 15 },
     ],
   },
   {
     category: "food", name: "Snacks", emoji: "🍕",
+    bonusType: "care" as const, bonusDesc: "+Fütter-Effekt",
     tiers: [
-      { name: "Keks", emoji: "🍪", basePrice: 100 },
-      { name: "Pizza", emoji: "🍕", basePrice: 500 },
-      { name: "Sushi", emoji: "🍣", basePrice: 2500 },
-      { name: "Steak", emoji: "🥩", basePrice: 15000 },
-      { name: "Goldener Apfel", emoji: "🍎", basePrice: 100000 },
+      { name: "Keks", emoji: "🍪", basePrice: 100, bonusValue: 5 },
+      { name: "Pizza", emoji: "🍕", basePrice: 500, bonusValue: 10 },
+      { name: "Sushi", emoji: "🍣", basePrice: 2500, bonusValue: 15 },
+      { name: "Steak", emoji: "🥩", basePrice: 15000, bonusValue: 25 },
+      { name: "Goldener Apfel", emoji: "🍎", basePrice: 100000, bonusValue: 40 },
     ],
   },
 ];
@@ -416,8 +422,13 @@ export async function feedPet(channelId: string, userId: string): Promise<{
     return { success: false, error: `Fütter-Cooldown! Noch ${mins} Min.` };
   }
 
+  // Food item bonus: equipped food increases feed amount
+  const active = data.pets.find(p => p.petId === data.activePetId);
+  const itemBonuses = active ? getItemBonuses(data, active.level) : { careBonus: 0 };
+  const feedAmount = 40 + itemBonuses.careBonus;
+
   data.care.lastFed = Date.now();
-  data.care.hunger = Math.min(100, data.care.hunger + 40);
+  data.care.hunger = Math.min(100, data.care.hunger + feedAmount);
   data.care.feedCount++;
 
   await redis.set(petKey(channelId, userId), JSON.stringify(data));
@@ -429,6 +440,33 @@ export async function getCareState(channelId: string, userId: string): Promise<P
   const data = await getPet(channelId, userId);
   if (!data?.care) return null;
   return decayCare({ ...data.care });
+}
+
+/** Get equipped item bonuses scaled by pet level */
+function getItemBonuses(data: PetData, petLevel: number): {
+  xp: number; shield: number; specials: number; bossDmg: number; payout: number; careBonus: number;
+} {
+  const result = { xp: 0, shield: 0, specials: 0, bossDmg: 0, payout: 0, careBonus: 0 };
+  const levelScale = 1 + petLevel * 0.05; // 5% more per pet level
+
+  for (const cat of ITEM_CATEGORIES) {
+    const equippedEmoji = data.equipped[cat.category as keyof PetData["equipped"]];
+    if (!equippedEmoji) continue;
+
+    const tier = cat.tiers.find(t => t.emoji === equippedEmoji);
+    if (!tier) continue;
+
+    const scaled = tier.bonusValue * levelScale;
+    switch (cat.bonusType) {
+      case "xp": result.xp += scaled; break;
+      case "shield": result.shield += Math.floor(scaled); break;
+      case "specials": result.specials += scaled / 100; break;
+      case "boss_dmg": result.bossDmg += scaled / 100; break;
+      case "payout": result.payout += scaled / 100; break;
+      case "care": result.careBonus += scaled; break;
+    }
+  }
+  return result;
 }
 
 /** Get active pet's passive bonus values */
@@ -449,23 +487,35 @@ export async function getPetBonuses(channelId: string, userId: string): Promise<
 
   const mood = data.care ? getMoodMultiplier(data.care) : 1;
   const lvl = active.level;
-  const val = def.perLevel * lvl * mood; // mood reduces effectiveness
+  const val = def.perLevel * lvl * mood;
+  const itemBonus = getItemBonuses(data, lvl);
 
+  // Start with item bonuses (always apply regardless of pet type)
+  const base = {
+    ...defaults,
+    shield: defaults.shield + itemBonus.shield,
+    specials: defaults.specials + itemBonus.specials,
+    bossDmg: defaults.bossDmg + itemBonus.bossDmg,
+    payout: defaults.payout + itemBonus.payout,
+    xpBonus: defaults.xpBonus + itemBonus.xp / 100, // normalize to multiplier
+  };
+
+  // Add pet-type-specific bonus on top
   switch (def.bonus) {
-    case "flip_luck": return { ...defaults, flipLuck: val };
-    case "shield": return { ...defaults, shield: Math.floor(val) };
-    case "free_plays": return { ...defaults, freePlays: Math.floor(val) };
-    case "specials": return { ...defaults, specials: val };
-    case "payout": return { ...defaults, payout: val };
-    case "boss_dmg": return { ...defaults, bossDmg: val };
-    case "slots_luck": return { ...defaults, slotsLuck: val };
-    case "scratch_luck": return { ...defaults, scratchLuck: val };
-    case "mystery": return { ...defaults, mysteryBonus: val };
-    case "xp": return { ...defaults, xpBonus: val };
-    case "heist": return { ...defaults, heistBonus: val };
+    case "flip_luck": return { ...base, flipLuck: val };
+    case "shield": return { ...base, shield: base.shield + Math.floor(val) };
+    case "free_plays": return { ...base, freePlays: Math.floor(val) };
+    case "specials": return { ...base, specials: base.specials + val };
+    case "payout": return { ...base, payout: base.payout + val };
+    case "boss_dmg": return { ...base, bossDmg: base.bossDmg + val };
+    case "slots_luck": return { ...base, slotsLuck: val };
+    case "scratch_luck": return { ...base, scratchLuck: val };
+    case "mystery": return { ...base, mysteryBonus: val };
+    case "xp": return { ...base, xpBonus: base.xpBonus + val };
+    case "heist": return { ...base, heistBonus: val };
     case "all":
-      return { flipLuck: val, slotsLuck: val, scratchLuck: val, payout: val, shield: Math.floor(val * 100), freePlays: 0, specials: val, bossDmg: val, xpBonus: val, heistBonus: val, mysteryBonus: val };
-    default: return defaults;
+      return { flipLuck: val, slotsLuck: val, scratchLuck: val, payout: base.payout + val, shield: base.shield + Math.floor(val * 100), freePlays: 0, specials: base.specials + val, bossDmg: base.bossDmg + val, xpBonus: base.xpBonus + val, heistBonus: val, mysteryBonus: val };
+    default: return base;
   }
 }
 
@@ -488,7 +538,9 @@ export async function getShop(channelId: string, userId: string) {
         const ownedCount = ownedItems.filter(i => i === itemKey).length;
         const price = getItemPrice(item.basePrice, ownedCount);
         const equipped = pet?.equipped[cat.category as keyof PetData["equipped"]] === item.emoji;
-        return { ...item, index: idx, price, ownedCount, equipped, owned: ownedCount > 0 };
+        const activePetLvl = pet?.pets.find(p => p.petId === pet.activePetId)?.level ?? 1;
+        const scaledBonus = +(item.bonusValue * (1 + activePetLvl * 0.05)).toFixed(1);
+        return { ...item, index: idx, price, ownedCount, equipped, owned: ownedCount > 0, scaledBonus, bonusType: cat.bonusType, bonusDesc: cat.bonusDesc };
       }),
     })),
   };

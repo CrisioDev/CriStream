@@ -1828,6 +1828,7 @@ export function CasinoPage() {
                             }}>
                               <div className="text-xl">{item.emoji}</div>
                               <div className="text-[10px] text-gray-300">{item.name}</div>
+                              <div className="text-[9px] text-purple-400">{item.bonusDesc}: +{item.scaledBonus}</div>
                               {item.owned && <div className="text-[9px] text-pink-400">x{item.ownedCount}</div>}
                               <div className="mt-1 flex gap-1 justify-center">
                                 {!item.equipped && item.owned && (

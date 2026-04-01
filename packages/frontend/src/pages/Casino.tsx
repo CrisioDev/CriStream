@@ -1370,7 +1370,7 @@ export function CasinoPage() {
       {/* Sound mute/unmute button */}
       <button
         onClick={() => { const next = !soundMuted; setSoundMuted(next); casinoSounds.setMute(next); if (!next) casinoSounds.toggle(); }}
-        className="fixed bottom-4 left-4 z-[60] w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110"
+        className={`fixed ${autoFlip?.active ? "bottom-28" : "bottom-4"} left-4 z-[60] w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110`}
         style={{ background: "rgba(20,20,40,0.85)", border: "1px solid rgba(145,71,255,0.4)", color: soundMuted ? "#666" : "#c084fc" }}
         title={soundMuted ? "Sound einschalten" : "Sound ausschalten"}
       >

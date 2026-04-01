@@ -3,6 +3,7 @@ import { viewerService } from "./service.js";
 import { prisma } from "../../lib/prisma.js";
 import jwt from "jsonwebtoken";
 import { config } from "../../config/index.js";
+import { addClient, removeClient, getInitialState, broadcastCasinoUpdate } from "../casino/sse.js";
 
 function getUser(request: FastifyRequest): { sub: string; twitchId: string } | null {
   const auth = request.headers.authorization;
@@ -15,6 +16,62 @@ function getUser(request: FastifyRequest): { sub: string; twitchId: string } | n
 }
 
 export async function viewerRoutes(app: FastifyInstance) {
+  // ── SSE endpoint for real-time casino updates ──
+  app.get<{ Params: { channelName: string }; Querystring: { token?: string } }>(
+    "/:channelName/casino/events",
+    async (request, reply) => {
+      const token = request.query.token;
+      if (!token) return reply.status(401).send("Unauthorized");
+      let user: { sub: string; twitchId: string };
+      try {
+        user = jwt.verify(token, config.jwtSecret) as any;
+      } catch {
+        return reply.status(401).send("Invalid token");
+      }
+
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send("Channel not found");
+
+      // SSE headers
+      reply.raw.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "Access-Control-Allow-Origin": "*",
+      });
+
+      const clientId = `${user.twitchId}_${Date.now()}`;
+      addClient(channel.id, { id: clientId, channelId: channel.id, userId: user.twitchId, res: reply.raw });
+
+      // Send full initial state
+      try {
+        const initialData = await getInitialState(channel.id, user.twitchId);
+        reply.raw.write(`event: init\ndata: ${JSON.stringify(initialData)}\n\n`);
+      } catch {
+        reply.raw.write(`event: init\ndata: {}\n\n`);
+      }
+
+      // Heartbeat every 30s
+      const heartbeat = setInterval(() => {
+        try {
+          if (!reply.raw.destroyed && !reply.raw.writableEnded) {
+            reply.raw.write(": heartbeat\n\n");
+          } else {
+            clearInterval(heartbeat);
+          }
+        } catch {
+          clearInterval(heartbeat);
+        }
+      }, 30000);
+
+      // Cleanup on disconnect
+      request.raw.on("close", () => {
+        clearInterval(heartbeat);
+        removeClient(channel.id, clientId);
+      });
+    }
+  );
+
   // ── Profile (public) ──
   app.get<{ Params: { channelName: string; twitchUserId: string } }>(
     "/:channelName/profile/:twitchUserId",
@@ -195,6 +252,13 @@ export async function viewerRoutes(app: FastifyInstance) {
         await redis.expire(key, 86400);
       };
 
+      // SSE broadcast helper — fire-and-forget after each game
+      const broadcastAfterGame = () => {
+        broadcastCasinoUpdate(channel.id, user.twitchId, {
+          feed: true, leaderboard: true, points: true, boss: true,
+        }).catch(() => {});
+      };
+
       // Free play helper (speed skill adds extra free plays)
       const maxFree = 10 + getExtraFreePlays(skills) + petBonus.freePlays;
       const useFree = async (g: string) => {
@@ -373,6 +437,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         await logResult("flip", finalPayout, cost, `🪙 ${side}`);
         const specials = [...pre.specials, ...post.specials];
         const progression = await runProgression("flip", win, finalPayout, cost, specials);
+        broadcastAfterGame();
         return { success: true, data: { result: side, win, payout: finalPayout, cost, free, freeLeft: await getFreeLeft("flip"), specials, ...progression } };
       }
 
@@ -405,6 +470,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         await logResult("slots", finalPayout, cost, `🎰 ${r1}${r2}${r3} ${label}`);
         const specials = [...pre.specials, ...post.specials];
         const progression = await runProgression("slots", payout > cost, finalPayout, cost, specials, { isTriple, is777 });
+        broadcastAfterGame();
         return { success: true, data: { reels: [r1,r2,r3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("slots"), specials, ...progression } };
       }
 
@@ -436,6 +502,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         await logResult("scratch", finalPayout, cost, `🎟️ ${s1}${s2}${s3} ${label}`);
         const specials = [...pre.specials, ...post.specials];
         const progression = await runProgression("scratch", payout > cost, finalPayout, cost, specials, { isTriple });
+        broadcastAfterGame();
         return { success: true, data: { symbols: [s1,s2,s3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("scratch"), specials, ...progression } };
       }
 
@@ -454,6 +521,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         await logResult("double", win ? amount * 2 : 0, amount, win ? `⚡ x2 → ${amount * 2}` : `💥 Verloren`);
         const specials = [...pre.specials, ...post.specials];
         const progression = await runProgression("double", win, win ? amount * 2 : 0, amount, specials);
+        broadcastAfterGame();
         return { success: true, data: { win, amount, payout: win ? amount * 2 : 0, specials, ...progression } };
       }
 
@@ -491,6 +559,7 @@ export async function viewerRoutes(app: FastifyInstance) {
 
         const specials: any[] = [];
         const progression = await runProgression("allin", win, payout, allInAmount, specials);
+        broadcastAfterGame();
         return {
           success: true,
           data: {
@@ -534,6 +603,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       await updateQuestProgress(channel.id, user.twitchId, { isGluecksrad: true });
       await addXp(channel.id, user.twitchId, 10, "gluecksrad");
 
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, leaderboard: true, points: true }).catch(() => {});
       return { success: true, data: result };
     }
   );
@@ -746,6 +816,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       const { createBattleChallenge } = await import("../casino/pet-battles.js");
       const result = await createBattleChallenge(channel.id, user.twitchId, channelUser.displayName, request.body.bet);
       if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { battle: true, points: true }).catch(() => {});
       return { success: true };
     }
   );
@@ -766,6 +837,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!battle) return reply.status(400).send({ success: false, error: "Keine offene Herausforderung!" });
       const result = await acceptBattle(channel.id, battle.challengerId, user.twitchId, channelUser.displayName);
       if (!result.success) return reply.status(400).send({ success: false, error: (result as any).error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { battle: true, feed: true, leaderboard: true, points: true }).catch(() => {});
       return { success: true, data: result };
     }
   );
@@ -1172,6 +1244,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       const stats = await getStats(channel.id, user.twitchId);
       await updateStats(channel.id, user.twitchId, { heistsPlayed: stats.heistsPlayed + 1 });
 
+      broadcastCasinoUpdate(channel.id, user.twitchId, { heist: true, points: true }).catch(() => {});
       return { success: true, data: result };
     }
   );
@@ -1198,6 +1271,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       const stats = await getStats(channel.id, user.twitchId);
       await updateStats(channel.id, user.twitchId, { heistsPlayed: stats.heistsPlayed + 1 });
 
+      broadcastCasinoUpdate(channel.id, user.twitchId, { heist: true, points: true }).catch(() => {});
       return { success: true, data: result };
     }
   );
@@ -1225,6 +1299,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!heist) return reply.status(400).send({ success: false, error: "Kein aktiver Heist!" });
       const result = await playHeistRound(channel.id, heist.id, user.twitchId, request.body.game);
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { heist: true }).catch(() => {});
       return { success: true, data: result };
     }
   );
@@ -1241,6 +1316,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!heist) return reply.status(400).send({ success: false, error: "Kein aktiver Heist!" });
       const result = await chooseBetray(channel.id, heist.id, user.twitchId);
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { heist: true }).catch(() => {});
       return { success: true, data: result };
     }
   );
@@ -1267,6 +1343,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         }
       }
 
+      broadcastCasinoUpdate(channel.id, user.twitchId, { heist: true, feed: true, leaderboard: true, points: true }).catch(() => {});
       return { success: true, data: result };
     }
   );

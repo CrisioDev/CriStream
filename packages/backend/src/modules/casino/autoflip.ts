@@ -1,6 +1,7 @@
 import { redis } from "../../lib/redis.js";
 import { prisma } from "../../lib/prisma.js";
 import { logger } from "../../lib/logger.js";
+import { broadcastToUser, broadcast } from "./sse.js";
 
 /**
  * Auto-Flipper Bot — unlocked at Season Pass Level 50
@@ -178,6 +179,15 @@ export async function processAutoFlips(): Promise<void> {
         if (win) stats.totalWon++;
         await redis.set(statsKey, JSON.stringify(stats));
 
+        // Broadcast autoflip stats to the user
+        broadcastToUser(channelId, userId, "autoflip", {
+          active: true,
+          prestige,
+          interval: getFlipInterval(prestige),
+          totalFlips: stats.totalFlips,
+          totalWon: stats.totalWon,
+        });
+
         // Log every 10th flip to feed (not every one to avoid spam)
         if (stats.totalFlips % 10 === 0) {
           const entry = JSON.stringify({
@@ -190,6 +200,13 @@ export async function processAutoFlips(): Promise<void> {
           });
           await redis.lpush(`casino:feed:${channelId}`, entry);
           await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+          // Broadcast updated feed to all clients
+          try {
+            const raw = await redis.lrange(`casino:feed:${channelId}`, 0, 19);
+            const feed = raw.map((r: string) => JSON.parse(r));
+            broadcast(channelId, "feed", feed);
+          } catch {}
         }
       } catch {
         // Skip individual flipper errors

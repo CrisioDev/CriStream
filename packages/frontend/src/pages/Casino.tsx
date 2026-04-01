@@ -268,20 +268,7 @@ export function CasinoPage() {
   // Auto-Flip Widget
   const [autoFlipTick, setAutoFlipTick] = useState(0);
 
-  // Poll auto-flip stats every interval seconds
-  useEffect(() => {
-    if (!autoFlip?.active || !user) return;
-    const iv = setInterval(async () => {
-      try {
-        const res = await api.get<any>(`/viewer/${channelName}/casino/autoflip`) as any;
-        if (res.data) {
-          setAutoFlip(res.data);
-          setAutoFlipTick(t => t + 1);
-        }
-      } catch {}
-    }, (autoFlip.interval || 50) * 1000);
-    return () => clearInterval(iv);
-  }, [autoFlip?.active, autoFlip?.interval, user, channelName]);
+  // Auto-flip stats are now pushed via SSE (no polling needed)
 
   // Bonus Sidebar
   const [bonusSidebar, setBonusSidebar] = useState(false);
@@ -436,7 +423,7 @@ export function CasinoPage() {
     } catch { /* */ }
   }, [user, channelName]);
 
-  useEffect(() => { fetchPoints(); }, [fetchPoints]);
+  // fetchPoints auto-invoke removed — SSE init provides points
 
   const fetchFree = useCallback(async () => {
     if (!user) return;
@@ -446,7 +433,7 @@ export function CasinoPage() {
     } catch { /* */ }
   }, [user, channelName]);
 
-  useEffect(() => { fetchFree(); }, [fetchFree]);
+  // fetchFree auto-invoke removed — SSE init provides free plays
 
   // Fetch quests
   const fetchQuests = useCallback(async () => {
@@ -588,53 +575,88 @@ export function CasinoPage() {
     } catch { /* */ }
   }, [user, channelName]);
 
-  // Initial data fetch
-  useEffect(() => {
-    if (user) {
-      fetchQuests();
-      fetchAchievements();
-      fetchSeason();
-      fetchStats();
-      fetchHeist();
-      fetchLoginStreak();
-      fetchTournament();
-      fetchPetBattle();
-      fetchBreedData();
-      fetchGuilds();
-    }
-  }, [user, channelName, fetchQuests, fetchAchievements, fetchSeason, fetchStats, fetchHeist, fetchLoginStreak, fetchTournament, fetchPetBattle, fetchBreedData, fetchGuilds]);
-
-  // Feed, leaderboard, boss polling
-  useEffect(() => {
-    const fetchFeed = async () => {
-      try {
-        const [f, l, b] = await Promise.all([
-          api.get<any[]>(`/viewer/${channelName}/casino/feed`),
-          api.get<any[]>(`/viewer/${channelName}/casino/leaderboard`),
-          api.get<any>(`/viewer/${channelName}/casino/boss`),
-        ]);
-        if (f.data) setFeed(f.data);
-        if (l.data) setLeaderboard(l.data);
-        if (b.data) setBoss(b.data);
-      } catch { /* */ }
-      if (user) {
-        try {
-          const t = await api.get<any>(`/viewer/${channelName}/casino/tickets`);
-          if (t.data) setTickets(t.data);
-        } catch { /* */ }
-      }
-    };
-    fetchFeed();
-    const iv = setInterval(fetchFeed, 5000);
-    return () => clearInterval(iv);
-  }, [channelName, user]);
-
-  // Heist polling — always poll so new heists appear without F5
+  // ── SSE: Real-time updates from server ──
   useEffect(() => {
     if (!user) return;
-    const iv = setInterval(fetchHeist, heist?.active ? 3000 : 10000);
-    return () => clearInterval(iv);
-  }, [user, heist?.active, fetchHeist]);
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const es = new EventSource(`/api/viewer/${channelName}/casino/events?token=${encodeURIComponent(token)}`);
+
+    es.addEventListener("init", (e) => {
+      const data = JSON.parse(e.data);
+      if (data.feed) setFeed(data.feed);
+      if (data.leaderboard) setLeaderboard(data.leaderboard);
+      if (data.boss) setBoss(data.boss);
+      if (data.heist) setHeist(transformHeist(data.heist));
+      else setHeist(null);
+      if (data.freePlays) setFreePlays(data.freePlays);
+      if (data.tickets) setTickets(data.tickets);
+      if (data.autoflip) setAutoFlip(data.autoflip);
+      if (data.pet) setPet(data.pet);
+      if (data.skills) setSkillData(data.skills);
+      if (data.stats) setPlayerStats(data.stats);
+      if (data.quests) setQuests(Array.isArray(data.quests) ? data.quests : []);
+      if (data.achievements) {
+        setAchievements(data.achievements.achievements || []);
+        setAchievementStats({ unlocked: data.achievements.unlocked ?? 0, total: data.achievements.total ?? 0 });
+      }
+      if (data.season) setSeason(data.season);
+      if (data.tournament) setTournament(data.tournament);
+      if (data.guilds) setGuilds(data.guilds);
+      if (data.myGuild) setMyGuild(data.myGuild);
+      if (data.loginStreak) setLoginStreak(data.loginStreak);
+      if (data.battle) setPetBattle(data.battle);
+      if (data.breed) setBreedData(data.breed);
+      if (data.points !== undefined) setPoints(data.points);
+    });
+
+    es.addEventListener("feed", (e) => setFeed(JSON.parse(e.data)));
+    es.addEventListener("leaderboard", (e) => setLeaderboard(JSON.parse(e.data)));
+    es.addEventListener("boss", (e) => setBoss(JSON.parse(e.data)));
+    es.addEventListener("heist", (e) => {
+      const h = JSON.parse(e.data);
+      if (h) setHeist(transformHeist(h));
+      else setHeist(null);
+    });
+    es.addEventListener("points", (e) => setPoints(JSON.parse(e.data).points));
+    es.addEventListener("season", (e) => setSeason(JSON.parse(e.data)));
+    es.addEventListener("autoflip", (e) => { setAutoFlip(JSON.parse(e.data)); setAutoFlipTick(t => t + 1); });
+    es.addEventListener("pet", (e) => setPet(JSON.parse(e.data)));
+    es.addEventListener("battle", (e) => setPetBattle(JSON.parse(e.data)));
+    es.addEventListener("tournament", (e) => setTournament(JSON.parse(e.data)));
+
+    es.onerror = () => { /* EventSource auto-reconnects */ };
+
+    return () => es.close();
+  }, [user, channelName]);
+
+  // Helper to transform raw heist data from SSE
+  function transformHeist(h: any): HeistState | null {
+    if (!h || !h.status) return null;
+    const myRounds = h.rounds?.filter((r: any) => r.userId === user?.twitchId).length ?? 0;
+    const totalRoundsPerPlayer = 3;
+    const now = Date.now();
+    const lobbyTimeLeft = h.status === "lobby" ? Math.max(0, Math.ceil(((h.createdAt + 120000) - now) / 1000)) : 0;
+    const betrayalTimeLeft = h.status === "betrayal" && h.betrayalStartedAt ? Math.max(0, Math.ceil(((h.betrayalStartedAt + 30000) - now) / 1000)) : 0;
+    const rounds = h.rounds ?? [];
+    const enrichedPlayers = (h.players ?? []).map((p: any) => ({
+      ...p,
+      roundsPlayed: rounds.filter((r: any) => r.userId === p.userId).length,
+      roundResults: rounds.filter((r: any) => r.userId === p.userId).map((r: any) => ({ game: r.game, payout: r.payout })),
+    }));
+    return {
+      active: h.status !== "finished",
+      phase: h.status,
+      players: enrichedPlayers,
+      pot: h.pot ?? 0,
+      round: myRounds,
+      totalRounds: totalRoundsPerPlayer,
+      countdown: h.status === "lobby" ? lobbyTimeLeft : h.status === "betrayal" ? betrayalTimeLeft : undefined,
+      createdBy: h.creatorName,
+      results: h.finishedResults ?? [],
+    };
+  }
 
   // All-In cooldown timer
   useEffect(() => {

@@ -585,8 +585,8 @@ export function CasinoPage() {
           if (confettiRef.current) spawnConfetti(confettiRef.current, 200, true);
           showMultiplier("ALL-IN WIN!");
         } else {
-          setAllInResult({ text: `ALL-IN VERLOREN! ${res.data.allInAmount} Punkte weg!`, win: false });
-          showLoss(res.data.allInAmount || 0);
+          setAllInResult({ text: `ALL-IN VERLOREN! ${res.data.amount} Punkte weg!`, win: false });
+          showLoss(res.data.amount || 0);
         }
         setAllInCooldown(3600);
         fetchPoints();

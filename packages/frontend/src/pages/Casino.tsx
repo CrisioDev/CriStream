@@ -2652,8 +2652,13 @@ export function CasinoPage() {
       {/* ══════════════════════════════════════════════════════════════════
           FOOTER
          ══════════════════════════════════════════════════════════════════ */}
-      <div className="text-center pb-6 text-xs text-gray-700">
-        Kein echtes Geld · Alle Instant-Games netto positiv · Verantwortungsvolles Fake-Gambling™
+      <div className="text-center pb-6 space-y-2">
+        <a href="/casino-guide.html" className="inline-block px-6 py-2 rounded-full text-sm font-bold" style={{ background: "linear-gradient(135deg, rgba(145,71,255,0.2), rgba(100,65,165,0.1))", border: "1px solid rgba(145,71,255,0.4)", color: "#c084fc" }}>
+          📖 Casino Guide — Alle Features erklärt
+        </a>
+        <div className="text-xs text-gray-700">
+          Kein echtes Geld · Verantwortungsvolles Fake-Gambling™
+        </div>
       </div>
     </div>
   );

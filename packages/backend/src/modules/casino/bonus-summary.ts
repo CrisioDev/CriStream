@@ -105,8 +105,23 @@ export async function getFullBonusSummary(channelId: string, userId: string): Pr
       totals[line.category] = { label: catLabels[line.category] ?? line.category, total: "" };
     }
   }
+  // Calculate "all" bonus to add to every category
+  const allBonus = lines.filter(l => l.category === "all").reduce((s, l) => s + l.value, 0);
+
+  // Add "all" bonus to all percentage-based categories
+  const allAppliesTo = ["luck_flip", "luck_slots", "luck_scratch", "payout", "specials", "boss_dmg", "xp", "heist", "mystery"];
+  for (const cat of allAppliesTo) {
+    if (!totals[cat] && allBonus > 0) {
+      totals[cat] = { label: catLabels[cat] ?? cat, total: "" };
+    }
+  }
+
   for (const [cat, info] of Object.entries(totals)) {
-    const sum = lines.filter(l => l.category === cat).reduce((s, l) => s + l.value, 0);
+    let sum = lines.filter(l => l.category === cat).reduce((s, l) => s + l.value, 0);
+    // Add universal "all" bonus to each category
+    if (cat !== "all" && cat !== "shield" && cat !== "free_plays" && cat !== "care" && allBonus > 0) {
+      sum += allBonus;
+    }
     if (cat === "shield" || cat === "free_plays") {
       info.total = `+${Math.floor(sum)}`;
     } else if (cat === "care") {

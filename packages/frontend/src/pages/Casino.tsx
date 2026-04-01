@@ -2099,6 +2099,60 @@ export function CasinoPage() {
                 {/* Item Shop */}
                 {showShop && shop && (
                   <div className="border-t border-pink-500/20 pt-4 space-y-4">
+                    {/* Buy More Pets */}
+                    {shop.pets.some((p: any) => !p.owned) && (
+                      <div>
+                        <h4 className="font-bold text-sm text-pink-300 mb-2">🐾 Weitere Pets kaufen</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {shop.pets.filter((p: any) => !p.owned).map((p: any) => (
+                            <button key={p.id} onClick={async () => {
+                              setBuyingPet(true);
+                              const res = await api.post<any>(`/viewer/${channelName}/casino/pet/buy`, { petId: p.id }) as any;
+                              if (res.success) {
+                                const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                fetchPoints();
+                              } else setMessage(res.error ?? "Fehler!");
+                              setBuyingPet(false);
+                            }} disabled={buyingPet} className="rounded-lg p-2 text-center hover:scale-105 transition-transform" style={{
+                              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", minWidth: "75px",
+                            }}>
+                              <div className="text-2xl">{p.emoji}</div>
+                              <div className="text-[10px] text-gray-300">{p.name}</div>
+                              <div className="text-[9px] text-yellow-400">{p.price.toLocaleString()}</div>
+                              <div className="text-[8px] text-purple-400">{p.bonusDesc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Owned Pets */}
+                    {shop.pets.some((p: any) => p.owned) && (
+                      <div>
+                        <h4 className="font-bold text-sm text-pink-300 mb-2">✅ Deine Pets</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {shop.pets.filter((p: any) => p.owned).map((p: any) => (
+                            <div key={p.id} className={`rounded-lg p-2 text-center ${p.active ? "ring-2 ring-pink-500" : ""}`} style={{
+                              background: "rgba(244,114,182,0.1)", border: "1px solid rgba(244,114,182,0.3)", minWidth: "75px",
+                            }}>
+                              <div className="text-2xl">{p.emoji}</div>
+                              <div className="text-[10px] text-white">{p.name}</div>
+                              <div className="text-[9px] text-purple-400">LVL {p.level}</div>
+                              {p.active ? <div className="text-[8px] text-green-400">Aktiv</div> : (
+                                <button onClick={async () => {
+                                  await api.post<any>(`/viewer/${channelName}/casino/pet/activate`, { petId: p.id });
+                                  const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                  const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                }} className="text-[8px] text-pink-300 hover:text-pink-200">Aktivieren</button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Item Categories */}
                     {shop.categories.map((cat: any) => (
                       <div key={cat.category}>
                         <h4 className="font-bold text-sm text-pink-300 mb-2">{cat.emoji} {cat.name}</h4>

@@ -658,17 +658,7 @@ export function CasinoPage() {
     };
   }
 
-  // All-In cooldown timer
-  useEffect(() => {
-    if (allInCooldown <= 0) return;
-    const iv = setInterval(() => {
-      setAllInCooldown(prev => {
-        if (prev <= 1) return 0;
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(iv);
-  }, [allInCooldown]);
+  // All-In cooldown removed — no timer needed
 
   const showWin = (profit: number) => {
     setStreak(s => { const n = s + 1; if (n > maxStreak) setMaxStreak(n); return n; });
@@ -778,7 +768,7 @@ export function CasinoPage() {
 
   // ── All-In ──
   const playAllIn = async () => {
-    if (!user || allInPlaying || allInCooldown > 0 || !points || points <= 0) return;
+    if (!user || allInPlaying || !points || points <= 0) return;
     setAllInPlaying(true); setAllInResult(null); setAllInShake(true);
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "allin" }) as any;
@@ -788,9 +778,6 @@ export function CasinoPage() {
         setAllInPlaying(false);
         if (!res.success) {
           setAllInResult({ text: res.error ?? "Fehler!", win: false });
-          if (res.error?.includes("Cooldown") || res.error?.includes("cooldown")) {
-            setAllInCooldown(3600);
-          }
           return;
         }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
@@ -804,7 +791,6 @@ export function CasinoPage() {
           setAllInResult({ text: `ALL-IN VERLOREN! ${res.data.amount} Punkte weg!`, win: false });
           showLoss(res.data.amount || 0);
         }
-        setAllInCooldown(3600);
         fetchPoints();
       }, 2500);
     } catch { setAllInPlaying(false); setAllInShake(false); setAllInResult({ text: "Fehler!", win: false }); }
@@ -1443,18 +1429,12 @@ export function CasinoPage() {
                 {allInResult.text}
               </div>
             )}
-            {allInCooldown > 0 ? (
-              <div className="text-sm text-gray-400">
-                Cooldown: {Math.floor(allInCooldown / 60)}m {allInCooldown % 60}s
-              </div>
-            ) : (
-              <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
-                className="casino-btn px-10 py-4 rounded-xl font-black text-xl text-white"
-                style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #7f1d1d, #dc2626)" }}>
-                {allInPlaying ? "..." : `💀 ALL-IN! (${points?.toLocaleString() || 0} Pts)`}
-              </button>
-            )}
-            <p className="text-xs text-gray-600 mt-2">1 Stunde Cooldown nach jedem Versuch</p>
+            <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
+              className="casino-btn px-10 py-4 rounded-xl font-black text-xl text-white"
+              style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #7f1d1d, #dc2626)" }}>
+              {allInPlaying ? "..." : `💀 ALL-IN! (${points?.toLocaleString() || 0} Pts)`}
+            </button>
+            <p className="text-xs text-gray-600 mt-2">Kein Cooldown · Jederzeit spielbar</p>
           </div>
         </div>
       )}

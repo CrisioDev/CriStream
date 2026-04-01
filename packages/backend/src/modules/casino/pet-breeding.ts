@@ -134,16 +134,24 @@ export async function breedPets(
   const bonus = strongest.bonus;
   const perLevel = strongest.perLevel;
 
-  const prefix = NAME_PREFIXES[pet1Id] ?? pet1.petName.split("-")[0] ?? "Hybrid";
-  const suffix = pet2.petName;
+  // Cap: max 8 bonus types, each capped at perLevel 0.1
+  const cappedBonuses = combinedBonuses.slice(0, 8).map(b => ({
+    bonus: b.bonus,
+    perLevel: Math.min(b.perLevel, 0.1),
+  }));
+
+  const prefix = NAME_PREFIXES[pet1Id] ?? pet1.petName.split("-")[0]?.slice(0, 10) ?? "Hybrid";
+  const suffix = pet2.petName.slice(0, 10);
   const petName = `${prefix}-${suffix}`;
 
-  const emoji1 = PET_EMOJIS[pet1Id] ?? "🥚";
-  const emoji2 = PET_EMOJIS[pet2Id] ?? "🥚";
-  // Take first emoji char(s) from each parent
-  const emoji = `${emoji1.slice(0, 2)}${emoji2.slice(0, 2)}`;
+  // Short emoji: max 4 chars
+  const baseEmojis = ["🐱","🐶","🐰","🦊","🐼","🐉","🦄","🔥","👾","🤖","🦑","👻","✨","💎","🌑","🌌"];
+  const emoji1 = PET_EMOJIS[pet1Id]?.slice(0, 2) ?? baseEmojis[Math.floor(Math.random() * baseEmojis.length)]!;
+  const emoji2 = PET_EMOJIS[pet2Id]?.slice(0, 2) ?? baseEmojis[Math.floor(Math.random() * baseEmojis.length)]!;
+  const emoji = `${emoji1}${emoji2}`;
 
-  const newPetId = `bred_${pet1Id}_${pet2Id}_${Date.now().toString(36)}`;
+  // Short ID: hash instead of concatenating parent IDs
+  const newPetId = `bred_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
 
   // Add to collection (store bonuses on pet for persistence across restarts)
   petData.pets.push({
@@ -151,7 +159,7 @@ export async function breedPets(
     petName,
     level: 1,
     xp: 0,
-    bredBonuses: combinedBonuses, // stored on pet for getPetBonuses to read
+    bredBonuses: cappedBonuses, // stored on pet, capped to prevent exploit
   } as any);
   await redis.set(petKey(channelId, userId), JSON.stringify(petData));
 
@@ -161,7 +169,7 @@ export async function breedPets(
   await redis.set(breedKey(channelId, userId), JSON.stringify(breedData));
 
   // Also register the new pet's bonuses for future breeding (carries all combined bonuses)
-  PET_BONUSES[newPetId] = { bonus, perLevel, bonuses: combinedBonuses };
+  PET_BONUSES[newPetId] = { bonus, perLevel: Math.min(perLevel, 0.1), bonuses: cappedBonuses };
   PET_EMOJIS[newPetId] = emoji;
 
   return {

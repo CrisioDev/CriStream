@@ -68,6 +68,10 @@ async function start() {
   const { startAutoFlipScheduler } = await import("./modules/casino/autoflip.js");
   startAutoFlipScheduler();
 
+  // Start casino passive points (5 pts/min for visitors)
+  const { startPassivePointsScheduler } = await import("./modules/casino/sse.js");
+  startPassivePointsScheduler();
+
   // Graceful shutdown
   const shutdown = async () => {
     logger.info("Shutting down...");

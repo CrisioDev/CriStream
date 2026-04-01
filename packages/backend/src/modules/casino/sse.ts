@@ -283,3 +283,41 @@ export async function broadcastCasinoUpdate(
     logger.error({ err }, "SSE broadcastCasinoUpdate error");
   }
 }
+
+// ── Passive Points for Casino Visitors ──
+// Every 60 seconds, all connected SSE users get 5 points
+
+export function startPassivePointsScheduler(): void {
+  setInterval(async () => {
+    try {
+      // Collect unique users across all channels
+      const processed = new Set<string>();
+      for (const [channelId, list] of clients.entries()) {
+        for (const client of list) {
+          const key = `${channelId}:${client.userId}`;
+          if (processed.has(key)) continue;
+          processed.add(key);
+
+          try {
+            await prisma.channelUser.update({
+              where: { channelId_twitchUserId: { channelId, twitchUserId: client.userId } },
+              data: { points: { increment: 5 } },
+            });
+
+            // Push updated points to the user
+            const updated = await prisma.channelUser.findUnique({
+              where: { channelId_twitchUserId: { channelId, twitchUserId: client.userId } },
+              select: { points: true },
+            });
+            if (updated) {
+              broadcastToUser(channelId, client.userId, "points", { points: updated.points });
+            }
+          } catch { /* user may not exist yet */ }
+        }
+      }
+    } catch (err) {
+      logger.error({ err }, "Passive points scheduler error");
+    }
+  }, 60000);
+  logger.info("Casino passive points scheduler started (5 pts/min for visitors)");
+}

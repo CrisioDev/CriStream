@@ -891,6 +891,19 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Bonus Summary ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/bonuses",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getFullBonusSummary } = await import("../casino/bonus-summary.js");
+      return { success: true, data: await getFullBonusSummary(channel.id, user.twitchId) };
+    }
+  );
+
   // ── Skill Tree ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/casino/skills",

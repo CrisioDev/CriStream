@@ -375,7 +375,8 @@ export function CasinoPage() {
     if (!user) return;
     try {
       const res = await api.get<any>(`/viewer/${channelName}/casino/quests`) as any;
-      if (res.data?.quests) setQuests(res.data.quests);
+      if (Array.isArray(res.data)) setQuests(res.data);
+      else if (res.data?.quests) setQuests(res.data.quests);
     } catch { /* */ }
   }, [user, channelName]);
 

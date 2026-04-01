@@ -72,7 +72,7 @@ interface SeasonData {
 interface HeistState {
   active: boolean;
   phase?: "lobby" | "playing" | "betrayal" | "finished";
-  players?: { displayName: string; ready?: boolean; result?: any }[];
+  players?: { userId: string; displayName: string; ready?: boolean; result?: any }[];
   countdown?: number;
   round?: number;
   totalRounds?: number;
@@ -2569,17 +2569,22 @@ export function CasinoPage() {
               <div className="text-center">
                 <p className="text-sm text-gray-400 mb-2">Heist gestartet von <span className="text-red-300 font-bold">{heist.createdBy}</span></p>
                 <div className="flex flex-wrap justify-center gap-2 mb-3">
-                  {heist.players?.map((p, i) => (
-                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-                      {p.displayName}
+                  {heist.players?.map((p: any, i: number) => (
+                    <span key={i} className={`text-xs px-2 py-1 rounded-full border ${p.userId === user?.twitchId ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" : "bg-red-500/20 text-red-300 border-red-500/30"}`}>
+                      {p.displayName} {p.userId === user?.twitchId ? "(Du)" : ""}
                     </span>
                   ))}
                 </div>
-                {heist.countdown && <p className="text-sm text-yellow-400 mb-3">Startet in {heist.countdown}s...</p>}
-                <button onClick={joinHeist} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
-                  style={{ background: "linear-gradient(135deg, #b91c1c, #7f1d1d)" }}>
-                  🏴‍☠️ BEITRETEN (25 Pts)
-                </button>
+                <p className="text-xs text-gray-500 mb-2">{heist.players?.length ?? 0}/5 Spieler · Pot: {heist.pot} Pts</p>
+                {heist.countdown !== undefined && heist.countdown > 0 && <p className="text-sm text-yellow-400 mb-3">Startet in ~{Math.ceil(heist.countdown / 10) * 10}s...</p>}
+                {!heist.players?.some((p: any) => p.userId === user?.twitchId) ? (
+                  <button onClick={joinHeist} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
+                    style={{ background: "linear-gradient(135deg, #b91c1c, #7f1d1d)" }}>
+                    🏴‍☠️ BEITRETEN (25 Pts)
+                  </button>
+                ) : (
+                  <p className="text-sm text-green-400 font-bold">✅ Du bist dabei! Warte auf andere Spieler...</p>
+                )}
               </div>
             )}
 

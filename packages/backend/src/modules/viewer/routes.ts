@@ -1187,8 +1187,10 @@ export async function viewerRoutes(app: FastifyInstance) {
         where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
       });
       if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
-      const { joinHeist } = await import("../casino/heists.js");
-      const result = await joinHeist(channel.id, request.body.heistId, user.twitchId, channelUser.displayName);
+      const { joinHeist, getActiveHeist } = await import("../casino/heists.js");
+      const activeHeist = await getActiveHeist(channel.id);
+      if (!activeHeist) return reply.status(400).send({ success: false, error: "Kein aktiver Heist!" });
+      const result = await joinHeist(channel.id, activeHeist.id, user.twitchId, channelUser.displayName);
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
 
       // Track heist stat

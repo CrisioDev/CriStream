@@ -3171,11 +3171,23 @@ export function CasinoPage() {
                               <div className="text-[10px] text-white">{p.name}</div>
                               <div className="text-[9px] text-purple-400">LVL {p.level}</div>
                               {p.active ? <div className="text-[8px] text-green-400">Aktiv</div> : (
-                                <button onClick={async () => {
-                                  await api.post<any>(`/viewer/${channelName}/casino/pet/activate`, { petId: p.id });
-                                  const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
-                                  const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
-                                }} className="text-[8px] text-pink-300 hover:text-pink-200">Aktivieren</button>
+                                <div className="flex gap-1">
+                                  <button onClick={async () => {
+                                    await api.post<any>(`/viewer/${channelName}/casino/pet/activate`, { petId: p.id });
+                                    const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                    const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                  }} className="text-[8px] text-pink-300 hover:text-pink-200">Aktivieren</button>
+                                  <button onClick={async () => {
+                                    if (!confirm(`${p.name} verkaufen?`)) return;
+                                    const res = await api.post<any>(`/viewer/${channelName}/casino/pet/sell`, { petId: p.id }) as any;
+                                    if (res.success) {
+                                      setMessage(`${p.name} verkauft! +${res.data.points} Pts`);
+                                      const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                      const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                      fetchPoints();
+                                    } else setMessage(res.error ?? "Fehler!");
+                                  }} className="text-[8px] text-red-400 hover:text-red-300">Verkaufen</button>
+                                </div>
                               )}
                             </div>
                           ))}

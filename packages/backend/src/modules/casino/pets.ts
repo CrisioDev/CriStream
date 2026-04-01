@@ -375,6 +375,46 @@ export async function setActivePet(channelId: string, userId: string, petId: str
   return { success: true };
 }
 
+/** Sell a pet for points */
+export async function sellPet(channelId: string, userId: string, petId: string): Promise<{ success: boolean; points?: number; error?: string }> {
+  const data = await getPet(channelId, userId);
+  if (!data) return { success: false, error: "Keine Pets!" };
+  if (data.pets.length <= 1) return { success: false, error: "Du brauchst mindestens 1 Pet!" };
+
+  const petIndex = data.pets.findIndex(p => p.petId === petId);
+  if (petIndex === -1) return { success: false, error: "Pet nicht gefunden!" };
+
+  const pet = data.pets[petIndex]!;
+
+  // Calculate sell price: 50% of buy price for catalog pets, level * 500 for bred pets
+  const catalogDef = PET_CATALOG.find(p => p.id === petId);
+  let sellPrice: number;
+  if (catalogDef) {
+    sellPrice = Math.floor(catalogDef.price * 0.5);
+  } else {
+    // Bred pet: base 500 * level
+    sellPrice = Math.max(100, pet.level * 500);
+  }
+
+  // Remove pet
+  data.pets.splice(petIndex, 1);
+
+  // If active pet was sold, switch to first remaining
+  if (data.activePetId === petId) {
+    data.activePetId = data.pets[0]?.petId ?? "";
+  }
+
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+
+  // Award points
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { increment: sellPrice } },
+  });
+
+  return { success: true, points: sellPrice };
+}
+
 /** Walk the pet — increases happiness, 60% chance poop spawns */
 export async function walkPet(channelId: string, userId: string): Promise<{
   success: boolean; poop?: boolean; happiness?: number; error?: string;

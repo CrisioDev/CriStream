@@ -295,3 +295,180 @@ export async function submitMemoryScore(
 
   return { points: pts };
 }
+
+// ── Dice 21 ──
+// Player rolls dice trying to get close to 21 without going over.
+// Each roll adds 1-6. Player decides when to stop.
+// State stored in Redis during game.
+
+interface Dice21State {
+  total: number;
+  rolls: number[];
+  bet: number;
+  finished: boolean;
+}
+
+function dice21Key(channelId: string, userId: string): string {
+  return `casino:dice21:${channelId}:${userId}`;
+}
+
+export async function startDice21(
+  channelId: string, userId: string, bet: number,
+): Promise<{ total: number; roll: number; rolls: number[] } | { error: string }> {
+  if (bet < 5) return { error: "Mindesteinsatz: 5 Punkte!" };
+
+  const existing = await redis.get(dice21Key(channelId, userId));
+  if (existing) {
+    const state = JSON.parse(existing) as Dice21State;
+    if (!state.finished) return { error: "Du hast bereits ein laufendes Spiel! Stoppe oder würfle weiter." };
+  }
+
+  const cu = await prisma.channelUser.findUnique({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+  });
+  if (!cu || cu.points < bet) return { error: `Nicht genug Punkte! Brauchst ${bet}.` };
+
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { decrement: bet } },
+  });
+
+  const roll = Math.floor(Math.random() * 6) + 1;
+  const state: Dice21State = { total: roll, rolls: [roll], bet, finished: false };
+  await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 300);
+
+  return { total: roll, roll, rolls: [roll] };
+}
+
+export async function hitDice21(
+  channelId: string, userId: string,
+): Promise<{ total: number; roll: number; rolls: number[]; bust: boolean; payout?: number } | { error: string }> {
+  const raw = await redis.get(dice21Key(channelId, userId));
+  if (!raw) return { error: "Kein laufendes Spiel! Starte mit einem Einsatz." };
+  const state = JSON.parse(raw) as Dice21State;
+  if (state.finished) return { error: "Spiel bereits beendet!" };
+
+  const roll = Math.floor(Math.random() * 6) + 1;
+  state.total += roll;
+  state.rolls.push(roll);
+
+  if (state.total > 21) {
+    // Bust!
+    state.finished = true;
+    await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 60);
+
+    const entry = JSON.stringify({ user: userId, game: "dice21", payout: 0, profit: -state.bet, detail: `🎲 21: ${state.total} BUST! -${state.bet}`, time: Date.now() });
+    await redis.lpush(`casino:feed:${channelId}`, entry);
+    await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+    return { total: state.total, roll, rolls: state.rolls, bust: true, payout: 0 };
+  }
+
+  if (state.total === 21) {
+    // Perfect 21! 3x payout
+    state.finished = true;
+    const payout = state.bet * 3;
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+      data: { points: { increment: payout } },
+    });
+    await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 60);
+
+    const entry = JSON.stringify({ user: userId, game: "dice21", payout, profit: payout - state.bet, detail: `🎲 21! PERFEKT! x3 → ${payout}`, time: Date.now() });
+    await redis.lpush(`casino:feed:${channelId}`, entry);
+    await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+    return { total: 21, roll, rolls: state.rolls, bust: false, payout };
+  }
+
+  await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 300);
+  return { total: state.total, roll, rolls: state.rolls, bust: false };
+}
+
+export async function standDice21(
+  channelId: string, userId: string,
+): Promise<{ total: number; payout: number; multiplier: number; rolls: number[] } | { error: string }> {
+  const raw = await redis.get(dice21Key(channelId, userId));
+  if (!raw) return { error: "Kein laufendes Spiel!" };
+  const state = JSON.parse(raw) as Dice21State;
+  if (state.finished) return { error: "Spiel bereits beendet!" };
+
+  state.finished = true;
+
+  // Payout based on how close to 21:
+  // 20-21: x3, 18-19: x2.5, 16-17: x2, 14-15: x1.5, 12-13: x1.2, <12: x1 (get bet back)
+  let multiplier: number;
+  if (state.total >= 20) multiplier = 3;
+  else if (state.total >= 18) multiplier = 2.5;
+  else if (state.total >= 16) multiplier = 2;
+  else if (state.total >= 14) multiplier = 1.5;
+  else if (state.total >= 12) multiplier = 1.2;
+  else multiplier = 1;
+
+  const payout = Math.round(state.bet * multiplier);
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { increment: payout } },
+  });
+  await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 60);
+
+  const entry = JSON.stringify({ user: userId, game: "dice21", payout, profit: payout - state.bet, detail: `🎲 21: ${state.total} · x${multiplier} → ${payout}`, time: Date.now() });
+  await redis.lpush(`casino:feed:${channelId}`, entry);
+  await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+  return { total: state.total, payout, multiplier, rolls: state.rolls };
+}
+
+export async function getDice21(channelId: string, userId: string): Promise<Dice21State | null> {
+  const raw = await redis.get(dice21Key(channelId, userId));
+  return raw ? JSON.parse(raw) : null;
+}
+
+// ── Over/Under (Drüber/Drunter) ──
+// Roll 2 dice (2-12). Guess if result is over or under 7.
+// 7 exactly = house wins. Over/Under pays 2x. Bet on exact 7 pays 5x.
+
+export async function playOverUnder(
+  channelId: string, userId: string, displayName: string, bet: number, guess: "over" | "under" | "seven",
+): Promise<{ dice: [number, number]; total: number; win: boolean; payout: number; guess: string } | { error: string }> {
+  if (bet < 1) return { error: "Mindesteinsatz: 1 Punkt!" };
+
+  const cu = await prisma.channelUser.findUnique({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+  });
+  if (!cu || cu.points < bet) return { error: `Nicht genug Punkte! Brauchst ${bet}.` };
+
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { decrement: bet } },
+  });
+
+  const d1 = Math.floor(Math.random() * 6) + 1;
+  const d2 = Math.floor(Math.random() * 6) + 1;
+  const total = d1 + d2;
+
+  let win = false;
+  let multiplier = 0;
+  if (guess === "over" && total > 7) { win = true; multiplier = 2; }
+  else if (guess === "under" && total < 7) { win = true; multiplier = 2; }
+  else if (guess === "seven" && total === 7) { win = true; multiplier = 5; }
+
+  const payout = win ? Math.round(bet * multiplier) : 0;
+  if (payout > 0) {
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+      data: { points: { increment: payout } },
+    });
+  }
+
+  const guessLabel = guess === "over" ? "Drüber" : guess === "under" ? "Drunter" : "Genau 7";
+  const entry = JSON.stringify({
+    user: displayName, game: "overunder", payout, profit: payout - bet,
+    detail: `🎲 ${d1}+${d2}=${total} · ${guessLabel} · ${win ? `x${multiplier} → ${payout}` : "Verloren!"}`,
+    time: Date.now(),
+  });
+  await redis.lpush(`casino:feed:${channelId}`, entry);
+  await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+  return { dice: [d1, d2], total, win, payout, guess: guessLabel };
+}

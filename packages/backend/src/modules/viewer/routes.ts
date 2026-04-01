@@ -1179,6 +1179,73 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Dice 21 ──
+  app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
+    "/:channelName/casino/minigame/dice21/start",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { startDice21 } = await import("../casino/minigames.js");
+      const result = await startDice21(channel.id, user.twitchId, request.body.bet);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/minigame/dice21/hit",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { hitDice21 } = await import("../casino/minigames.js");
+      const result = await hitDice21(channel.id, user.twitchId);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      if (result.bust || result.payout !== undefined) {
+        broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, points: true }).catch(() => {});
+      }
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/minigame/dice21/stand",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { standDice21 } = await import("../casino/minigames.js");
+      const result = await standDice21(channel.id, user.twitchId);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, points: true, leaderboard: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
+  // ── Over/Under ──
+  app.post<{ Params: { channelName: string }; Body: { bet: number; guess: "over" | "under" | "seven" } }>(
+    "/:channelName/casino/minigame/overunder",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil!" });
+      const { playOverUnder } = await import("../casino/minigames.js");
+      const result = await playOverUnder(channel.id, user.twitchId, channelUser.displayName, request.body.bet, request.body.guess);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, points: true, leaderboard: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
   // ── Skill Tree ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/casino/skills",

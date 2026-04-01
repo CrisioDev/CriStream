@@ -273,6 +273,15 @@ export function CasinoPage() {
   const [memoryPoints, setMemoryPoints] = useState(0);
   const memoryLockRef = useRef(false);
 
+  // Dice 21
+  const [d21, setD21] = useState<{ total: number; rolls: number[]; bet: number; finished: boolean } | null>(null);
+  const [d21Bet, setD21Bet] = useState(20);
+  const [d21Msg, setD21Msg] = useState<string | null>(null);
+  // Over/Under
+  const [ouBet, setOuBet] = useState(10);
+  const [ouResult, setOuResult] = useState<{ dice: number[]; total: number; win: boolean; payout: number; guess: string } | null>(null);
+  const [ouMsg, setOuMsg] = useState<string | null>(null);
+
   // Boss Fight
   const [boss, setBoss] = useState<{ active: boolean; name?: string; hp?: number; maxHp?: number; participants?: number } | null>(null);
 
@@ -1917,6 +1926,20 @@ export function CasinoPage() {
               <div className="text-xs text-gray-500 mt-1">Finde alle Paare! Bis zu 26 Pts</div>
               <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Spielen</div>
             </button>
+            {/* Dice 21 */}
+            <button onClick={() => setActiveMinigame("dice21" as any)} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(251,146,60,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(251,146,60,0.3)" }}>
+              <div className="text-4xl mb-2">🎲</div>
+              <div className="font-black text-orange-400">Würfel 21</div>
+              <div className="text-xs text-gray-500 mt-1">Triff 21! Bis x3</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(251,146,60,0.2)", color: "#fb923c" }}>Spielen</div>
+            </button>
+            {/* Over/Under */}
+            <button onClick={() => setActiveMinigame("overunder" as any)} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
+              <div className="text-4xl mb-2">🎯</div>
+              <div className="font-black text-cyan-400">Drüber/Drunter</div>
+              <div className="text-xs text-gray-500 mt-1">Über/Unter 7? x2!</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(34,211,238,0.2)", color: "#22d3ee" }}>Spielen</div>
+            </button>
           </div>
         </div>
       )}
@@ -2075,6 +2098,130 @@ export function CasinoPage() {
                 <button onClick={startMemory} className="px-6 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.4)" }}>Nochmal</button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Dice 21 Modal */}
+      {activeMinigame === ("dice21" as any) && (
+        <div className="fixed inset-0 z-[35] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-6 text-center max-w-sm w-full mx-4" style={{ background: "linear-gradient(180deg, #1a0f00, #000)", border: "2px solid rgba(251,146,60,0.4)" }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-black text-lg text-orange-400">🎲 Würfel 21</h3>
+              <button onClick={() => { setActiveMinigame(null); setD21(null); setD21Msg(null); }} className="text-gray-500 hover:text-white text-lg">✕</button>
+            </div>
+            {d21Msg && <p className={`text-sm mb-2 font-bold ${d21Msg.includes("+") ? "text-green-400" : d21Msg.includes("BUST") ? "text-red-400" : "text-yellow-400"}`}>{d21Msg}</p>}
+            {!d21 || d21.finished ? (
+              <div>
+                <p className="text-gray-400 text-sm mb-3">Würfle so nah an 21 wie möglich — aber nicht drüber!</p>
+                <div className="text-xs text-gray-500 mb-3 space-y-0.5">
+                  <p>20-21: x3 · 18-19: x2.5 · 16-17: x2</p>
+                  <p>14-15: x1.5 · 12-13: x1.2 · &lt;12: x1</p>
+                  <p>Über 21: Alles verloren! · Genau 21: x3!</p>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span className="text-gray-500 text-sm">Einsatz:</span>
+                  <input type="number" min={5} value={d21Bet} onChange={e => setD21Bet(Math.max(5, +e.target.value))} className="w-20 bg-black/40 border border-orange-500/30 rounded-lg px-2 py-1 text-center text-white" />
+                </div>
+                <button onClick={async () => {
+                  const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/dice21/start`, { bet: d21Bet }) as any;
+                  if (res.success) { setD21({ total: res.data.total, rolls: res.data.rolls, bet: d21Bet, finished: false }); setD21Msg(null); casinoSounds.coinFlip(); }
+                  else setD21Msg(res.error ?? "Fehler!");
+                }} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: "linear-gradient(135deg, #fb923c, #ea580c)" }}>
+                  🎲 Würfeln! ({d21Bet} Pts)
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-center gap-2 mb-3">
+                  {d21.rolls.map((r, i) => (
+                    <div key={i} className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black" style={{ background: "rgba(251,146,60,0.2)", border: "1px solid rgba(251,146,60,0.4)" }}>
+                      {r}
+                    </div>
+                  ))}
+                </div>
+                <p className={`text-4xl font-black mb-3 ${d21.total > 18 ? "text-orange-400" : d21.total > 14 ? "text-yellow-400" : "text-white"}`}>{d21.total}</p>
+                <div className="flex justify-center gap-3">
+                  <button onClick={async () => {
+                    casinoSounds.coinFlip();
+                    const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/dice21/hit`, {}) as any;
+                    if (res.success) {
+                      if (res.data.bust) {
+                        setD21({ ...d21, total: res.data.total, rolls: res.data.rolls, finished: true });
+                        setD21Msg(`💥 BUST! ${res.data.total} — Einsatz verloren!`);
+                        casinoSounds.loss(); fetchPoints();
+                      } else if (res.data.payout) {
+                        setD21({ ...d21, total: 21, rolls: res.data.rolls, finished: true });
+                        setD21Msg(`🎯 PERFEKT 21! x3 → +${res.data.payout} Pts!`);
+                        casinoSounds.jackpot(); fetchPoints();
+                      } else {
+                        setD21({ ...d21, total: res.data.total, rolls: res.data.rolls });
+                      }
+                    } else setD21Msg(res.error ?? "Fehler!");
+                  }} className="casino-btn px-6 py-3 rounded-xl font-black text-white" style={{ background: "linear-gradient(135deg, #fb923c, #ea580c)" }}>
+                    🎲 WÜRFELN
+                  </button>
+                  <button onClick={async () => {
+                    const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/dice21/stand`, {}) as any;
+                    if (res.success) {
+                      setD21({ ...d21, finished: true });
+                      setD21Msg(`✅ ${res.data.total} · x${res.data.multiplier} → +${res.data.payout} Pts!`);
+                      casinoSounds.win(); fetchPoints();
+                    } else setD21Msg(res.error ?? "Fehler!");
+                  }} className="casino-btn px-6 py-3 rounded-xl font-black text-black" style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)" }}>
+                    ✋ STOPP
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Over/Under Modal */}
+      {activeMinigame === ("overunder" as any) && (
+        <div className="fixed inset-0 z-[35] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-6 text-center max-w-sm w-full mx-4" style={{ background: "linear-gradient(180deg, #001a1a, #000)", border: "2px solid rgba(34,211,238,0.4)" }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-black text-lg text-cyan-400">🎯 Drüber / Drunter</h3>
+              <button onClick={() => { setActiveMinigame(null); setOuResult(null); setOuMsg(null); }} className="text-gray-500 hover:text-white text-lg">✕</button>
+            </div>
+            <p className="text-gray-400 text-xs mb-3">2 Würfel (2-12) — ist die Summe über oder unter 7?</p>
+            {ouMsg && <p className={`text-sm mb-2 font-bold ${ouMsg.includes("+") ? "text-green-400" : "text-red-400"}`}>{ouMsg}</p>}
+            {ouResult && (
+              <div className="mb-3">
+                <div className="flex justify-center gap-3 mb-2">
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black" style={{ background: "rgba(34,211,238,0.2)", border: "1px solid rgba(34,211,238,0.4)" }}>{ouResult.dice[0]}</div>
+                  <div className="text-2xl font-black text-gray-500 self-center">+</div>
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black" style={{ background: "rgba(34,211,238,0.2)", border: "1px solid rgba(34,211,238,0.4)" }}>{ouResult.dice[1]}</div>
+                  <div className="text-2xl font-black text-cyan-300 self-center">= {ouResult.total}</div>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="text-gray-500 text-sm">Einsatz:</span>
+              <input type="number" min={1} value={ouBet} onChange={e => setOuBet(Math.max(1, +e.target.value))} className="w-20 bg-black/40 border border-cyan-500/30 rounded-lg px-2 py-1 text-center text-white" />
+            </div>
+            <div className="flex justify-center gap-2">
+              {([["under", "⬇️ DRUNTER", "x2"], ["seven", "7️⃣ GENAU 7", "x5"], ["over", "⬆️ DRÜBER", "x2"]] as const).map(([guess, label, mult]) => (
+                <button key={guess} onClick={async () => {
+                  casinoSounds.coinFlip();
+                  const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/overunder`, { bet: ouBet, guess }) as any;
+                  if (res.success) {
+                    setOuResult(res.data);
+                    if (res.data.win) { setOuMsg(`${res.data.guess} ✅ +${res.data.payout} Pts!`); casinoSounds.win(); }
+                    else { setOuMsg(`${res.data.guess} ❌ -${ouBet} Pts`); casinoSounds.loss(); }
+                    fetchPoints();
+                  } else setOuMsg(res.error ?? "Fehler!");
+                }} className="casino-btn px-4 py-3 rounded-xl font-bold text-sm text-black flex-1" style={{
+                  background: guess === "seven" ? "linear-gradient(135deg, #ffd700, #f59e0b)" : "linear-gradient(135deg, #22d3ee, #0891b2)",
+                }}>
+                  <div>{label}</div>
+                  <div className="text-[10px] opacity-70">{mult}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-600 mt-2">Unter 7: x2 · Über 7: x2 · Genau 7: x5 · 7 bei Drüber/Drunter: verloren</p>
           </div>
         </div>
       )}

@@ -3055,18 +3055,34 @@ export function CasinoPage() {
                   </div>
                 </div>
 
-                {/* Owned Pets Row (switch active) */}
+                {/* Owned Pets Row (switch active + sell) */}
                 {pet.pets.length > 1 && (
                   <div className="flex gap-2 mb-4 flex-wrap">
                     {pet.pets.map((p: any) => (
-                      <button key={p.petId} onClick={async () => {
-                        await api.post<any>(`/viewer/${channelName}/casino/pet/activate`, { petId: p.petId });
-                        const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
-                      }} className={`rounded-lg px-3 py-2 text-center transition-all ${p.petId === pet.activePetId ? "ring-2 ring-pink-500 bg-pink-500/10" : "bg-white/3 hover:bg-white/5"}`}
-                        style={{ border: `1px solid ${p.petId === pet.activePetId ? "rgba(244,114,182,0.5)" : "rgba(255,255,255,0.08)"}` }}>
-                        <div className="text-2xl">{PET_EMOJIS[p.petId] ?? "🐱"}</div>
-                        <div className="text-[10px] text-gray-400">LVL {p.level}</div>
-                      </button>
+                      <div key={p.petId} className="relative">
+                        <button onClick={async () => {
+                          await api.post<any>(`/viewer/${channelName}/casino/pet/activate`, { petId: p.petId });
+                          const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                        }} className={`rounded-lg px-3 py-2 text-center transition-all ${p.petId === pet.activePetId ? "ring-2 ring-pink-500 bg-pink-500/10" : "bg-white/3 hover:bg-white/5"}`}
+                          style={{ border: `1px solid ${p.petId === pet.activePetId ? "rgba(244,114,182,0.5)" : "rgba(255,255,255,0.08)"}` }}>
+                          <div className="text-2xl">{PET_EMOJIS[p.petId] ?? "🐱"}</div>
+                          <div className="text-[10px] text-gray-400">LVL {p.level}</div>
+                        </button>
+                        {p.petId !== pet.activePetId && pet.pets.length > 1 && (
+                          <button onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm(`${p.petName ?? p.petId} verkaufen?`)) return;
+                            const res = await api.post<any>(`/viewer/${channelName}/casino/pet/sell`, { petId: p.petId }) as any;
+                            if (res.success) {
+                              setMessage(`Verkauft! +${res.data.points} Pts`);
+                              const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                              fetchPoints();
+                            } else setMessage(res.error ?? "Fehler!");
+                          }} className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[8px] flex items-center justify-center hover:bg-red-500" title="Verkaufen">
+                            ×
+                          </button>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}

@@ -12,6 +12,7 @@ const DEFAULT_REWARDS = [
   { level: 45, type: "title", value: "Casino-Meister", premium: false },
   { level: 50, type: "points", value: 1000, premium: false },
   { level: 50, type: "title", value: "Casino-Legende S1", premium: false },
+  { level: 50, type: "autoflip", value: "Auto-Münzwurf Bot", premium: false },
   // Premium-only rewards
   { level: 3, type: "points", value: 50, premium: true },
   { level: 8, type: "title", value: "Premium-Spieler", premium: true },

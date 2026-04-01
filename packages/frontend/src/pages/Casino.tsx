@@ -50,7 +50,7 @@ interface PlayerStats {
   achievementsUnlocked: number;
 }
 
-interface SeasonReward { level: number; type: "points" | "title" | "lootbox"; value: string | number; premium: boolean; }
+interface SeasonReward { level: number; type: "points" | "title" | "lootbox" | "autoflip"; value: string | number; premium: boolean; }
 interface SeasonData {
   season: { name: string; number: number; startDate: string; endDate: string; rewards: SeasonReward[] };
   progress: { xp: number; xpIntoCurrentLevel?: number; level: number; premium: boolean; claimedLevels: number[] };
@@ -1229,8 +1229,8 @@ export function CasinoPage() {
                   const rewards = (season.season.rewards ?? []).filter((r: SeasonReward) => r.level === level);
                   const freeRewards = rewards.filter((r: SeasonReward) => !r.premium);
                   const premiumRewards = rewards.filter((r: SeasonReward) => r.premium);
-                  const rewardIcon = (r: SeasonReward) => r.type === "points" ? "💰" : r.type === "title" ? "🏷️" : "📦";
-                  const rewardText = (r: SeasonReward) => r.type === "points" ? `${r.value} Pts` : r.type === "title" ? `"${r.value}"` : `${r.value}x Lootbox`;
+                  const rewardIcon = (r: SeasonReward) => r.type === "points" ? "💰" : r.type === "title" ? "🏷️" : r.type === "autoflip" ? "🤖" : "📦";
+                  const rewardText = (r: SeasonReward) => r.type === "points" ? `${r.value} Pts` : r.type === "title" ? `"${r.value}"` : r.type === "autoflip" ? `${r.value}` : `${r.value}x Lootbox`;
                   return (
                     <div key={level} className={`flex-shrink-0 w-28 text-center rounded-xl p-2 ${canClaim ? "bp-unclaimed" : ""}`}
                       style={{

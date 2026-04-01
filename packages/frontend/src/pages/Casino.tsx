@@ -1735,9 +1735,9 @@ export function CasinoPage() {
                   </div>
                   <div className="flex-1">
                     <div className="font-black text-white text-lg">{activePet.petName} <span className="text-xs text-pink-400 font-normal">(aktiv)</span></div>
-                    <div className="text-xs text-gray-400">Level {activePet.level} · {activePet.xp}/{activePet.level * 50} XP</div>
+                    <div className="text-xs text-gray-400">Level {activePet.level} · {activePet.xp}/{Math.floor(50 * Math.pow(1.5, activePet.level - 1))} XP</div>
                     <div className="h-2 rounded-full bg-black/40 mt-1 overflow-hidden" style={{ border: "1px solid rgba(255,182,193,0.2)" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${(activePet.xp / (activePet.level * 50)) * 100}%`, background: "linear-gradient(90deg, #f472b6, #ec4899)" }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: `${(activePet.xp / (Math.floor(50 * Math.pow(1.5, activePet.level - 1)))) * 100}%`, background: "linear-gradient(90deg, #f472b6, #ec4899)" }} />
                     </div>
                     <div className="flex gap-2 mt-2">
                       <button onClick={() => { setShowShop(!showShop); if (!showShop && !shop) { api.get<any>(`/viewer/${channelName}/casino/pet/shop`).then((r: any) => { if (r.data) setShop(r.data); }); } }}

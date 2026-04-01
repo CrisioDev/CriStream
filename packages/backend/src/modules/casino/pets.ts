@@ -345,11 +345,13 @@ export async function addPetXp(channelId: string, userId: string, xp: number): P
 
   active.xp += xp;
   let levelUp = false;
-  let xpNeeded = active.level * 50;
+  // Exponential: level 1=50, 2=75, 3=112, 5=253, 10=1440, 20=16k, 50=3.2M
+  const petXpNeeded = (lvl: number) => Math.floor(50 * Math.pow(1.5, lvl - 1));
+  let xpNeeded = petXpNeeded(active.level);
   while (active.xp >= xpNeeded && active.level < 999) {
     active.xp -= xpNeeded;
     active.level++;
-    xpNeeded = active.level * 50;
+    xpNeeded = petXpNeeded(active.level);
     levelUp = true;
   }
 

@@ -1739,20 +1739,50 @@ export function CasinoPage() {
       </div>
 
       {/* Tickets */}
-      {user && tickets && (tickets.bingo || tickets.lotto) && (
+      {user && (
         <div className="max-w-4xl mx-auto px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {tickets.bingo && (
+          {tickets?.bingo ? (
             <div className="rounded-2xl p-4" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.3)" }}>
               <h4 className="font-black text-blue-300 mb-1">🎱 Dein Bingo-Ticket</h4>
               <p className="text-lg font-mono font-bold text-white">{tickets.bingo.numbers.join(" · ")}</p>
-              <p className="text-xs text-gray-500 mt-1">Nächste Ziehung: 07:00</p>
+              {tickets.lastBingoDraw && (
+                <div className="mt-2 text-xs text-gray-400">
+                  <span>Letzte Ziehung: </span>
+                  <span className="text-blue-400 font-mono">{tickets.lastBingoDraw.numbers.join(" · ")}</span>
+                  {(() => {
+                    const matches = tickets.bingo.numbers.filter((n: number) => tickets.lastBingoDraw.numbers.includes(n)).length;
+                    return matches > 0 ? <span className="text-yellow-400 ml-1">({matches} Treffer!)</span> : null;
+                  })()}
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Nächste Ziehung: 07:00 · !bingo (10 Pts)</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(59,130,246,0.05)", border: "1px dashed rgba(59,130,246,0.2)" }}>
+              <h4 className="font-black text-blue-300/50 mb-1">🎱 Bingo</h4>
+              <p className="text-xs text-gray-600">Kein Ticket · Schreibe !bingo im Chat (10 Pts)</p>
             </div>
           )}
-          {tickets.lotto && (
+          {tickets?.lotto ? (
             <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)" }}>
               <h4 className="font-black text-green-300 mb-1">🍀 Dein Lottoschein</h4>
               <p className="text-lg font-mono font-bold text-white">{tickets.lotto.numbers.join(" · ")}</p>
-              <p className="text-xs text-gray-500 mt-1">Nächste Ziehung: Sonntag 10:00</p>
+              {tickets.lastLottoDraw && (
+                <div className="mt-2 text-xs text-gray-400">
+                  <span>Letzte Ziehung: </span>
+                  <span className="text-green-400 font-mono">{tickets.lastLottoDraw.numbers.join(" · ")}</span>
+                  {(() => {
+                    const matches = tickets.lotto.numbers.filter((n: number) => tickets.lastLottoDraw.numbers.includes(n)).length;
+                    return matches > 0 ? <span className="text-yellow-400 ml-1">({matches} Richtige!)</span> : null;
+                  })()}
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Nächste Ziehung: Sonntag 10:00 · !lotto (50 Pts)</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(34,197,94,0.05)", border: "1px dashed rgba(34,197,94,0.2)" }}>
+              <h4 className="font-black text-green-300/50 mb-1">🍀 Lotto</h4>
+              <p className="text-xs text-gray-600">Kein Schein · Schreibe !lotto im Chat (50 Pts)</p>
             </div>
           )}
         </div>

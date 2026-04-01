@@ -290,11 +290,65 @@ export async function viewerRoutes(app: FastifyInstance) {
         const { addPetXp } = await import("../casino/pets.js");
         await addPetXp(channel.id, user.twitchId, win ? 10 : 5).catch(() => null);
 
+        // ── Login Streak (first play of the day) ──
+        let loginStreak: any = undefined;
+        try {
+          const { checkLoginStreak } = await import("../casino/login-streak.js");
+          const streakResult = await checkLoginStreak(channel.id, user.twitchId);
+          if (streakResult.isNewDay) {
+            loginStreak = streakResult;
+          }
+        } catch {}
+
+        // ── Lootbox Pet/Item Roll ──
+        let lootboxDrop: any = undefined;
+        try {
+          const { rollLootboxPet, rollLootboxItem, grantLootboxPet, grantLootboxItem } = await import("../casino/lootbox-pets.js");
+          const petRoll = rollLootboxPet();
+          if (petRoll) {
+            await grantLootboxPet(channel.id, user.twitchId, petRoll.pet.id);
+            lootboxDrop = { type: "pet" as const, data: petRoll.pet };
+          } else {
+            const itemRoll = rollLootboxItem();
+            if (itemRoll) {
+              await grantLootboxItem(channel.id, user.twitchId, itemRoll.item.category, itemRoll.item.emoji, itemRoll.item.bonusValue);
+              lootboxDrop = { type: "item" as const, data: itemRoll.item };
+            }
+          }
+        } catch {}
+
+        // ── Tournament Points (on win) ──
+        let tournamentPoints: number | undefined = undefined;
+        try {
+          if (win) {
+            const { addTournamentPoints } = await import("../casino/tournaments.js");
+            const channelUserForName = await prisma.channelUser.findUnique({
+              where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+            });
+            const tPts =
+              gameType === "flip" ? 1 :
+              gameType === "slots" ? (opts?.is777 ? 50 : opts?.isTriple ? 10 : 3) :
+              gameType === "scratch" ? (opts?.isTriple ? 10 : 3) :
+              gameType === "double" ? 2 : 1;
+            await addTournamentPoints(channel.id, user.twitchId, tPts, channelUserForName?.displayName ?? undefined);
+            tournamentPoints = tPts;
+          }
+        } catch {}
+
+        // ── Guild XP (every game) ──
+        try {
+          const { addGuildXp } = await import("../casino/guilds.js");
+          await addGuildXp(channel.id, user.twitchId, win ? 10 : 5);
+        } catch {}
+
         return {
           stats,
           newAchievements: achievements,
           questsCompleted: questResult.completed,
           xp: { gained: xp, levelUp: xpResult.levelUp, newLevel: xpResult.newLevel, rewards: xpResult.rewards },
+          loginStreak,
+          lootboxDrop,
+          tournamentPoints,
         };
         } catch (err) {
           // Progression is non-critical — don't break the game
@@ -646,6 +700,194 @@ export async function viewerRoutes(app: FastifyInstance) {
       const { renamePet } = await import("../casino/pets.js");
       await renamePet(channel.id, user.twitchId, request.body.name);
       return { success: true };
+    }
+  );
+
+  // ── Login Streak ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/login-streak",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getLoginData } = await import("../casino/login-streak.js");
+      const data = await getLoginData(channel.id, user.twitchId);
+      return { success: true, data };
+    }
+  );
+
+  // ── Pet Battles ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/battle",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getOpenBattle, getBattleHistory } = await import("../casino/pet-battles.js");
+      const [battle, history] = await Promise.all([
+        getOpenBattle(channel.id),
+        getBattleHistory(channel.id),
+      ]);
+      return { success: true, data: { battle, history } };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
+    "/:channelName/casino/battle",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+      const { createBattleChallenge } = await import("../casino/pet-battles.js");
+      const result = await createBattleChallenge(channel.id, user.twitchId, channelUser.displayName, request.body.bet);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/battle/accept",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+      const { getOpenBattle, acceptBattle } = await import("../casino/pet-battles.js");
+      const battle = await getOpenBattle(channel.id);
+      if (!battle) return reply.status(400).send({ success: false, error: "Keine offene Herausforderung!" });
+      const result = await acceptBattle(channel.id, battle.challengerId, user.twitchId, channelUser.displayName);
+      if (!result.success) return reply.status(400).send({ success: false, error: (result as any).error });
+      return { success: true, data: result };
+    }
+  );
+
+  // ── Tournaments ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/tournament",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getTournamentInfo } = await import("../casino/tournaments.js");
+      return { success: true, data: await getTournamentInfo(channel.id) };
+    }
+  );
+
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/tournament/leaderboard",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getTournamentLeaderboard } = await import("../casino/tournaments.js");
+      return { success: true, data: await getTournamentLeaderboard(channel.id) };
+    }
+  );
+
+  // ── Guilds ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/guilds",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { listGuilds } = await import("../casino/guilds.js");
+      return { success: true, data: await listGuilds(channel.id) };
+    }
+  );
+
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/guild",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getPlayerGuild } = await import("../casino/guilds.js");
+      return { success: true, data: await getPlayerGuild(channel.id, user.twitchId) };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { name: string; emoji: string } }>(
+    "/:channelName/casino/guild/create",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+      const { createGuild } = await import("../casino/guilds.js");
+      const result = await createGuild(channel.id, user.twitchId, channelUser.displayName, request.body.name, request.body.emoji);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: { guildId: result.guildId } };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { guildId: string } }>(
+    "/:channelName/casino/guild/join",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+      const { joinGuild } = await import("../casino/guilds.js");
+      const result = await joinGuild(channel.id, user.twitchId, channelUser.displayName, request.body.guildId);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/guild/leave",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { leaveGuild } = await import("../casino/guilds.js");
+      const result = await leaveGuild(channel.id, user.twitchId);
+      if (!result.success) return reply.status(400).send({ success: false, error: (result as any).error });
+      return { success: true };
+    }
+  );
+
+  // ── Pet Breeding ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/breed",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getBreedInfo } = await import("../casino/pet-breeding.js");
+      return { success: true, data: await getBreedInfo(channel.id, user.twitchId) };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { pet1Id: string; pet2Id: string } }>(
+    "/:channelName/casino/breed",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { breedPets } = await import("../casino/pet-breeding.js");
+      const result = await breedPets(channel.id, user.twitchId, request.body.pet1Id, request.body.pet2Id);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
     }
   );
 

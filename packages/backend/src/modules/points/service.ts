@@ -139,7 +139,7 @@ class PointsService {
       rank: i + 1,
       twitchUserId: u.twitchUserId,
       displayName: u.displayName,
-      points: u.points,
+      points: Number(u.points),
       watchMinutes: u.watchMinutes,
     }));
   }
@@ -150,7 +150,8 @@ class PointsService {
     const user = await prisma.channelUser.findUnique({
       where: { channelId_twitchUserId: { channelId, twitchUserId } },
     });
-    return user;
+    if (!user) return null;
+    return { ...user, points: Number(user.points) } as any;
   }
 
   async deductPoints(channelId: string, twitchUserId: string, amount: number): Promise<void> {

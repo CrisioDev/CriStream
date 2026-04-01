@@ -101,7 +101,7 @@ async function getUserPoints(channelId: string, userId: string): Promise<number>
     where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
     select: { points: true },
   });
-  return cu?.points ?? 0;
+  return Number(cu?.points ?? 0);
 }
 
 /**

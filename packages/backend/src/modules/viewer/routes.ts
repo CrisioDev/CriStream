@@ -539,8 +539,8 @@ export async function viewerRoutes(app: FastifyInstance) {
         if (channelUser.points < 10) return reply.status(400).send({ success: false, error: "Brauchst mindestens 10 Punkte für All-In!" });
 
         // Bet 90% of points — keep 10% safety net
-        const allInAmount = Math.floor(channelUser.points * 0.9);
-        const kept = channelUser.points - allInAmount;
+        const allInAmount = Math.floor(Number(channelUser.points) * 0.9);
+        const kept = Number(channelUser.points) - allInAmount;
         await prisma.channelUser.update({
           where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
           data: { points: kept },
@@ -581,7 +581,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (game === "deadlyallin") {
         if (channelUser.points < 10) return reply.status(400).send({ success: false, error: "Brauchst mindestens 10 Punkte!" });
 
-        const allInAmount = channelUser.points;
+        const allInAmount = Number(channelUser.points);
         await prisma.channelUser.update({
           where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
           data: { points: 0 },

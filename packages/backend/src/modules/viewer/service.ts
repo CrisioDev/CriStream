@@ -55,7 +55,7 @@ class ViewerService {
     return {
       twitchUserId: channelUser.twitchUserId,
       displayName: channelUser.displayName,
-      points: channelUser.points,
+      points: Number(channelUser.points),
       watchMinutes: channelUser.watchMinutes,
       activeTitle: activeTitle?.title ?? null,
       inventory: inventory.map((i) => ({

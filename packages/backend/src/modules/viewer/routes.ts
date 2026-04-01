@@ -666,12 +666,22 @@ export async function viewerRoutes(app: FastifyInstance) {
         } else {
           r1=pickTierSlot(); r2=pickTierSlot(); r3=pickTierSlot();
         }
-        // Base payouts same as regular slots, then multiplied by tier multiplier
-        let payout=8+shieldBonus, label="Trostpreis";
-        if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};[payout,label]=p[r1]??[55,"TRIPLE!"];}
-        else if(r1===r2||r2===r3||r1===r3){payout=22;label="Doppelt!";}
-        // Apply tier multiplier, then profit mult and prestige
-        payout = Math.round(payout * tierDef.multiplier * profitMult * prestigeMultiplier);
+        // Tier slot payouts: trostpreis/doppelt are losses, only triples win
+        let payout: number, label: string;
+        if(r1===r2&&r2===r3){
+          const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};
+          [payout,label]=p[r1]??[55,"TRIPLE!"];
+          // Triples: full multiplier + bonuses
+          payout = Math.round(payout * tierDef.multiplier * profitMult * prestigeMultiplier);
+        } else if(r1===r2||r2===r3||r1===r3){
+          // Doppelt: get 40% of cost back (loss)
+          payout = Math.round(tierDef.cost * 0.4);
+          label = "Doppelt!";
+        } else {
+          // Trostpreis: get 15% of cost back (big loss)
+          payout = Math.round(tierDef.cost * 0.15);
+          label = "Trostpreis";
+        }
         // Trostpreis also gets tier multiplier via shieldBonus already in base
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = r1===r2&&r2===r3;

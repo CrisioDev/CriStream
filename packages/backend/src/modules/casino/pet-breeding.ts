@@ -73,12 +73,21 @@ export async function breedPets(
 }> {
   if (pet1Id === pet2Id) return { success: false, error: "Du kannst nicht dasselbe Pet mit sich selbst züchten!" };
 
-  // Check pet ownership
+  // DEFENSIVE: reject pet IDs longer than 60 chars (exploit prevention)
+  if (pet1Id.length > 60 || pet2Id.length > 60) return { success: false, error: "Ungültige Pet-ID!" };
+
+  // Rate limit: max 1 breed per 10 seconds
+  const rateLimitKey = `casino:breed:rl:${channelId}:${userId}`;
+  const rl = await redis.get(rateLimitKey);
+  if (rl) return { success: false, error: "Warte 10 Sekunden zwischen Zuchten!" };
+  await redis.set(rateLimitKey, "1", "EX", 10);
+
+  // Max pets limit: prevent collection bloat
   const petRaw = await redis.get(petKey(channelId, userId));
   if (!petRaw) return { success: false, error: "Du hast keine Pets!" };
-
   const petData = JSON.parse(petRaw);
   if (!petData.pets?.length) return { success: false, error: "Du hast keine Pets!" };
+  if (petData.pets.length >= 50) return { success: false, error: "Max 50 Pets! Zu viele Pets." };
 
   const pet1 = petData.pets.find((p: any) => p.petId === pet1Id);
   const pet2 = petData.pets.find((p: any) => p.petId === pet2Id);

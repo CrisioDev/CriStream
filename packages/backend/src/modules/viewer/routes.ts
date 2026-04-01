@@ -529,10 +529,12 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (game === "allin") {
         if (channelUser.points < 10) return reply.status(400).send({ success: false, error: "Brauchst mindestens 10 Punkte für All-In!" });
 
-        const allInAmount = channelUser.points;
+        // Bet 90% of points — keep 10% safety net
+        const allInAmount = Math.floor(channelUser.points * 0.9);
+        const kept = channelUser.points - allInAmount;
         await prisma.channelUser.update({
           where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
-          data: { points: 0 },
+          data: { points: kept },
         });
 
         const win = Math.random() < 0.40;
@@ -541,7 +543,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         if (win) {
           await prisma.channelUser.update({
             where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
-            data: { points: payout },
+            data: { points: { increment: payout } },
           });
         }
 

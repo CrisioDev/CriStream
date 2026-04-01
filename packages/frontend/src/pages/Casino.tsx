@@ -1420,7 +1420,7 @@ export function CasinoPage() {
             border: "2px solid rgba(220,38,38,0.5)",
           }}>
             <h3 className="text-2xl font-black text-red-400 mb-1">💀 ALL-IN 💀</h3>
-            <p className="text-xs text-gray-500 mb-1">40% Chance · 2.5x Auszahlung · Alles oder Nichts!</p>
+            <p className="text-xs text-gray-500 mb-1">40% Chance · 2.5x Auszahlung · Setzt 90% deiner Punkte!</p>
             <p className="text-3xl font-black text-white mb-3">
               {points !== null && points > 0 ? `${points.toLocaleString()} PUNKTE` : "---"}
             </p>

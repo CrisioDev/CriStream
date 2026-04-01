@@ -925,7 +925,7 @@ export function CasinoPage() {
         .bp-track::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.5); border-radius: 3px; }
       `}</style>
 
-      <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-50" />
+      <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-[60]" />
 
       {/* ── Bonus Sidebar ── */}
       {user && (
@@ -938,12 +938,12 @@ export function CasinoPage() {
               } catch {}
             }
             setBonusSidebar(!bonusSidebar);
-          }} className="fixed right-0 top-1/2 -translate-y-1/2 z-30 px-1.5 py-4 rounded-l-lg text-xs font-bold writing-vertical"
+          }} className="fixed right-0 top-1/2 -translate-y-1/2 z-20 px-1.5 py-4 rounded-l-lg text-xs font-bold writing-vertical"
             style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.8), rgba(100,65,165,0.8))", color: "#fff", writingMode: "vertical-rl", textOrientation: "mixed", backdropFilter: "blur(8px)" }}>
             📊 Boni
           </button>
           {bonusSidebar && (
-            <div className="fixed right-0 top-0 h-full w-80 z-30 overflow-y-auto" style={{ background: "linear-gradient(180deg, rgba(10,10,26,0.97), rgba(0,0,0,0.98))", borderLeft: "1px solid rgba(168,85,247,0.3)", backdropFilter: "blur(12px)" }}>
+            <div className="fixed right-0 top-0 h-full w-80 z-20 overflow-y-auto" style={{ background: "linear-gradient(180deg, rgba(10,10,26,0.97), rgba(0,0,0,0.98))", borderLeft: "1px solid rgba(168,85,247,0.3)", backdropFilter: "blur(12px)" }}>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-black text-purple-300">📊 Aktive Boni</h3>
@@ -993,12 +993,12 @@ export function CasinoPage() {
 
       {/* Siren flash overlay */}
       {sirenActive && (
-        <div className="fixed inset-0 pointer-events-none z-40" style={{ animation: "siren-flash 0.3s ease-in-out infinite" }} />
+        <div className="fixed inset-0 pointer-events-none z-50" style={{ animation: "siren-flash 0.3s ease-in-out infinite" }} />
       )}
 
       {/* Pet Walk Animation */}
       {petWalkAnim && pet && (
-        <div className="fixed bottom-20 left-0 pointer-events-none z-40" style={{ animation: "pet-walk 3s ease-in-out forwards" }}>
+        <div className="fixed bottom-20 left-0 pointer-events-none z-50" style={{ animation: "pet-walk 3s ease-in-out forwards" }}>
           <div className="text-6xl">{(() => { const e: Record<string,string> = {cat:"🐱",dog:"🐶",bunny:"🐰",fox:"🦊",panda:"🐼",dragon:"🐉",unicorn:"🦄",phoenix:"🔥",alien:"👾",robot:"🤖",kraken:"🦑",void:"🕳️"}; return e[pet.activePetId] ?? "🐱"; })()}</div>
           <div className="text-sm absolute -bottom-4 left-0" style={{ animation: "paw-print 0.5s ease-out forwards", animationDelay: "0.3s" }}>🐾</div>
           <div className="text-sm absolute -bottom-4 left-6" style={{ animation: "paw-print 0.5s ease-out forwards", animationDelay: "0.6s" }}>🐾</div>
@@ -1008,7 +1008,7 @@ export function CasinoPage() {
 
       {/* Pet Feed Animation */}
       {petFeedAnim && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           <div style={{ animation: "pet-feed-chomp 0.4s ease-in-out 4" }}>
             <div className="text-7xl">😋🍖</div>
           </div>
@@ -1018,21 +1018,21 @@ export function CasinoPage() {
 
       {/* Pet Clean Animation */}
       {petCleanAnim && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           <div className="text-7xl" style={{ animation: "clean-wipe 0.5s ease-in-out 3" }}>🧹✨</div>
         </div>
       )}
 
       {/* Cat walk */}
       {catWalk && (
-        <div className="fixed top-1/2 left-0 pointer-events-none z-40 text-8xl" style={{ animation: "cat-walk 3s linear forwards" }}>
+        <div className="fixed top-1/2 left-0 pointer-events-none z-50 text-8xl" style={{ animation: "cat-walk 3s linear forwards" }}>
           🐈‍⬛✨
         </div>
       )}
 
       {/* Multiplier popup */}
       {multiplierAnim && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           <div className="multiplier-anim text-7xl font-black" style={{
             color: "#ffd700", textShadow: "0 0 30px #ffd700, 0 0 60px #ff6600, 0 0 90px #ff0000",
           }}>{multiplierAnim}</div>
@@ -1041,7 +1041,7 @@ export function CasinoPage() {
 
       {/* Quest Bonus floating text */}
       {questBonusAnim && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
           <div className="quest-bonus-anim text-4xl font-black text-green-400" style={{ textShadow: "0 0 20px rgba(74,222,128,0.8)" }}>
             {questBonusAnim}
           </div>
@@ -1050,7 +1050,7 @@ export function CasinoPage() {
 
       {/* Achievement unlock popup */}
       {newAchievementPopup && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-45">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[55]">
           <div className="achievement-burst text-center px-8 py-6 rounded-2xl" style={{
             background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(168,85,247,0.15))",
             border: "2px solid rgba(255,215,0,0.6)",
@@ -1066,7 +1066,7 @@ export function CasinoPage() {
 
       {/* Active Special Overlay */}
       {activeSpecial && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-45">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[55]">
           {activeSpecial.type === "mitleid" && (
             <div className="text-3xl font-black text-blue-400" style={{ animation: "special-float 3s ease-out forwards", textShadow: "0 0 20px rgba(96,165,250,0.8)" }}>
               +5 Mitleids-Punkte!
@@ -1212,7 +1212,7 @@ export function CasinoPage() {
       {/* ══════════════════════════════════════════════════════════════════
           GAME MACHINES (3 existing + All-In below)
          ══════════════════════════════════════════════════════════════════ */}
-      <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8 relative z-0">
         {/* SLOT MACHINE */}
         <div className="slot-machine rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
           {pet?.careState?.needsPoop && <div className="absolute -top-3 -right-3 text-3xl z-10" style={{ animation: "poop-wobble 1s ease-in-out infinite" }}>💩</div>}

@@ -50,8 +50,9 @@ interface PlayerStats {
   achievementsUnlocked: number;
 }
 
+interface SeasonReward { level: number; type: "points" | "title" | "lootbox"; value: string | number; premium: boolean; }
 interface SeasonData {
-  season: { name: string; number: number; startDate: string; endDate: string };
+  season: { name: string; number: number; startDate: string; endDate: string; rewards: SeasonReward[] };
   progress: { xp: number; xpIntoCurrentLevel?: number; level: number; premium: boolean; claimedLevels: number[] };
   nextLevelXp: number;
 }
@@ -369,7 +370,7 @@ export function CasinoPage() {
       const res = await api.get<any>(`/viewer/${channelName}/casino/achievements`) as any;
       if (res.data) {
         setAchievements(res.data.achievements || []);
-        setAchievementStats(res.data.stats || { unlocked: 0, total: 0 });
+        setAchievementStats({ unlocked: res.data.unlocked ?? 0, total: res.data.total ?? 0 });
       }
     } catch { /* */ }
   }, [user, channelName]);
@@ -706,6 +707,11 @@ export function CasinoPage() {
     : "text-red-400 bg-red-500/10 border border-red-500/30";
 
   // Achievement categories grouping
+  const CATEGORY_NAMES: Record<string, string> = {
+    start: "🎮 Erste Schritte", milestone: "🏅 Meilensteine", luck: "🍀 Glück",
+    pech: "😢 Pech", specials: "🎁 Specials", double: "⚡ Doppelt-oder-Nichts",
+    social: "👥 Sozial", grind: "💪 Ausdauer", legendary: "🌟 Legendär",
+  };
   const achievementsByCategory = achievements.reduce<Record<string, Achievement[]>>((acc, ach) => {
     const cat = ach.category || "Sonstige";
     if (!acc[cat]) acc[cat] = [];
@@ -721,8 +727,9 @@ export function CasinoPage() {
     });
   };
 
-  // Battle pass reward levels
-  const REWARD_LEVELS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+  // Battle pass reward levels — all levels that have rewards
+  const allRewardLevels = season ? [...new Set((season.season.rewards ?? []).map((r: SeasonReward) => r.level))].sort((a, b) => a - b) : [];
+  const REWARD_LEVELS = allRewardLevels.length > 0 ? allRewardLevels : [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 
   return (
     <div className={`min-h-screen text-white overflow-hidden relative ${allInShake ? "allin-shake" : ""}`} style={{
@@ -1219,8 +1226,13 @@ export function CasinoPage() {
                   const reached = season.progress.level >= level;
                   const claimed = season.progress.claimedLevels.includes(level);
                   const canClaim = reached && !claimed;
+                  const rewards = (season.season.rewards ?? []).filter((r: SeasonReward) => r.level === level);
+                  const freeRewards = rewards.filter((r: SeasonReward) => !r.premium);
+                  const premiumRewards = rewards.filter((r: SeasonReward) => r.premium);
+                  const rewardIcon = (r: SeasonReward) => r.type === "points" ? "💰" : r.type === "title" ? "🏷️" : "📦";
+                  const rewardText = (r: SeasonReward) => r.type === "points" ? `${r.value} Pts` : r.type === "title" ? `"${r.value}"` : `${r.value}x Lootbox`;
                   return (
-                    <div key={level} className={`flex-shrink-0 w-20 text-center rounded-xl p-2 ${canClaim ? "bp-unclaimed" : ""}`}
+                    <div key={level} className={`flex-shrink-0 w-28 text-center rounded-xl p-2 ${canClaim ? "bp-unclaimed" : ""}`}
                       style={{
                         scrollSnapAlign: "start",
                         background: claimed ? "rgba(34,197,94,0.15)" : reached ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.03)",
@@ -1228,18 +1240,33 @@ export function CasinoPage() {
                         opacity: reached ? 1 : 0.5,
                       }}>
                       <div className="text-xs text-gray-400 mb-1">LVL {level}</div>
-                      <div className="text-2xl mb-1">{claimed ? "✅" : level % 10 === 0 ? "👑" : "🎁"}</div>
-                      {canClaim ? (
-                        <button onClick={() => claimLevel(level)} disabled={claimingLevel !== null}
-                          className="casino-btn text-xs font-bold px-2 py-0.5 rounded-full w-full"
-                          style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>
-                          Claim
-                        </button>
-                      ) : claimed ? (
-                        <span className="text-xs text-green-400">Erhalten</span>
-                      ) : (
-                        <span className="text-xs text-gray-600">{level - season.progress.level} LVL</span>
+                      {freeRewards.map((r: SeasonReward, i: number) => (
+                        <div key={i} className="text-xs mb-0.5">
+                          <span>{rewardIcon(r)} {rewardText(r)}</span>
+                        </div>
+                      ))}
+                      {premiumRewards.length > 0 && (
+                        <div className="mt-1 border-t border-yellow-500/20 pt-1">
+                          {premiumRewards.map((r: SeasonReward, i: number) => (
+                            <div key={i} className={`text-xs ${season.progress.premium ? "text-yellow-400" : "text-gray-600"}`}>
+                              <span>⭐ {rewardText(r)}</span>
+                            </div>
+                          ))}
+                        </div>
                       )}
+                      <div className="mt-1">
+                        {canClaim ? (
+                          <button onClick={() => claimLevel(level)} disabled={claimingLevel !== null}
+                            className="casino-btn text-xs font-bold px-2 py-0.5 rounded-full w-full"
+                            style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>
+                            Claim
+                          </button>
+                        ) : claimed ? (
+                          <span className="text-xs text-green-400">✅ Erhalten</span>
+                        ) : (
+                          <span className="text-xs text-gray-600">{level - season.progress.level} LVL</span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -1376,7 +1403,7 @@ export function CasinoPage() {
                   <button onClick={() => toggleCategory(category)}
                     className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-left hover:bg-white/5 transition-colors"
                     style={{ background: "rgba(255,255,255,0.02)" }}>
-                    <span className="font-bold text-sm text-gray-300">{category}</span>
+                    <span className="font-bold text-sm text-gray-300">{CATEGORY_NAMES[category] ?? category}</span>
                     <span className="text-xs text-gray-500">{unlockedInCat}/{achs.length} {isOpen ? "▲" : "▼"}</span>
                   </button>
                   {isOpen && (

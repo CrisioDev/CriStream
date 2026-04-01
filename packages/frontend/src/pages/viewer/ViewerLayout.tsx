@@ -38,13 +38,13 @@ export function ViewerLayout() {
             </div>
             <div className="flex items-center gap-1 ml-4">
               {[
-                { to: "marketplace", label: "Marktplatz" },
-                { to: "trades", label: "Trades" },
-                { to: "/casino", label: "🎰 Casino" },
-              ].map(({ to, label }) => (
+                { to: `marketplace`, label: "Marktplatz", relative: true },
+                { to: `trades`, label: "Trades", relative: true },
+                { to: "/casino", label: "🎰 Casino", relative: false },
+              ].map(({ to, label, relative }) => (
                 <NavLink
                   key={to}
-                  to={`/viewer/${channelName}/${to}`}
+                  to={relative ? `/viewer/${channelName}/${to}` : to}
                   className={({ isActive }) =>
                     cn(
                       "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",

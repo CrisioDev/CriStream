@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 
+// ── Types ──
 interface CasinoSpecial {
   type: string;
   points?: number;
@@ -9,6 +10,75 @@ interface CasinoSpecial {
   animationData?: Record<string, any>;
 }
 
+interface Quest {
+  id: string;
+  name: string;
+  target: number;
+  progress: number;
+  reward: number;
+  done: boolean;
+  difficulty: "easy" | "medium" | "hard" | "bonus";
+}
+
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
+  unlocked: boolean;
+  unlockedAt?: string;
+  reward: number;
+}
+
+interface PlayerStats {
+  totalPlays: number;
+  totalWins: number;
+  totalLost: number;
+  totalWon: number;
+  maxStreak: number;
+  currentStreak: number;
+  winRate: number;
+  bossKills: number;
+  heistsCompleted: number;
+  allInWins: number;
+  allInLosses: number;
+  favoriteGame: string;
+  luckiestWin: number;
+  totalDoubles: number;
+  questsCompleted: number;
+  achievementsUnlocked: number;
+}
+
+interface SeasonData {
+  season: { name: string; number: number; startDate: string; endDate: string };
+  progress: { xp: number; level: number; premium: boolean; claimedLevels: number[] };
+  nextLevelXp: number;
+}
+
+interface HeistState {
+  active: boolean;
+  phase?: "lobby" | "playing" | "betrayal" | "finished";
+  players?: { displayName: string; ready?: boolean; result?: any }[];
+  countdown?: number;
+  round?: number;
+  totalRounds?: number;
+  pot?: number;
+  results?: { displayName: string; payout: number; betrayed?: boolean }[];
+  createdBy?: string;
+}
+
+interface Progression {
+  stats: PlayerStats;
+  newAchievements: { id: string; name: string; reward: number }[];
+  questUpdates: { id: string; name: string; progress: number; target: number; done: boolean; reward: number }[];
+  xpGained: number;
+  levelUp: boolean;
+  newLevel: number;
+  seasonRewards: any[];
+}
+
+// ── Helpers ──
 function spawnConfetti(container: HTMLDivElement, count = 60, goldOnly = false) {
   const colors = goldOnly
     ? ["#ffd700", "#ffb300", "#ff8c00", "#ffe066", "#fff2a0"]
@@ -21,6 +91,65 @@ function spawnConfetti(container: HTMLDivElement, count = 60, goldOnly = false) 
   }
 }
 
+const QUEST_DIFF_COLORS: Record<string, string> = {
+  easy: "from-green-500/40 to-green-600/20",
+  medium: "from-blue-500/40 to-blue-600/20",
+  hard: "from-purple-500/40 to-purple-600/20",
+  bonus: "from-yellow-500/40 to-yellow-600/20",
+};
+
+const QUEST_BORDER_COLORS: Record<string, string> = {
+  easy: "border-green-500/50",
+  medium: "border-blue-500/50",
+  hard: "border-purple-500/50",
+  bonus: "border-yellow-500/50",
+};
+
+const RARITY_COLORS: Record<string, string> = {
+  common: "border-gray-500/40",
+  uncommon: "border-green-500/50",
+  rare: "border-blue-500/60",
+  epic: "border-purple-500/60",
+  legendary: "border-yellow-500/70",
+};
+
+const RARITY_BG: Record<string, string> = {
+  common: "rgba(107,114,128,0.1)",
+  uncommon: "rgba(34,197,94,0.1)",
+  rare: "rgba(59,130,246,0.1)",
+  epic: "rgba(168,85,247,0.15)",
+  legendary: "rgba(255,215,0,0.15)",
+};
+
+const RARITY_LABELS: Record<string, string> = {
+  common: "Gewöhnlich",
+  uncommon: "Ungewöhnlich",
+  rare: "Selten",
+  epic: "Episch",
+  legendary: "Legendär",
+};
+
+function formatCountdown(targetDate: string): string {
+  const diff = new Date(targetDate).getTime() - Date.now();
+  if (diff <= 0) return "Jetzt!";
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (h > 24) return `${Math.floor(h / 24)}d ${h % 24}h`;
+  return `${h}h ${m}m`;
+}
+
+function formatQuestReset(): string {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  const diff = tomorrow.getTime() - now.getTime();
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  return `${h}h ${m}m`;
+}
+
+// ── Component ──
 export function CasinoPage() {
   const { user } = useAuthStore();
   const [channelInput, setChannelInput] = useState("");
@@ -62,7 +191,7 @@ export function CasinoPage() {
   const [doubleResult, setDoubleResult] = useState<string | null>(null);
   const [doubleFlipping, setDoubleFlipping] = useState(false);
 
-  // Streak & Stats
+  // Streak & Stats (session)
   const [streak, setStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [totalWon, setTotalWon] = useState(0);
@@ -89,6 +218,36 @@ export function CasinoPage() {
 
   // Boss Fight
   const [boss, setBoss] = useState<{ active: boolean; name?: string; hp?: number; maxHp?: number; participants?: number } | null>(null);
+
+  // ── NEW: Daily Quests ──
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [questBonusAnim, setQuestBonusAnim] = useState<string | null>(null);
+
+  // ── NEW: Achievements ──
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [achievementStats, setAchievementStats] = useState<{ unlocked: number; total: number }>({ unlocked: 0, total: 0 });
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+  const [newAchievementPopup, setNewAchievementPopup] = useState<{ name: string; reward: number } | null>(null);
+
+  // ── NEW: Battle Pass / Season ──
+  const [season, setSeason] = useState<SeasonData | null>(null);
+  const [seasonLeaderboard, setSeasonLeaderboard] = useState<{ displayName: string; xp: number; level: number }[]>([]);
+  const [showSeasonLb, setShowSeasonLb] = useState(false);
+  const [claimingLevel, setClaimingLevel] = useState<number | null>(null);
+
+  // ── NEW: All-In ──
+  const [allInPlaying, setAllInPlaying] = useState(false);
+  const [allInResult, setAllInResult] = useState<{ text: string; win: boolean } | null>(null);
+  const [allInCooldown, setAllInCooldown] = useState<number>(0);
+  const [allInShake, setAllInShake] = useState(false);
+
+  // ── NEW: Heist ──
+  const [heist, setHeist] = useState<HeistState | null>(null);
+  const [heistMessage, setHeistMessage] = useState<string | null>(null);
+
+  // ── NEW: Player Stats ──
+  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   // ── Process specials queue ──
   const processSpecial = useCallback((special: CasinoSpecial) => {
@@ -118,6 +277,58 @@ export function CasinoPage() {
     }
   }, [activeSpecial, processSpecial]);
 
+  // ── Process progression from gamble response ──
+  const processProgression = useCallback((progression: Progression | undefined) => {
+    if (!progression) return;
+
+    // Update quests
+    if (progression.questUpdates?.length) {
+      setQuests(prev => {
+        const updated = [...prev];
+        for (const qu of progression.questUpdates) {
+          const idx = updated.findIndex(q => q.id === qu.id);
+          if (idx >= 0) {
+            updated[idx] = { ...updated[idx]!, progress: qu.progress, done: qu.done };
+            if (qu.done && !prev[idx]!.done) {
+              setQuestBonusAnim(`+${qu.reward} Quest Bonus!`);
+              setTimeout(() => setQuestBonusAnim(null), 2500);
+            }
+          }
+        }
+        return updated;
+      });
+    }
+
+    // New achievements popup
+    if (progression.newAchievements?.length) {
+      for (let i = 0; i < progression.newAchievements.length; i++) {
+        const ach = progression.newAchievements[i]!;
+        setTimeout(() => {
+          setNewAchievementPopup({ name: ach.name, reward: ach.reward });
+          if (confettiRef.current) spawnConfetti(confettiRef.current, 50, true);
+          setTimeout(() => setNewAchievementPopup(null), 3000);
+        }, i * 3500);
+      }
+      // Refresh achievements list
+      fetchAchievements();
+    }
+
+    // Season XP / level up
+    if (progression.xpGained && season) {
+      setSeason(prev => {
+        if (!prev) return prev;
+        const newXp = prev.progress.xp + progression.xpGained;
+        const newLevel = progression.levelUp ? progression.newLevel : prev.progress.level;
+        return { ...prev, progress: { ...prev.progress, xp: newXp, level: newLevel } };
+      });
+    }
+
+    // Stats
+    if (progression.stats) {
+      setPlayerStats(progression.stats);
+    }
+  }, [season]);
+
   // ── Fetches ──
   const fetchPoints = useCallback(async () => {
     if (!user) return;
@@ -139,6 +350,67 @@ export function CasinoPage() {
 
   useEffect(() => { fetchFree(); }, [fetchFree]);
 
+  // Fetch quests
+  const fetchQuests = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/quests`) as any;
+      if (res.data?.quests) setQuests(res.data.quests);
+    } catch { /* */ }
+  }, [user, channelName]);
+
+  // Fetch achievements
+  const fetchAchievements = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/achievements`) as any;
+      if (res.data) {
+        setAchievements(res.data.achievements || []);
+        setAchievementStats(res.data.stats || { unlocked: 0, total: 0 });
+      }
+    } catch { /* */ }
+  }, [user, channelName]);
+
+  // Fetch season/battle pass
+  const fetchSeason = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/season`) as any;
+      if (res.data) setSeason(res.data);
+    } catch { /* */ }
+  }, [user, channelName]);
+
+  // Fetch player stats
+  const fetchStats = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/stats`) as any;
+      if (res.data) setPlayerStats(res.data);
+    } catch { /* */ }
+  }, [user, channelName]);
+
+  // Fetch heist
+  const fetchHeist = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/heist`) as any;
+      if (res.data) setHeist(res.data);
+      else setHeist(null);
+    } catch { setHeist(null); }
+  }, [user, channelName]);
+
+  // Initial data fetch
+  useEffect(() => {
+    if (user) {
+      fetchQuests();
+      fetchAchievements();
+      fetchSeason();
+      fetchStats();
+      fetchHeist();
+    }
+  }, [user, channelName, fetchQuests, fetchAchievements, fetchSeason, fetchStats, fetchHeist]);
+
+  // Feed, leaderboard, boss polling
   useEffect(() => {
     const fetchFeed = async () => {
       try {
@@ -162,6 +434,25 @@ export function CasinoPage() {
     const iv = setInterval(fetchFeed, 5000);
     return () => clearInterval(iv);
   }, [channelName, user]);
+
+  // Heist polling when active
+  useEffect(() => {
+    if (!heist?.active) return;
+    const iv = setInterval(fetchHeist, 3000);
+    return () => clearInterval(iv);
+  }, [heist?.active, fetchHeist]);
+
+  // All-In cooldown timer
+  useEffect(() => {
+    if (allInCooldown <= 0) return;
+    const iv = setInterval(() => {
+      setAllInCooldown(prev => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [allInCooldown]);
 
   const showWin = (profit: number) => {
     setStreak(s => { const n = s + 1; if (n > maxStreak) setMaxStreak(n); return n; });
@@ -187,14 +478,15 @@ export function CasinoPage() {
         setDoubleFlipping(false);
         if (!res.success) { setDoubleResult(res.error ?? "Fehler!"); setDoubleActive(false); fetchPoints(); return; }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+        processProgression(res.data.progression);
         if (res.data.win) {
           const newAmount = doubleAmount * 2;
-          setDoubleResult(`✅ VERDOPPELT! ${newAmount} Punkte!`);
+          setDoubleResult(`VERDOPPELT! ${newAmount} Punkte!`);
           setDoubleAmount(newAmount);
           showWin(doubleAmount);
           if (confettiRef.current && newAmount >= 200) spawnConfetti(confettiRef.current, 40);
         } else {
-          setDoubleResult(`❌ VERLOREN! ${doubleAmount} Punkte weg!`);
+          setDoubleResult(`VERLOREN! ${doubleAmount} Punkte weg!`);
           showLoss(doubleAmount);
           setDoubleAmount(0); setDoubleActive(false);
         }
@@ -203,7 +495,7 @@ export function CasinoPage() {
     } catch { setDoubleFlipping(false); setDoubleResult("Fehler!"); setDoubleActive(false); }
   };
 
-  const cashOut = () => { setDoubleActive(false); setDoubleResult(`💰 Eingesackt: ${doubleAmount} Punkte!`); setDoubleAmount(0); fetchPoints(); };
+  const cashOut = () => { setDoubleActive(false); setDoubleResult(`Eingesackt: ${doubleAmount} Punkte!`); setDoubleAmount(0); fetchPoints(); };
 
   // ── Game handlers ──
   const playSlots = async () => {
@@ -222,6 +514,7 @@ export function CasinoPage() {
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, slots: res.data.freeLeft } : f);
         if (profit > 0) { showWin(profit); startDouble(res.data.payout); } else showLoss(-profit);
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+        processProgression(res.data.progression);
         setSlotSpinning(false); fetchPoints();
       }, 1500);
     } catch { clearInterval(iv); setSlotResult({ text: "Fehler!", win: false }); setSlotSpinning(false); }
@@ -242,6 +535,7 @@ export function CasinoPage() {
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, scratch: res.data.freeLeft } : f);
         if (profit > 0) { showWin(profit); startDouble(res.data.payout); } else showLoss(-profit);
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+        processProgression(res.data.progression);
         fetchPoints();
       }, 1400);
     } catch { setScratchResult({ text: "Fehler!", win: false }); }
@@ -260,9 +554,44 @@ export function CasinoPage() {
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, flip: res.data.freeLeft } : f);
         if (res.data.win) showWin(1); else showLoss(1);
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+        processProgression(res.data.progression);
         fetchPoints();
       }, 1000);
     } catch { setCoinFlipping(false); setFlipResult({ text: "Fehler!", win: false }); }
+  };
+
+  // ── All-In ──
+  const playAllIn = async () => {
+    if (!user || allInPlaying || allInCooldown > 0 || !points || points <= 0) return;
+    setAllInPlaying(true); setAllInResult(null); setAllInShake(true);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "allin" }) as any;
+      // Dramatic slow reveal
+      setTimeout(() => {
+        setAllInShake(false);
+        setAllInPlaying(false);
+        if (!res.success) {
+          setAllInResult({ text: res.error ?? "Fehler!", win: false });
+          if (res.error?.includes("Cooldown") || res.error?.includes("cooldown")) {
+            setAllInCooldown(3600);
+          }
+          return;
+        }
+        if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+        processProgression(res.data.progression);
+        if (res.data.win) {
+          setAllInResult({ text: `ALL-IN GEWONNEN! +${res.data.payout} Punkte!`, win: true });
+          showWin(res.data.payout);
+          if (confettiRef.current) spawnConfetti(confettiRef.current, 200, true);
+          showMultiplier("ALL-IN WIN!");
+        } else {
+          setAllInResult({ text: `ALL-IN VERLOREN! ${res.data.allInAmount} Punkte weg!`, win: false });
+          showLoss(res.data.allInAmount || 0);
+        }
+        setAllInCooldown(3600);
+        fetchPoints();
+      }, 2500);
+    } catch { setAllInPlaying(false); setAllInShake(false); setAllInResult({ text: "Fehler!", win: false }); }
   };
 
   // ── Glucksrad ──
@@ -274,7 +603,7 @@ export function CasinoPage() {
       setTimeout(() => {
         setWheelSpinning(false);
         if (!res.success) { setWheelResult(res.error ?? "Fehler!"); setWheelUsed(true); return; }
-        setWheelResult(`🎡 +${res.data.points} Punkte!`);
+        setWheelResult(`+${res.data.points} Punkte!`);
         setWheelUsed(true);
         if (confettiRef.current && res.data.points >= 50) spawnConfetti(confettiRef.current, 60);
         fetchPoints();
@@ -282,12 +611,115 @@ export function CasinoPage() {
     } catch { setWheelSpinning(false); setWheelResult("Fehler!"); }
   };
 
+  // ── Season actions ──
+  const buyPremium = async () => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/season/premium`, {}) as any;
+      if (res.success) {
+        setSeason(prev => prev ? { ...prev, progress: { ...prev.progress, premium: true } } : prev);
+        fetchPoints();
+      } else {
+        setMessage(res.error ?? "Fehler!");
+      }
+    } catch { setMessage("Fehler!"); }
+  };
+
+  const claimLevel = async (level: number) => {
+    if (!user || claimingLevel !== null) return;
+    setClaimingLevel(level);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/season/claim`, { level }) as any;
+      if (res.success) {
+        setSeason(prev => {
+          if (!prev) return prev;
+          return { ...prev, progress: { ...prev.progress, claimedLevels: [...prev.progress.claimedLevels, level] } };
+        });
+        fetchPoints();
+        if (confettiRef.current) spawnConfetti(confettiRef.current, 30);
+      }
+    } catch { /* */ }
+    setClaimingLevel(null);
+  };
+
+  const fetchSeasonLeaderboard = async () => {
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/season/leaderboard`) as any;
+      if (res.data) setSeasonLeaderboard(res.data);
+    } catch { /* */ }
+  };
+
+  // ── Heist actions ──
+  const createHeist = async () => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/heist`, {}) as any;
+      if (res.success) { fetchHeist(); fetchPoints(); }
+      else setHeistMessage(res.error ?? "Fehler!");
+    } catch { setHeistMessage("Fehler!"); }
+  };
+
+  const joinHeist = async () => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/heist/join`, {}) as any;
+      if (res.success) { fetchHeist(); fetchPoints(); }
+      else setHeistMessage(res.error ?? "Fehler!");
+    } catch { setHeistMessage("Fehler!"); }
+  };
+
+  const playHeistRound = async (game: string) => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/heist/play`, { game }) as any;
+      if (res.success) fetchHeist();
+      else setHeistMessage(res.error ?? "Fehler!");
+    } catch { setHeistMessage("Fehler!"); }
+  };
+
+  const heistBetray = async () => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/heist/betray`, {}) as any;
+      if (res.success) fetchHeist();
+      else setHeistMessage(res.error ?? "Fehler!");
+    } catch { setHeistMessage("Fehler!"); }
+  };
+
+  const heistFinish = async () => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/heist/finish`, {}) as any;
+      if (res.success) { fetchHeist(); fetchPoints(); }
+      else setHeistMessage(res.error ?? "Fehler!");
+    } catch { setHeistMessage("Fehler!"); }
+  };
+
   const resultClass = (r: { win: boolean } | null) => !r ? "" : r.win
     ? "text-green-400 bg-green-500/10 border border-green-500/30"
     : "text-red-400 bg-red-500/10 border border-red-500/30";
 
+  // Achievement categories grouping
+  const achievementsByCategory = achievements.reduce<Record<string, Achievement[]>>((acc, ach) => {
+    const cat = ach.category || "Sonstige";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat]!.push(ach);
+    return acc;
+  }, {});
+
+  const toggleCategory = (cat: string) => {
+    setOpenCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  };
+
+  // Battle pass reward levels
+  const REWARD_LEVELS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+
   return (
-    <div className="min-h-screen text-white overflow-hidden relative" style={{
+    <div className={`min-h-screen text-white overflow-hidden relative ${allInShake ? "allin-shake" : ""}`} style={{
       background: "radial-gradient(ellipse at center top, #1a0533 0%, #0a0a1a 40%, #000 100%)",
     }}>
       <style>{`
@@ -311,6 +743,13 @@ export function CasinoPage() {
         @keyframes boss-hit { 0% { transform: scale(1); } 30% { transform: scale(0.95); filter: brightness(2); } 100% { transform: scale(1); filter: brightness(1); } }
         @keyframes mystery-open { 0% { transform: scale(0.5) rotate(-5deg); opacity: 0; } 50% { transform: scale(1.3) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
         @keyframes near-miss-shake { 0%,100% { transform: translateX(0); } 10%,30%,50%,70%,90% { transform: translateX(-4px); } 20%,40%,60%,80% { transform: translateX(4px); } }
+        @keyframes allin-pulse { 0%,100% { box-shadow: 0 0 20px rgba(255,0,0,0.4), 0 0 40px rgba(255,0,0,0.2); } 50% { box-shadow: 0 0 40px rgba(255,0,0,0.8), 0 0 80px rgba(255,0,0,0.4), 0 0 120px rgba(255,50,0,0.2); } }
+        @keyframes allin-screen-shake { 0%,100% { transform: translate(0,0); } 10% { transform: translate(-3px,2px); } 20% { transform: translate(3px,-2px); } 30% { transform: translate(-2px,-3px); } 40% { transform: translate(2px,3px); } 50% { transform: translate(-3px,1px); } 60% { transform: translate(3px,-1px); } 70% { transform: translate(-1px,3px); } 80% { transform: translate(1px,-3px); } 90% { transform: translate(-2px,2px); } }
+        @keyframes quest-bonus-float { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.3); opacity: 0; } }
+        @keyframes achievement-burst { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 50% { transform: scale(1.2) rotate(10deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        @keyframes heist-pulse { 0%,100% { border-color: rgba(220,38,38,0.4); } 50% { border-color: rgba(220,38,38,0.8); } }
+        @keyframes bp-glow { 0%,100% { box-shadow: 0 0 8px rgba(168,85,247,0.3); } 50% { box-shadow: 0 0 16px rgba(168,85,247,0.6); } }
+        @keyframes bp-unclaimed { 0%,100% { box-shadow: 0 0 8px rgba(255,215,0,0.4); } 50% { box-shadow: 0 0 20px rgba(255,215,0,0.8); } }
         .neon-text { animation: neon-pulse 2s ease-in-out infinite; }
         .slot-machine { animation: slot-glow 2s ease-in-out infinite; }
         .coin-anim { animation: coin-flip 1s ease-in-out; }
@@ -324,6 +763,16 @@ export function CasinoPage() {
         .casino-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 8px 25px rgba(255,215,0,0.3); }
         .casino-btn:active { transform: scale(0.98); }
         .casino-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        .allin-shake { animation: allin-screen-shake 0.5s ease-in-out infinite; }
+        .allin-btn-pulse { animation: allin-pulse 1.5s ease-in-out infinite; }
+        .quest-bonus-anim { animation: quest-bonus-float 2.5s ease-out forwards; }
+        .achievement-burst { animation: achievement-burst 0.6s ease-out forwards; }
+        .heist-border { animation: heist-pulse 2s ease-in-out infinite; }
+        .bp-glow { animation: bp-glow 2s ease-in-out infinite; }
+        .bp-unclaimed { animation: bp-unclaimed 1.5s ease-in-out infinite; }
+        .bp-track::-webkit-scrollbar { height: 6px; }
+        .bp-track::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
+        .bp-track::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.5); border-radius: 3px; }
       `}</style>
 
       <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-50" />
@@ -349,22 +798,47 @@ export function CasinoPage() {
         </div>
       )}
 
+      {/* Quest Bonus floating text */}
+      {questBonusAnim && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+          <div className="quest-bonus-anim text-4xl font-black text-green-400" style={{ textShadow: "0 0 20px rgba(74,222,128,0.8)" }}>
+            {questBonusAnim}
+          </div>
+        </div>
+      )}
+
+      {/* Achievement unlock popup */}
+      {newAchievementPopup && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-45">
+          <div className="achievement-burst text-center px-8 py-6 rounded-2xl" style={{
+            background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(168,85,247,0.15))",
+            border: "2px solid rgba(255,215,0,0.6)",
+            boxShadow: "0 0 60px rgba(255,215,0,0.4)",
+          }}>
+            <div className="text-5xl mb-2">🏆</div>
+            <div className="text-2xl font-black text-yellow-300 mb-1">ACHIEVEMENT FREIGESCHALTET!</div>
+            <div className="text-lg text-white font-bold">{newAchievementPopup.name}</div>
+            <div className="text-sm text-yellow-400 mt-1">+{newAchievementPopup.reward} Punkte</div>
+          </div>
+        </div>
+      )}
+
       {/* Active Special Overlay */}
       {activeSpecial && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-45">
           {activeSpecial.type === "mitleid" && (
             <div className="text-3xl font-black text-blue-400" style={{ animation: "special-float 3s ease-out forwards", textShadow: "0 0 20px rgba(96,165,250,0.8)" }}>
-              😢 +5 Mitleids-Punkte!
+              +5 Mitleids-Punkte!
             </div>
           )}
           {activeSpecial.type === "ragequit" && (
             <div className="px-8 py-4 rounded-2xl font-black text-2xl text-yellow-300" style={{ animation: "special-slide 3s ease-out forwards", background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,100,0,0.1))", border: "2px solid rgba(255,215,0,0.5)", textShadow: "0 0 20px rgba(255,215,0,0.8)" }}>
-              🎁 WILLKOMMEN ZURUCK! +25
+              WILLKOMMEN ZURUCK! +25
             </div>
           )}
           {activeSpecial.type === "beinahe_jackpot" && (
             <div className="text-4xl font-black text-orange-400" style={{ animation: "near-miss-shake 0.5s ease-in-out 3", textShadow: "0 0 20px rgba(251,146,60,0.8)" }}>
-              😱 SO KNAPP!
+              SO KNAPP!
             </div>
           )}
           {activeSpecial.type === "verfluchte_muenze" && (
@@ -379,7 +853,7 @@ export function CasinoPage() {
           )}
           {activeSpecial.type === "goldener_regen" && (
             <div className="text-5xl font-black text-yellow-300" style={{ animation: "multiplier-pop 3s ease-out forwards", textShadow: "0 0 40px rgba(255,215,0,0.9)" }}>
-              🌟 GOLDENER REGEN! 🌟
+              GOLDENER REGEN!
             </div>
           )}
           {activeSpecial.type === "multiplikator" && (
@@ -398,7 +872,7 @@ export function CasinoPage() {
           {activeSpecial.type === "geschenk_an_chat" && (
             <div className="text-center">
               <div className="text-4xl font-black text-pink-400 mb-2" style={{ animation: "multiplier-pop 3s ease-out forwards" }}>
-                🎁 GESCHENK AN CHAT! 🎁
+                GESCHENK AN CHAT!
               </div>
               <div className="text-lg text-pink-300">
                 {activeSpecial.animationData?.recipients?.join(", ")} bekommen je +10!
@@ -415,7 +889,7 @@ export function CasinoPage() {
           )}
           {activeSpecial.type === "boss_damage" && (
             <div className="text-3xl font-black text-red-400" style={{ animation: "special-float 3s ease-out forwards", textShadow: "0 0 20px rgba(239,68,68,0.8)" }}>
-              ⚔️ -{activeSpecial.animationData?.damage} HP!
+              -{activeSpecial.animationData?.damage} HP!
             </div>
           )}
           {activeSpecial.type === "boss_kill" && (
@@ -429,7 +903,9 @@ export function CasinoPage() {
         </div>
       )}
 
-      {/* Marquee */}
+      {/* ══════════════════════════════════════════════════════════════════
+          MARQUEE
+         ══════════════════════════════════════════════════════════════════ */}
       <div className="bg-black/50 border-b border-yellow-500/20 py-1.5 overflow-hidden">
         <div className="whitespace-nowrap text-sm" style={{ animation: "marquee-scroll 25s linear infinite" }}>
           <span className="text-yellow-400 mx-8">🎰 WILLKOMMEN IM CRISTREAM CASINO 🎰</span>
@@ -440,7 +916,9 @@ export function CasinoPage() {
         </div>
       </div>
 
-      {/* Header + Points */}
+      {/* ══════════════════════════════════════════════════════════════════
+          HEADER + POINTS
+         ══════════════════════════════════════════════════════════════════ */}
       <div className="text-center pt-8 pb-2">
         <img src="/crisino-header.webp" alt="WILLKOMMEN IM CRISINO" className="mx-auto max-w-xl w-full px-4" style={{ filter: "drop-shadow(0 0 30px rgba(168,85,247,0.5))" }} />
         {!user ? (
@@ -472,14 +950,49 @@ export function CasinoPage() {
         {message && <p className="text-red-400 mt-2 text-sm">{message}</p>}
       </div>
 
-      {/* Double or Nothing */}
+      {/* ══════════════════════════════════════════════════════════════════
+          1. DAILY QUESTS
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && quests.length > 0 && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-black text-lg text-yellow-400">📋 TÄGLICHE QUESTS</h3>
+            <span className="text-xs text-gray-500">Neue Quests in {formatQuestReset()}</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {quests.map(quest => (
+              <div key={quest.id} className={`relative rounded-2xl p-4 border ${QUEST_BORDER_COLORS[quest.difficulty] || "border-gray-500/30"} ${quest.done ? "ring-1 ring-green-500/50" : ""}`}
+                style={{ background: `linear-gradient(135deg, ${quest.done ? "rgba(34,197,94,0.1), rgba(34,197,94,0.05)" : QUEST_DIFF_COLORS[quest.difficulty]?.replace("from-", "").replace(" to-", ", ") || "rgba(255,255,255,0.05), rgba(255,255,255,0.02)"})` }}>
+                {quest.done && (
+                  <div className="absolute top-2 right-2 text-2xl" style={{ filter: "drop-shadow(0 0 8px rgba(34,197,94,0.8))" }}>✅</div>
+                )}
+                <h4 className="font-bold text-white text-sm mb-2">{quest.name}</h4>
+                <div className="relative h-3 rounded-full overflow-hidden mb-1" style={{ background: "rgba(0,0,0,0.4)" }}>
+                  <div className="h-full rounded-full transition-all duration-500" style={{
+                    width: `${Math.min(100, (quest.progress / quest.target) * 100)}%`,
+                    background: quest.done ? "linear-gradient(90deg, #22c55e, #4ade80)" : "linear-gradient(90deg, #9146ff, #a78bfa)",
+                  }} />
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">{quest.progress}/{quest.target}</span>
+                  <span className="text-yellow-400 font-bold">+{quest.reward} Pts</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          DOUBLE OR NOTHING
+         ══════════════════════════════════════════════════════════════════ */}
       {doubleActive && doubleAmount > 0 && (
         <div className="max-w-lg mx-auto px-6 py-4 mb-4">
           <div className="double-glow rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(255,215,0,0.1), rgba(255,100,0,0.05))", border: "2px solid rgba(255,215,0,0.4)" }}>
-            <h3 className="text-2xl font-black text-yellow-400 mb-1">⚡ DOPPELT ODER NICHTS ⚡</h3>
+            <h3 className="text-2xl font-black text-yellow-400 mb-1">DOPPELT ODER NICHTS</h3>
             <p className="text-4xl font-black text-white mb-3">{doubleAmount.toLocaleString()} PTS</p>
             {doubleResult && (
-              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${doubleResult.includes("✅") ? "text-green-400 bg-green-500/10" : doubleResult.includes("❌") ? "text-red-400 bg-red-500/10" : "text-yellow-400"}`}>
+              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${doubleResult.includes("VERDOPPELT") ? "text-green-400 bg-green-500/10" : doubleResult.includes("VERLOREN") ? "text-red-400 bg-red-500/10" : "text-yellow-400"}`}>
                 {doubleResult}
               </div>
             )}
@@ -496,11 +1009,13 @@ export function CasinoPage() {
         </div>
       )}
 
-      {/* Boss Fight */}
+      {/* ══════════════════════════════════════════════════════════════════
+          BOSS FIGHT
+         ══════════════════════════════════════════════════════════════════ */}
       {boss?.active && (
         <div className="max-w-2xl mx-auto px-6 pb-4">
           <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(239,68,68,0.1), rgba(0,0,0,0.3))", border: "2px solid rgba(239,68,68,0.4)" }}>
-            <h3 className="text-2xl font-black text-red-400 mb-2">⚔️ BOSS FIGHT ⚔️</h3>
+            <h3 className="text-2xl font-black text-red-400 mb-2">BOSS FIGHT</h3>
             <div className="text-4xl mb-2">{boss.name}</div>
             <div className="relative h-6 rounded-full overflow-hidden mb-2" style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(239,68,68,0.3)" }}>
               <div className="h-full rounded-full transition-all duration-500" style={{
@@ -511,14 +1026,16 @@ export function CasinoPage() {
                 {boss.hp}/{boss.maxHp} HP
               </div>
             </div>
-            <p className="text-xs text-gray-400">👥 {boss.participants} Kämpfer · Jeder Gewinn schadet dem Boss!</p>
+            <p className="text-xs text-gray-400">{boss.participants} Kämpfer · Jeder Gewinn schadet dem Boss!</p>
             <p className="text-xs text-yellow-400 mt-1">Boss besiegt = +50 Bonus für alle Teilnehmer!</p>
           </div>
         </div>
       )}
 
-      {/* Game Machines */}
-      <div className="max-w-6xl mx-auto px-6 pb-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* ══════════════════════════════════════════════════════════════════
+          GAME MACHINES (3 existing + All-In below)
+         ══════════════════════════════════════════════════════════════════ */}
+      <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* SLOT MACHINE */}
         <div className="slot-machine rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
@@ -586,7 +1103,44 @@ export function CasinoPage() {
         </div>
       </div>
 
-      {/* Glucksrad */}
+      {/* ══════════════════════════════════════════════════════════════════
+          2. ALL-IN BUTTON
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && (
+        <div className="max-w-lg mx-auto px-6 pb-6">
+          <div className={`rounded-2xl p-6 text-center ${allInPlaying ? "" : "allin-btn-pulse"}`} style={{
+            background: "linear-gradient(180deg, rgba(220,38,38,0.15), rgba(0,0,0,0.4))",
+            border: "2px solid rgba(220,38,38,0.5)",
+          }}>
+            <h3 className="text-2xl font-black text-red-400 mb-1">💀 ALL-IN 💀</h3>
+            <p className="text-xs text-gray-500 mb-1">40% Chance · 2.5x Auszahlung · Alles oder Nichts!</p>
+            <p className="text-3xl font-black text-white mb-3">
+              {points !== null && points > 0 ? `${points.toLocaleString()} PUNKTE` : "---"}
+            </p>
+            {allInResult && (
+              <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${allInResult.win ? "text-green-400 bg-green-500/10 border border-green-500/30" : "text-red-400 bg-red-500/10 border border-red-500/30"}`}>
+                {allInResult.text}
+              </div>
+            )}
+            {allInCooldown > 0 ? (
+              <div className="text-sm text-gray-400">
+                Cooldown: {Math.floor(allInCooldown / 60)}m {allInCooldown % 60}s
+              </div>
+            ) : (
+              <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
+                className="casino-btn px-10 py-4 rounded-xl font-black text-xl text-white"
+                style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #7f1d1d, #dc2626)" }}>
+                {allInPlaying ? "..." : `💀 ALL-IN! (${points?.toLocaleString() || 0} Pts)`}
+              </button>
+            )}
+            <p className="text-xs text-gray-600 mt-2">1 Stunde Cooldown nach jedem Versuch</p>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          GLUCKSRAD
+         ══════════════════════════════════════════════════════════════════ */}
       {user && (
         <div className="max-w-md mx-auto px-6 pb-6">
           <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.08), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
@@ -605,7 +1159,114 @@ export function CasinoPage() {
         </div>
       )}
 
-      {/* Bingo & Lotto */}
+      {/* ══════════════════════════════════════════════════════════════════
+          3. BATTLE PASS / SEASON
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && season && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5" style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.08), rgba(0,0,0,0.3))", border: "1px solid rgba(168,85,247,0.3)" }}>
+            {/* Season Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-black text-lg text-purple-300">🎖️ {season.season.name}</h3>
+                <span className="text-xs text-gray-500">Saison {season.season.number} · Endet in {formatCountdown(season.season.endDate)}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="bp-glow rounded-full px-4 py-1.5 font-black text-lg" style={{
+                  background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff",
+                }}>
+                  LVL {season.progress.level}
+                </div>
+                {season.progress.premium ? (
+                  <span className="text-xs text-yellow-400 font-bold px-2 py-1 rounded-full" style={{ background: "rgba(255,215,0,0.15)", border: "1px solid rgba(255,215,0,0.3)" }}>
+                    PREMIUM
+                  </span>
+                ) : (
+                  <button onClick={buyPremium} className="casino-btn text-xs font-bold px-3 py-1.5 rounded-full" style={{
+                    background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.1))",
+                    border: "1px solid rgba(255,215,0,0.4)", color: "#ffd700",
+                  }}>
+                    Premium kaufen (500 Pts)
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* XP Bar */}
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-gray-400 mb-1">
+                <span>{season.progress.xp} XP</span>
+                <span>{season.nextLevelXp} XP</span>
+              </div>
+              <div className="relative h-4 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(168,85,247,0.3)" }}>
+                <div className="h-full rounded-full transition-all duration-700" style={{
+                  width: `${Math.min(100, (season.progress.xp / season.nextLevelXp) * 100)}%`,
+                  background: "linear-gradient(90deg, #9146ff, #c084fc)",
+                }} />
+              </div>
+            </div>
+
+            {/* Reward Track - horizontal scroll */}
+            <div className="bp-track overflow-x-auto pb-2 mb-3" style={{ scrollSnapType: "x mandatory" }}>
+              <div className="flex gap-3" style={{ minWidth: "max-content" }}>
+                {REWARD_LEVELS.map(level => {
+                  const reached = season.progress.level >= level;
+                  const claimed = season.progress.claimedLevels.includes(level);
+                  const canClaim = reached && !claimed;
+                  return (
+                    <div key={level} className={`flex-shrink-0 w-20 text-center rounded-xl p-2 ${canClaim ? "bp-unclaimed" : ""}`}
+                      style={{
+                        scrollSnapAlign: "start",
+                        background: claimed ? "rgba(34,197,94,0.15)" : reached ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.03)",
+                        border: `2px solid ${claimed ? "rgba(34,197,94,0.5)" : reached ? "rgba(255,215,0,0.4)" : "rgba(255,255,255,0.1)"}`,
+                        opacity: reached ? 1 : 0.5,
+                      }}>
+                      <div className="text-xs text-gray-400 mb-1">LVL {level}</div>
+                      <div className="text-2xl mb-1">{claimed ? "✅" : level % 10 === 0 ? "👑" : "🎁"}</div>
+                      {canClaim ? (
+                        <button onClick={() => claimLevel(level)} disabled={claimingLevel !== null}
+                          className="casino-btn text-xs font-bold px-2 py-0.5 rounded-full w-full"
+                          style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>
+                          Claim
+                        </button>
+                      ) : claimed ? (
+                        <span className="text-xs text-green-400">Erhalten</span>
+                      ) : (
+                        <span className="text-xs text-gray-600">{level - season.progress.level} LVL</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Season Leaderboard Toggle */}
+            <button onClick={() => { setShowSeasonLb(!showSeasonLb); if (!showSeasonLb) fetchSeasonLeaderboard(); }}
+              className="text-xs text-purple-400 hover:text-purple-300 font-bold">
+              {showSeasonLb ? "▲ Saison-Rangliste ausblenden" : "▼ Saison-Rangliste anzeigen"}
+            </button>
+            {showSeasonLb && seasonLeaderboard.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {seasonLeaderboard.map((entry, i) => {
+                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}.`;
+                  return (
+                    <div key={i} className="flex items-center gap-2 text-xs rounded-lg px-3 py-1.5" style={{ background: i < 3 ? "rgba(168,85,247,0.1)" : "rgba(255,255,255,0.02)" }}>
+                      <span className="w-6 text-center shrink-0">{medal}</span>
+                      <span className={`flex-1 truncate ${i < 3 ? "font-bold text-purple-300" : "text-white"}`}>{entry.displayName}</span>
+                      <span className="text-purple-400 font-bold">LVL {entry.level}</span>
+                      <span className="text-gray-500">{entry.xp} XP</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          BINGO & LOTTO
+         ══════════════════════════════════════════════════════════════════ */}
       <div className="max-w-4xl mx-auto px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <span className="text-2xl">🎱</span>
@@ -639,7 +1300,180 @@ export function CasinoPage() {
         </div>
       )}
 
-      {/* Live Feed + Leaderboard */}
+      {/* ══════════════════════════════════════════════════════════════════
+          4. ACHIEVEMENTS
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && achievements.length > 0 && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <h3 className="font-black text-lg text-yellow-400 mb-4">
+              🏆 {achievementStats.unlocked}/{achievementStats.total} Achievements
+            </h3>
+
+            {Object.entries(achievementsByCategory).map(([category, achs]) => {
+              const isOpen = openCategories.has(category);
+              const unlockedInCat = achs.filter(a => a.unlocked).length;
+              return (
+                <div key={category} className="mb-2">
+                  <button onClick={() => toggleCategory(category)}
+                    className="w-full flex items-center justify-between py-2 px-3 rounded-lg text-left hover:bg-white/5 transition-colors"
+                    style={{ background: "rgba(255,255,255,0.02)" }}>
+                    <span className="font-bold text-sm text-gray-300">{category}</span>
+                    <span className="text-xs text-gray-500">{unlockedInCat}/{achs.length} {isOpen ? "▲" : "▼"}</span>
+                  </button>
+                  {isOpen && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 ml-2">
+                      {achs.map(ach => (
+                        <div key={ach.id} className={`rounded-xl p-3 border-2 ${RARITY_COLORS[ach.rarity] || "border-gray-500/30"} ${!ach.unlocked ? "opacity-50 grayscale" : ""}`}
+                          style={{ background: ach.unlocked ? (RARITY_BG[ach.rarity] || "rgba(255,255,255,0.03)") : "rgba(0,0,0,0.2)" }}>
+                          <div className="flex items-start gap-2">
+                            <span className="text-xl shrink-0">{ach.unlocked ? "🏆" : "🔒"}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-white truncate">{ach.name}</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                  ach.rarity === "legendary" ? "text-yellow-300 bg-yellow-500/20" :
+                                  ach.rarity === "epic" ? "text-purple-300 bg-purple-500/20" :
+                                  ach.rarity === "rare" ? "text-blue-300 bg-blue-500/20" :
+                                  ach.rarity === "uncommon" ? "text-green-300 bg-green-500/20" :
+                                  "text-gray-400 bg-gray-500/20"
+                                }`}>{RARITY_LABELS[ach.rarity] || ach.rarity}</span>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-0.5">{ach.description}</p>
+                              {ach.unlocked && ach.unlockedAt && (
+                                <p className="text-[10px] text-gray-600 mt-0.5">
+                                  Freigeschaltet: {new Date(ach.unlockedAt).toLocaleDateString("de-DE")}
+                                </p>
+                              )}
+                              {ach.reward > 0 && (
+                                <span className="text-[10px] text-yellow-400 font-bold">+{ach.reward} Pts</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          5. HEIST
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && (
+        <div className="max-w-2xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5 heist-border" style={{
+            background: "linear-gradient(180deg, rgba(127,29,29,0.15), rgba(0,0,0,0.3))",
+            border: "2px solid rgba(220,38,38,0.4)",
+          }}>
+            <h3 className="font-black text-lg text-red-400 mb-3">🏴‍☠️ HEIST</h3>
+
+            {heistMessage && (
+              <div className="text-sm text-red-300 bg-red-500/10 rounded-lg px-3 py-2 mb-3 border border-red-500/20">
+                {heistMessage}
+              </div>
+            )}
+
+            {/* No active heist */}
+            {(!heist || !heist.active) && (
+              <div className="text-center">
+                <p className="text-sm text-gray-400 mb-3">Starte einen Heist und überfalle das Casino mit anderen Spielern!</p>
+                <button onClick={createHeist} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
+                  style={{ background: "linear-gradient(135deg, #dc2626, #991b1b)" }}>
+                  🏴‍☠️ HEIST STARTEN (50 Pts)
+                </button>
+              </div>
+            )}
+
+            {/* Lobby phase */}
+            {heist?.active && heist.phase === "lobby" && (
+              <div className="text-center">
+                <p className="text-sm text-gray-400 mb-2">Heist gestartet von <span className="text-red-300 font-bold">{heist.createdBy}</span></p>
+                <div className="flex flex-wrap justify-center gap-2 mb-3">
+                  {heist.players?.map((p, i) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                      {p.displayName}
+                    </span>
+                  ))}
+                </div>
+                {heist.countdown && <p className="text-sm text-yellow-400 mb-3">Startet in {heist.countdown}s...</p>}
+                <button onClick={joinHeist} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
+                  style={{ background: "linear-gradient(135deg, #b91c1c, #7f1d1d)" }}>
+                  🏴‍☠️ BEITRETEN (25 Pts)
+                </button>
+              </div>
+            )}
+
+            {/* Playing phase */}
+            {heist?.active && heist.phase === "playing" && (
+              <div className="text-center">
+                <p className="text-sm text-gray-400 mb-2">Runde {heist.round}/{heist.totalRounds} · Pot: {heist.pot} Pts</p>
+                <div className="flex flex-wrap justify-center gap-2 mb-3">
+                  {heist.players?.map((p, i) => (
+                    <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-gray-300 border border-red-500/20">
+                      {p.displayName} {p.result ? (p.result.win ? "✅" : "❌") : "⏳"}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex justify-center gap-2">
+                  <button onClick={() => playHeistRound("slots")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #9146ff, #6441a5)", color: "#fff" }}>🎰 Slots</button>
+                  <button onClick={() => playHeistRound("flip")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)", color: "#000" }}>🪙 Flip</button>
+                  <button onClick={() => playHeistRound("scratch")} className="casino-btn px-4 py-2 rounded-lg font-bold text-sm" style={{ background: "linear-gradient(135deg, #00cc88, #009966)", color: "#000" }}>🎟️ Scratch</button>
+                </div>
+              </div>
+            )}
+
+            {/* Betrayal phase */}
+            {heist?.active && heist.phase === "betrayal" && (
+              <div className="text-center">
+                <p className="text-lg text-red-300 font-black mb-2">VERRAT ODER TREUE?</p>
+                <p className="text-sm text-gray-400 mb-3">Pot: {heist.pot} Pts · Entscheide dich!</p>
+                {heist.countdown && <p className="text-yellow-400 text-sm mb-3">{heist.countdown}s verbleibend...</p>}
+                <div className="flex justify-center gap-4">
+                  <button onClick={heistFinish} className="casino-btn px-6 py-3 rounded-xl font-black text-lg text-white"
+                    style={{ background: "linear-gradient(135deg, #22c55e, #166534)" }}>
+                    🤝 TREU BLEIBEN
+                  </button>
+                  <button onClick={heistBetray} className="casino-btn px-6 py-3 rounded-xl font-black text-lg text-white"
+                    style={{ background: "linear-gradient(135deg, #dc2626, #7f1d1d)" }}>
+                    🗡️ VERRATEN
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Finished phase */}
+            {heist?.active && heist.phase === "finished" && (
+              <div className="text-center">
+                <p className="text-lg text-yellow-400 font-black mb-3">HEIST ABGESCHLOSSEN!</p>
+                <div className="space-y-1 mb-3">
+                  {heist.results?.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between text-sm px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      <span className={`font-bold ${r.betrayed ? "text-red-400" : "text-white"}`}>
+                        {r.displayName} {r.betrayed ? "🗡️" : "🤝"}
+                      </span>
+                      <span className={`font-bold ${r.payout > 0 ? "text-green-400" : "text-red-400"}`}>
+                        {r.payout > 0 ? "+" : ""}{r.payout} Pts
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => { setHeist(null); fetchPoints(); }} className="text-xs text-gray-500 hover:text-gray-300">
+                  Schließen
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          LIVE FEED + LEADERBOARD
+         ══════════════════════════════════════════════════════════════════ */}
       <div className="max-w-6xl mx-auto px-6 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <h3 className="font-black text-lg text-yellow-400 mb-3">⚡ Live Aktivität</h3>
@@ -687,27 +1521,97 @@ export function CasinoPage() {
         </div>
       </div>
 
-      {/* Specials Legend */}
+      {/* ══════════════════════════════════════════════════════════════════
+          6. PLAYER STATS (collapsible)
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && playerStats && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <button onClick={() => setStatsOpen(!statsOpen)} className="w-full flex items-center justify-between">
+              <h3 className="font-black text-sm text-gray-400">📊 DEINE STATISTIKEN</h3>
+              <span className="text-xs text-gray-600">{statsOpen ? "▲" : "▼"}</span>
+            </button>
+            {statsOpen && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-white">{playerStats.totalPlays}</div>
+                  <div className="text-[10px] text-gray-500">Spiele gesamt</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-green-400">{playerStats.winRate?.toFixed(1) || 0}%</div>
+                  <div className="text-[10px] text-gray-500">Gewinnrate</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-yellow-400">{playerStats.maxStreak}</div>
+                  <div className="text-[10px] text-gray-500">Bester Streak</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-green-400">+{playerStats.totalWon}</div>
+                  <div className="text-[10px] text-gray-500">Gewonnen</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-red-400">-{playerStats.totalLost}</div>
+                  <div className="text-[10px] text-gray-500">Verloren</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-red-500">{playerStats.bossKills}</div>
+                  <div className="text-[10px] text-gray-500">Boss Kills</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-yellow-300">{playerStats.luckiestWin}</div>
+                  <div className="text-[10px] text-gray-500">Größter Gewinn</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-purple-400">{playerStats.questsCompleted}</div>
+                  <div className="text-[10px] text-gray-500">Quests erledigt</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-cyan-400">{playerStats.heistsCompleted}</div>
+                  <div className="text-[10px] text-gray-500">Heists abgeschlossen</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-red-400">{playerStats.allInWins}/{(playerStats.allInWins || 0) + (playerStats.allInLosses || 0)}</div>
+                  <div className="text-[10px] text-gray-500">All-In (W/Total)</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-orange-400">{playerStats.totalDoubles}</div>
+                  <div className="text-[10px] text-gray-500">Doppelungen</div>
+                </div>
+                <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="text-xl font-black text-pink-400">{playerStats.favoriteGame || "—"}</div>
+                  <div className="text-[10px] text-gray-500">Lieblingsspiel</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SPECIALS LEGEND
+         ══════════════════════════════════════════════════════════════════ */}
       <div className="max-w-4xl mx-auto px-6 pb-6">
         <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <h3 className="font-black text-sm text-gray-500 mb-2">🎁 CASINO SPECIALS</h3>
+          <h3 className="font-black text-sm text-gray-500 mb-2">CASINO SPECIALS</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 text-xs text-gray-600">
-            <span>😢 3x Pech → +5 Mitleid</span>
-            <span>🔥 5x Flip-Pech → Verfluchte Münze</span>
-            <span>🐈‍⬛ 3% Schwarze Katze → Garantie-Win</span>
+            <span>3x Pech = +5 Mitleid</span>
+            <span>🔥 5x Flip-Pech = Verfluchte Münze</span>
+            <span>🐈‍⬛ 3% Schwarze Katze = Garantie-Win</span>
             <span>🎡 x2-x5 Multiplikator bei 100+ Win</span>
             <span>🚨 Jackpot-Sirene bei 777</span>
-            <span>🎁 500+ Win → Geschenk an Chat</span>
+            <span>500+ Win = Geschenk an Chat</span>
             <span>📦 Mystery Box alle 20 Spins</span>
-            <span>⚔️ Boss Fights mit Community</span>
+            <span>Boss Fights mit Community</span>
             <span>🎡 Tägliches Gratis-Glücksrad</span>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
+      {/* ══════════════════════════════════════════════════════════════════
+          FOOTER
+         ══════════════════════════════════════════════════════════════════ */}
       <div className="text-center pb-6 text-xs text-gray-700">
-        ⚠️ Kein echtes Geld · Alle Instant-Games netto positiv · Verantwortungsvolles Fake-Gambling™ ⚠️
+        Kein echtes Geld · Alle Instant-Games netto positiv · Verantwortungsvolles Fake-Gambling™
       </div>
     </div>
   );

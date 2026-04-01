@@ -174,6 +174,10 @@ export async function viewerRoutes(app: FastifyInstance) {
       const { pointsService } = await import("../points/service.js");
       const { redis } = await import("../../lib/redis.js");
       const { prePlaySpecials, postPlaySpecials } = await import("../gambling/specials.js");
+      const { recordPlay } = await import("../casino/stats.js");
+      const { checkAchievements } = await import("../casino/achievements.js");
+      const { updateQuestProgress } = await import("../casino/quests.js");
+      const { addXp } = await import("../casino/battlepass.js");
 
       const logResult = async (g: string, payout: number, cost: number, detail: string) => {
         const entry = JSON.stringify({
@@ -202,7 +206,87 @@ export async function viewerRoutes(app: FastifyInstance) {
 
       const specCtx = { channelId: channel.id, userId: user.twitchId, displayName: channelUser.displayName };
 
-      // Flip
+      // Progression helper: runs after every game
+      const runProgression = async (
+        gameType: "flip" | "slots" | "scratch" | "double" | "allin",
+        win: boolean,
+        payout: number,
+        cost: number,
+        specials: any[],
+        opts?: { isTriple?: boolean; is777?: boolean },
+      ) => {
+        const specialTypes = specials.map((s: any) => s.type);
+        const stats = await recordPlay(channel.id, user.twitchId, {
+          game: gameType,
+          win,
+          payout,
+          cost,
+          isTriple: opts?.isTriple,
+          is777: opts?.is777,
+          specials: specialTypes,
+        });
+
+        const [achievements, questResult] = await Promise.all([
+          checkAchievements(channel.id, user.twitchId, stats),
+          updateQuestProgress(channel.id, user.twitchId, {
+            game: gameType,
+            win,
+            isTriple: opts?.isTriple,
+            streak: stats.currentStreak,
+            pointsWon: payout > cost ? payout - cost : 0,
+            specialType: specialTypes[0],
+            doubleWon: gameType === "double" && win,
+            is777: opts?.is777,
+            isBossHit: specialTypes.includes("boss_damage") || specialTypes.includes("boss_kill"),
+            isAllinWin: gameType === "allin" && win,
+          }),
+        ]);
+
+        // XP: base 5 for playing, +5 for win, +15 for triple, +90 for 777
+        let xp = 5;
+        if (win) xp += 5;
+        if (opts?.isTriple) xp += 15;
+        if (opts?.is777) xp += 90;
+
+        // Daily login XP (first play of the day)
+        const today = new Date().toISOString().slice(0, 10);
+        const dailyKey = `casino:daily:${channel.id}:${user.twitchId}`;
+        const alreadyPlayed = await redis.get(dailyKey);
+        if (!alreadyPlayed) {
+          xp += 15;
+          const now = new Date();
+          const tom = new Date(now);
+          tom.setHours(24, 0, 0, 0);
+          await redis.set(dailyKey, today, "EX", Math.floor((tom.getTime() - now.getTime()) / 1000));
+        }
+
+        // Quest completion XP
+        if (questResult.completed.length > 0) {
+          xp += questResult.completed.length * 30;
+          // Check if all 3 quests done
+          const { getDailyQuests } = await import("../casino/quests.js");
+          const allQuests = await getDailyQuests(channel.id, user.twitchId);
+          if (allQuests.every((q) => q.done)) {
+            xp += 50; // bonus for completing all 3
+          }
+        }
+
+        // Achievement unlock XP
+        if (achievements.length > 0) {
+          xp += achievements.length * 20;
+        }
+
+        const xpResult = await addXp(channel.id, user.twitchId, xp, gameType);
+
+        return {
+          stats,
+          newAchievements: achievements,
+          questsCompleted: questResult.completed,
+          xp: { gained: xp, levelUp: xpResult.levelUp, newLevel: xpResult.newLevel, rewards: xpResult.rewards },
+        };
+      };
+
+      // ── Flip ──
       if (game === "flip") {
         const pre = await prePlaySpecials({ ...specCtx, game: "flip" });
         const free = await useFree("flip");
@@ -215,16 +299,13 @@ export async function viewerRoutes(app: FastifyInstance) {
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
         const post = await postPlaySpecials({ ...specCtx, game: "flip", win, payout: win ? 2 : 0, cost });
         const finalPayout = post.adjustedPayout;
-        if (post.adjustedPayout > (win ? 2 : 0)) {
-          const bonus = post.adjustedPayout - (win ? 2 : 0);
-          // bonus already applied in postPlaySpecials
-        }
         await logResult("flip", finalPayout, cost, `🪙 ${side}`);
         const specials = [...pre.specials, ...post.specials];
-        return { success: true, data: { result: side, win, payout: finalPayout, cost, free, freeLeft: await getFreeLeft("flip"), specials } };
+        const progression = await runProgression("flip", win, finalPayout, cost, specials);
+        return { success: true, data: { result: side, win, payout: finalPayout, cost, free, freeLeft: await getFreeLeft("flip"), specials, ...progression } };
       }
 
-      // Slots (cost: 20)
+      // ── Slots (cost: 20) ──
       if (game === "slots") {
         const pre = await prePlaySpecials({ ...specCtx, game: "slots" });
         const free = await useFree("slots");
@@ -251,10 +332,11 @@ export async function viewerRoutes(app: FastifyInstance) {
         const finalPayout = post.adjustedPayout;
         await logResult("slots", finalPayout, cost, `🎰 ${r1}${r2}${r3} ${label}`);
         const specials = [...pre.specials, ...post.specials];
-        return { success: true, data: { reels: [r1,r2,r3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("slots"), specials } };
+        const progression = await runProgression("slots", payout > cost, finalPayout, cost, specials, { isTriple, is777 });
+        return { success: true, data: { reels: [r1,r2,r3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("slots"), specials, ...progression } };
       }
 
-      // Scratch (cost: 40)
+      // ── Scratch (cost: 40) ──
       if (game === "scratch") {
         const pre = await prePlaySpecials({ ...specCtx, game: "scratch" });
         const free = await useFree("scratch");
@@ -280,10 +362,11 @@ export async function viewerRoutes(app: FastifyInstance) {
         const finalPayout = post.adjustedPayout;
         await logResult("scratch", finalPayout, cost, `🎟️ ${s1}${s2}${s3} ${label}`);
         const specials = [...pre.specials, ...post.specials];
-        return { success: true, data: { symbols: [s1,s2,s3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("scratch"), specials } };
+        const progression = await runProgression("scratch", payout > cost, finalPayout, cost, specials, { isTriple });
+        return { success: true, data: { symbols: [s1,s2,s3], payout: finalPayout, cost, label, free, freeLeft: await getFreeLeft("scratch"), specials, ...progression } };
       }
 
-      // Double or Nothing
+      // ── Double or Nothing ──
       if (game === "double") {
         const amount = request.body.amount as number | undefined;
         if (!amount || amount < 1) return reply.status(400).send({ success: false, error: "Ungültiger Betrag" });
@@ -297,7 +380,55 @@ export async function viewerRoutes(app: FastifyInstance) {
         const post = await postPlaySpecials({ ...specCtx, game: "double", win, payout: win ? amount * 2 : 0, cost: amount });
         await logResult("double", win ? amount * 2 : 0, amount, win ? `⚡ x2 → ${amount * 2}` : `💥 Verloren`);
         const specials = [...pre.specials, ...post.specials];
-        return { success: true, data: { win, amount, payout: win ? amount * 2 : 0, specials } };
+        const progression = await runProgression("double", win, win ? amount * 2 : 0, amount, specials);
+        return { success: true, data: { win, amount, payout: win ? amount * 2 : 0, specials, ...progression } };
+      }
+
+      // ── All-In ──
+      if (game === "allin") {
+        const allInCdKey = `casino:allin:cd:${channel.id}:${user.twitchId}`;
+        const cdExists = await redis.get(allInCdKey);
+        if (cdExists) return reply.status(400).send({ success: false, error: "All-In Cooldown! Versuche es in einer Stunde wieder." });
+
+        if (channelUser.points < 10) return reply.status(400).send({ success: false, error: "Brauchst mindestens 10 Punkte für All-In!" });
+
+        const allInAmount = channelUser.points;
+        await prisma.channelUser.update({
+          where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+          data: { points: 0 },
+        });
+
+        // Set 1 hour cooldown
+        await redis.set(allInCdKey, "1", "EX", 3600);
+
+        const win = Math.random() < 0.40;
+        const payout = win ? Math.floor(allInAmount * 2.5) : 0;
+
+        if (win) {
+          await prisma.channelUser.update({
+            where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+            data: { points: payout },
+          });
+        }
+
+        const detail = win
+          ? `🔥 ALL-IN x2.5! ${allInAmount} → ${payout}!!!`
+          : `💀 ALL-IN VERLOREN! ${allInAmount} Punkte weg!`;
+        await logResult("allin", payout, allInAmount, detail);
+
+        const specials: any[] = [];
+        const progression = await runProgression("allin", win, payout, allInAmount, specials);
+        return {
+          success: true,
+          data: {
+            win,
+            amount: allInAmount,
+            payout,
+            multiplier: 2.5,
+            specials,
+            ...progression,
+          },
+        };
       }
 
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
@@ -319,6 +450,17 @@ export async function viewerRoutes(app: FastifyInstance) {
       const { spinGluecksrad } = await import("../gambling/specials.js");
       const result = await spinGluecksrad(channel.id, user.twitchId, channelUser.displayName);
       if (!result.success) return reply.status(400).send({ success: false, error: (result as any).error });
+
+      // Track stats + quests for gluecksrad
+      const { updateStats } = await import("../casino/stats.js");
+      const { updateQuestProgress } = await import("../casino/quests.js");
+      const { addXp } = await import("../casino/battlepass.js");
+      const stats = await updateStats(channel.id, user.twitchId, {});
+      stats.gluecksradSpins++;
+      await updateStats(channel.id, user.twitchId, { gluecksradSpins: stats.gluecksradSpins });
+      await updateQuestProgress(channel.id, user.twitchId, { isGluecksrad: true });
+      await addXp(channel.id, user.twitchId, 10, "gluecksrad");
+
       return { success: true, data: result };
     }
   );
@@ -400,6 +542,227 @@ export async function viewerRoutes(app: FastifyInstance) {
         select: { displayName: true, points: true },
       });
       return { success: true, data: top };
+    }
+  );
+
+  // ══════════════════════════════════════════════════════════
+  // ── Casino Progression Endpoints ──
+  // ══════════════════════════════════════════════════════════
+
+  // ── Player Stats ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/stats",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getStats } = await import("../casino/stats.js");
+      const stats = await getStats(channel.id, user.twitchId);
+      return { success: true, data: stats };
+    }
+  );
+
+  // ── Daily Quests ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/quests",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getDailyQuests } = await import("../casino/quests.js");
+      const quests = await getDailyQuests(channel.id, user.twitchId);
+      return { success: true, data: quests };
+    }
+  );
+
+  // ── Achievements ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/achievements",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getPlayerAchievements, ACHIEVEMENTS } = await import("../casino/achievements.js");
+      const { unlocked, total } = await getPlayerAchievements(channel.id, user.twitchId);
+      const unlockedSet = new Set(unlocked);
+      const all = ACHIEVEMENTS.map((a) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        category: a.category,
+        rarity: a.rarity,
+        reward: a.reward,
+        unlocked: unlockedSet.has(a.id),
+      }));
+      return { success: true, data: { achievements: all, unlocked: unlocked.length, total } };
+    }
+  );
+
+  // ── Season / Battle Pass ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/season",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getSeasonProgress } = await import("../casino/battlepass.js");
+      const data = await getSeasonProgress(channel.id, user.twitchId);
+      return { success: true, data };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/season/premium",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { buyPremium } = await import("../casino/battlepass.js");
+      const result = await buyPremium(channel.id, user.twitchId);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { level: number } }>(
+    "/:channelName/casino/season/claim",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { claimReward } = await import("../casino/battlepass.js");
+      const result = await claimReward(channel.id, user.twitchId, request.body.level);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: { reward: result.reward } };
+    }
+  );
+
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/season/leaderboard",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getSeasonLeaderboard } = await import("../casino/battlepass.js");
+      const data = await getSeasonLeaderboard(channel.id);
+      return { success: true, data };
+    }
+  );
+
+  // ── Heists ──
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/heist",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+      const { createHeist } = await import("../casino/heists.js");
+      const result = await createHeist(channel.id, user.twitchId, channelUser.displayName);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+
+      // Track heist stat
+      const { updateStats, getStats } = await import("../casino/stats.js");
+      const stats = await getStats(channel.id, user.twitchId);
+      await updateStats(channel.id, user.twitchId, { heistsPlayed: stats.heistsPlayed + 1 });
+
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { heistId: string } }>(
+    "/:channelName/casino/heist/join",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil gefunden" });
+      const { joinHeist } = await import("../casino/heists.js");
+      const result = await joinHeist(channel.id, request.body.heistId, user.twitchId, channelUser.displayName);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+
+      // Track heist stat
+      const { updateStats, getStats } = await import("../casino/stats.js");
+      const stats = await getStats(channel.id, user.twitchId);
+      await updateStats(channel.id, user.twitchId, { heistsPlayed: stats.heistsPlayed + 1 });
+
+      return { success: true, data: result };
+    }
+  );
+
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/heist",
+    async (request, reply) => {
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getActiveHeist } = await import("../casino/heists.js");
+      const heist = await getActiveHeist(channel.id);
+      return { success: true, data: heist };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { heistId: string; game: string } }>(
+    "/:channelName/casino/heist/play",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { playHeistRound } = await import("../casino/heists.js");
+      const result = await playHeistRound(channel.id, request.body.heistId, user.twitchId, request.body.game);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { heistId: string } }>(
+    "/:channelName/casino/heist/betray",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { chooseBetray } = await import("../casino/heists.js");
+      const result = await chooseBetray(channel.id, request.body.heistId, user.twitchId);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { heistId: string } }>(
+    "/:channelName/casino/heist/finish",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { finishHeist } = await import("../casino/heists.js");
+      const result = await finishHeist(channel.id, request.body.heistId);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+
+      // Track heist wins for all winners
+      const { updateStats, getStats } = await import("../casino/stats.js");
+      for (const r of result.results) {
+        if (r.payout > 0) {
+          const stats = await getStats(channel.id, r.userId);
+          await updateStats(channel.id, r.userId, { heistsWon: stats.heistsWon + 1 });
+        }
+      }
+
+      return { success: true, data: result };
     }
   );
 

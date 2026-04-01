@@ -58,6 +58,8 @@ model Channel {
   activeTitles             ActiveTitle[]
   marketplaceListings      MarketplaceListing[]
   tradeOffers              TradeOffer[]
+  achievements             ViewerAchievement[]
+  seasons                  Season[]
 }
 
 model Command {
@@ -457,4 +459,45 @@ model EventLog {
 
   @@index([channelId, createdAt])
   @@index([channelId, eventType])
+}
+
+model ViewerAchievement {
+  id            String   @id @default(uuid())
+  channelId     String
+  twitchUserId  String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  channel       Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  @@unique([channelId, twitchUserId, achievementId])
+  @@index([channelId, twitchUserId])
+}
+
+model Season {
+  id        String   @id @default(uuid())
+  channelId String
+  name      String
+  number    Int
+  startDate DateTime
+  endDate   DateTime
+  active    Boolean  @default(true)
+  rewards   Json     @default("[]")
+
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  progress  SeasonProgress[]
+  @@unique([channelId, number])
+}
+
+model SeasonProgress {
+  id            String  @id @default(uuid())
+  channelId     String
+  twitchUserId  String
+  seasonId      String
+  xp            Int     @default(0)
+  level         Int     @default(0)
+  premium       Boolean @default(false)
+  claimedLevels Int[]   @default([])
+
+  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  @@unique([channelId, twitchUserId, seasonId])
 }

@@ -481,6 +481,48 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Prestige ──
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/prestige",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { doPrestige } = await import("../casino/autoflip.js");
+      const result = await doPrestige(channel.id, user.twitchId);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  // ── Auto-Flip Status ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/autoflip",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getAutoFlipStatus } = await import("../casino/autoflip.js");
+      return { success: true, data: await getAutoFlipStatus(channel.id, user.twitchId) };
+    }
+  );
+
+  // ── Auto-Flip Toggle ──
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/autoflip/toggle",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { toggleAutoFlip } = await import("../casino/autoflip.js");
+      const active = await toggleAutoFlip(channel.id, user.twitchId);
+      return { success: true, data: { active } };
+    }
+  );
+
   // ── Free plays remaining ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/casino/free",

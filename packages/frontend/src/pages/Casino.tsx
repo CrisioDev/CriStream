@@ -52,7 +52,7 @@ interface PlayerStats {
 
 interface SeasonData {
   season: { name: string; number: number; startDate: string; endDate: string };
-  progress: { xp: number; level: number; premium: boolean; claimedLevels: number[] };
+  progress: { xp: number; xpIntoCurrentLevel?: number; level: number; premium: boolean; claimedLevels: number[] };
   nextLevelXp: number;
 }
 
@@ -235,6 +235,9 @@ export function CasinoPage() {
   const [showSeasonLb, setShowSeasonLb] = useState(false);
   const [claimingLevel, setClaimingLevel] = useState<number | null>(null);
 
+  // Auto-Flip & Prestige
+  const [autoFlip, setAutoFlip] = useState<{ active: boolean; prestige: number; interval: number; totalFlips: number; totalWon: number } | null>(null);
+
   // ── NEW: All-In ──
   const [allInPlaying, setAllInPlaying] = useState(false);
   const [allInResult, setAllInResult] = useState<{ text: string; win: boolean } | null>(null);
@@ -377,6 +380,9 @@ export function CasinoPage() {
     try {
       const res = await api.get<any>(`/viewer/${channelName}/casino/season`) as any;
       if (res.data) setSeason(res.data);
+      // Also fetch auto-flip status
+      const af = await api.get<any>(`/viewer/${channelName}/casino/autoflip`) as any;
+      if (af.data) setAutoFlip(af.data);
     } catch { /* */ }
   }, [user, channelName]);
 
@@ -1195,12 +1201,12 @@ export function CasinoPage() {
             {/* XP Bar */}
             <div className="mb-4">
               <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>{season.progress.xp} XP</span>
-                <span>{season.nextLevelXp} XP</span>
+                <span>{season.progress.xpIntoCurrentLevel ?? season.progress.xp} / {season.nextLevelXp} XP</span>
+                <span>Gesamt: {season.progress.xp} XP</span>
               </div>
               <div className="relative h-4 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(168,85,247,0.3)" }}>
                 <div className="h-full rounded-full transition-all duration-700" style={{
-                  width: `${Math.min(100, (season.progress.xp / season.nextLevelXp) * 100)}%`,
+                  width: `${Math.min(100, ((season.progress.xpIntoCurrentLevel ?? season.progress.xp) / season.nextLevelXp) * 100)}%`,
                   background: "linear-gradient(90deg, #9146ff, #c084fc)",
                 }} />
               </div>
@@ -1258,6 +1264,58 @@ export function CasinoPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {/* Prestige + Auto-Flip */}
+            {season.progress.level >= 50 && (
+              <div className="mt-4 rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(255,215,0,0.08), rgba(168,85,247,0.08))", border: "1px solid rgba(255,215,0,0.3)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-black text-yellow-300">⭐ PRESTIGE</h4>
+                  {autoFlip && <span className="text-xs text-purple-400">Prestige {autoFlip.prestige}</span>}
+                </div>
+                <p className="text-xs text-gray-400 mb-3">Setze den Battle Pass zurück und schalte einen Auto-Münzwurf-Bot frei. Jedes Prestige-Level macht ihn schneller!</p>
+                {!autoFlip || autoFlip.prestige === 0 ? (
+                  <button onClick={async () => {
+                    try {
+                      const res = await api.post<any>(`/viewer/${channelName}/casino/prestige`, {}) as any;
+                      if (res.success) { fetchSeason(); fetchPoints(); }
+                      else setMessage(res.error ?? "Fehler!");
+                    } catch { setMessage("Fehler!"); }
+                  }} className="casino-btn px-6 py-2 rounded-xl font-bold text-sm text-black" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)" }}>
+                    ⭐ PRESTIGE MACHEN
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm">
+                        <span className="text-yellow-300 font-bold">🤖 Auto-Flipper</span>
+                        <span className="text-gray-400 ml-2">alle {autoFlip.interval}s</span>
+                      </div>
+                      <button onClick={async () => {
+                        try {
+                          const res = await api.post<any>(`/viewer/${channelName}/casino/autoflip/toggle`, {}) as any;
+                          if (res.data) setAutoFlip(af => af ? { ...af, active: res.data.active } : af);
+                        } catch { /* */ }
+                      }} className={`px-3 py-1 rounded-full text-xs font-bold ${autoFlip.active ? "bg-green-500/20 text-green-400 border border-green-500/40" : "bg-red-500/20 text-red-400 border border-red-500/40"}`}>
+                        {autoFlip.active ? "AN" : "AUS"}
+                      </button>
+                      <button onClick={async () => {
+                        try {
+                          const res = await api.post<any>(`/viewer/${channelName}/casino/prestige`, {}) as any;
+                          if (res.success) { fetchSeason(); fetchPoints(); }
+                          else setMessage(res.error ?? "Fehler!");
+                        } catch { setMessage("Fehler!"); }
+                      }} className="casino-btn px-4 py-1 rounded-full text-xs font-bold text-black" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)" }}>
+                        ⭐ Nächstes Prestige
+                      </button>
+                    </div>
+                    <div className="flex gap-4 text-xs text-gray-500">
+                      <span>Flips: {autoFlip.totalFlips}</span>
+                      <span>Gewonnen: {autoFlip.totalWon}</span>
+                      <span>Rate: {autoFlip.totalFlips > 0 ? Math.round(autoFlip.totalWon / autoFlip.totalFlips * 100) : 0}%</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

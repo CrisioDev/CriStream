@@ -64,6 +64,10 @@ async function start() {
   initBingoScheduler();
   initLottoScheduler();
 
+  // Start auto-flip scheduler
+  const { startAutoFlipScheduler } = await import("./modules/casino/autoflip.js");
+  startAutoFlipScheduler();
+
   // Graceful shutdown
   const shutdown = async () => {
     logger.info("Shutting down...");

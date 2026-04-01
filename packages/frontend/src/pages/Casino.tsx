@@ -34,20 +34,32 @@ interface Achievement {
 interface PlayerStats {
   totalPlays: number;
   totalWins: number;
-  totalLost: number;
-  totalWon: number;
+  totalPointsWon: number;
+  totalPointsLost: number;
   maxStreak: number;
   currentStreak: number;
-  winRate: number;
-  bossKills: number;
-  heistsCompleted: number;
-  allInWins: number;
-  allInLosses: number;
-  favoriteGame: string;
-  luckiestWin: number;
-  totalDoubles: number;
+  maxLossStreak: number;
+  slotsPlayed: number;
+  scratchPlayed: number;
+  flipPlayed: number;
+  triplesHit: number;
+  jackpots777: number;
+  doublesWon: number;
+  doublesPlayed: number;
+  maxDoubleStreak: number;
+  maxDoubleAmount: number;
+  mysteryBoxes: number;
+  bossesKilled: number;
+  bossDamageDealt: number;
+  specialsTriggered: number;
   questsCompleted: number;
-  achievementsUnlocked: number;
+  daysPlayed: number;
+  gluecksradSpins: number;
+  giftsTriggered: number;
+  allInsPlayed: number;
+  allInsWon: number;
+  heistsPlayed: number;
+  [key: string]: any;
 }
 
 interface SeasonReward { level: number; type: "points" | "title" | "lootbox" | "autoflip"; value: string | number; premium: boolean; }
@@ -1616,58 +1628,67 @@ export function CasinoPage() {
               <h3 className="font-black text-sm text-gray-400">📊 DEINE STATISTIKEN</h3>
               <span className="text-xs text-gray-600">{statsOpen ? "▲" : "▼"}</span>
             </button>
-            {statsOpen && (
+            {statsOpen && (() => {
+              const s = playerStats;
+              const winRate = s.totalPlays > 0 ? (s.totalWins / s.totalPlays * 100) : 0;
+              const favGame = [
+                { name: "Slots", count: s.slotsPlayed },
+                { name: "Scratch", count: s.scratchPlayed },
+                { name: "Flip", count: s.flipPlayed },
+              ].sort((a, b) => b.count - a.count)[0];
+              return (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-white">{playerStats.totalPlays}</div>
+                  <div className="text-xl font-black text-white">{s.totalPlays.toLocaleString()}</div>
                   <div className="text-[10px] text-gray-500">Spiele gesamt</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-green-400">{playerStats.winRate?.toFixed(1) || 0}%</div>
+                  <div className="text-xl font-black text-green-400">{winRate.toFixed(1)}%</div>
                   <div className="text-[10px] text-gray-500">Gewinnrate</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-yellow-400">{playerStats.maxStreak}</div>
+                  <div className="text-xl font-black text-yellow-400">{s.maxStreak}</div>
                   <div className="text-[10px] text-gray-500">Bester Streak</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-green-400">+{playerStats.totalWon}</div>
+                  <div className="text-xl font-black text-green-400">+{s.totalPointsWon.toLocaleString()}</div>
                   <div className="text-[10px] text-gray-500">Gewonnen</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-red-400">-{playerStats.totalLost}</div>
+                  <div className="text-xl font-black text-red-400">-{s.totalPointsLost.toLocaleString()}</div>
                   <div className="text-[10px] text-gray-500">Verloren</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-red-500">{playerStats.bossKills}</div>
+                  <div className="text-xl font-black text-red-500">{s.bossesKilled}</div>
                   <div className="text-[10px] text-gray-500">Boss Kills</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-yellow-300">{playerStats.luckiestWin}</div>
-                  <div className="text-[10px] text-gray-500">Größter Gewinn</div>
+                  <div className="text-xl font-black text-yellow-300">{s.maxDoubleAmount.toLocaleString()}</div>
+                  <div className="text-[10px] text-gray-500">Größter Double</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-purple-400">{playerStats.questsCompleted}</div>
+                  <div className="text-xl font-black text-purple-400">{s.questsCompleted}</div>
                   <div className="text-[10px] text-gray-500">Quests erledigt</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-cyan-400">{playerStats.heistsCompleted}</div>
-                  <div className="text-[10px] text-gray-500">Heists abgeschlossen</div>
+                  <div className="text-xl font-black text-cyan-400">{s.heistsPlayed}</div>
+                  <div className="text-[10px] text-gray-500">Heists gespielt</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-red-400">{playerStats.allInWins}/{(playerStats.allInWins || 0) + (playerStats.allInLosses || 0)}</div>
+                  <div className="text-xl font-black text-red-400">{s.allInsWon}/{s.allInsPlayed}</div>
                   <div className="text-[10px] text-gray-500">All-In (W/Total)</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-orange-400">{playerStats.totalDoubles}</div>
+                  <div className="text-xl font-black text-orange-400">{s.doublesWon}/{s.doublesPlayed}</div>
                   <div className="text-[10px] text-gray-500">Doppelungen</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-pink-400">{playerStats.favoriteGame || "—"}</div>
+                  <div className="text-xl font-black text-pink-400">{favGame?.name ?? "—"}</div>
                   <div className="text-[10px] text-gray-500">Lieblingsspiel</div>
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}

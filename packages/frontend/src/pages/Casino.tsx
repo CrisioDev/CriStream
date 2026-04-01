@@ -306,6 +306,12 @@ export function CasinoPage() {
   const [buyingPet, setBuyingPet] = useState(false);
   const [petWalkAnim, setPetWalkAnim] = useState(false);
 
+  // Tier Slots
+  const [tierSlots, setTierSlots] = useState<{ tiers: { id: string; name: string; emoji: string; cost: number; requirement: number; unlocked: boolean }[]; totalInvested: number } | null>(null);
+  const [tierReels, setTierReels] = useState<Record<string, string[]>>({});
+  const [tierSpinning, setTierSpinning] = useState<string | null>(null);
+  const [tierResult, setTierResult] = useState<Record<string, { text: string; win: boolean }>>({});
+
   // Lootbox Drop
   const [lootboxDropAnim, setLootboxDropAnim] = useState<{ type: string; data: any } | null>(null);
 
@@ -524,6 +530,15 @@ export function CasinoPage() {
     } catch { /* */ }
   }, [user, channelName]);
 
+  // Fetch tier slots info
+  const fetchTierSlots = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/tier-slots`) as any;
+      if (res.data) setTierSlots(res.data);
+    } catch { /* */ }
+  }, [user, channelName]);
+
   // Fetch player stats
   const fetchStats = useCallback(async () => {
     if (!user) return;
@@ -660,6 +675,8 @@ export function CasinoPage() {
       if (data.battle) setPetBattle(data.battle);
       if (data.breed) setBreedData(data.breed);
       if (data.points !== undefined) setPoints(data.points);
+      // Fetch tier slots info after init
+      fetchTierSlots();
     });
 
     es.addEventListener("feed", (e) => setFeed(JSON.parse(e.data)));
@@ -779,6 +796,38 @@ export function CasinoPage() {
         setSlotSpinning(false); fetchPoints();
       }, 1500);
     } catch { clearInterval(iv); setSlotResult({ text: "Fehler!", win: false }); setSlotSpinning(false); }
+  };
+
+  const playTierSlots = async (tierId: string) => {
+    if (!user) { setMessage("Erst einloggen!"); return; }
+    if (tierSpinning) return;
+    setTierSpinning(tierId);
+    setTierResult(prev => ({ ...prev, [tierId]: undefined as any }));
+    setTierReels(prev => ({ ...prev, [tierId]: ["❓","❓","❓"] }));
+    casinoSounds.spin();
+    const symbols = ["🍒","🍋","🍊","🍇","⭐","💎","7️⃣"];
+    const iv = setInterval(() => setTierReels(prev => ({ ...prev, [tierId]: [symbols[Math.floor(Math.random()*7)]!,symbols[Math.floor(Math.random()*7)]!,symbols[Math.floor(Math.random()*7)]!] })), 80);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: tierId }) as any;
+      setTimeout(() => {
+        clearInterval(iv);
+        if (!res.success) {
+          setTierReels(prev => ({ ...prev, [tierId]: ["❌","❌","❌"] }));
+          setTierResult(prev => ({ ...prev, [tierId]: { text: res.error, win: false } }));
+          setTierSpinning(null);
+          return;
+        }
+        setTierReels(prev => ({ ...prev, [tierId]: res.data.reels }));
+        const profit = res.data.payout - res.data.cost;
+        setTierResult(prev => ({ ...prev, [tierId]: { text: `${res.data.label} → ${res.data.payout.toLocaleString()} Pts (${profit>=0?"+":""}${profit.toLocaleString()})`, win: profit > 0 } }));
+        if (profit > 0) { showWin(profit); startDouble(res.data.payout); if (profit >= 50) casinoSounds.bigWin(); else casinoSounds.win(); } else { showLoss(-profit); casinoSounds.loss(); }
+        if (res.data.specials?.length) enqueueSpecials(res.data.specials);
+        processProgression(res.data.progression);
+        setTierSpinning(null);
+        fetchPoints();
+        fetchTierSlots();
+      }, 1500);
+    } catch { clearInterval(iv); setTierResult(prev => ({ ...prev, [tierId]: { text: "Fehler!", win: false } })); setTierSpinning(null); }
   };
 
   const playScratch = async () => {
@@ -1757,6 +1806,73 @@ export function CasinoPage() {
               <span>|</span>
               <span>Deadly: 35% Chance · 3x · ALLES oder NICHTS</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          PREMIUM SLOTS (Tiered)
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && tierSlots && (
+        <div className="max-w-6xl mx-auto px-6 pb-6">
+          <h2 className="text-center text-2xl font-black mb-4" style={{ background: "linear-gradient(90deg, #ffd700, #ff6b6b, #a78bfa, #60a5fa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            PREMIUM SLOTS
+          </h2>
+          <p className="text-center text-xs text-gray-500 mb-4">Investiere in Skills & Pets um Premium-Maschinen freizuschalten</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {tierSlots.tiers.map(tier => {
+              const reels = tierReels[tier.id] || ["❓","❓","❓"];
+              const result = tierResult[tier.id];
+              const spinning = tierSpinning === tier.id;
+              const locked = !tier.unlocked;
+              const gradients: Record<string, string> = {
+                diamond_slots: "linear-gradient(135deg, #60a5fa, #3b82f6, #60a5fa)",
+                royal_slots: "linear-gradient(135deg, #ffd700, #f59e0b, #ffd700)",
+                cosmic_slots: "linear-gradient(135deg, #a78bfa, #7c3aed, #a78bfa)",
+                infinity_slots: "linear-gradient(135deg, #f472b6, #ec4899, #f472b6)",
+              };
+              const textColors: Record<string, string> = {
+                diamond_slots: "text-blue-300",
+                royal_slots: "text-yellow-300",
+                cosmic_slots: "text-purple-300",
+                infinity_slots: "text-pink-300",
+              };
+              return (
+                <div key={tier.id} className="rounded-2xl p-[2px]" style={{ background: gradients[tier.id] || gradients.diamond_slots, opacity: locked ? 0.5 : 1 }}>
+                  <div className="rounded-2xl p-4" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
+                    <h3 className={`text-center text-lg font-black ${textColors[tier.id] || "text-white"} mb-1`}>{tier.emoji} {tier.name.replace(" Slots", "")}</h3>
+                    <p className="text-center text-xs text-gray-500 mb-2">{tier.cost.toLocaleString()} Punkte</p>
+                    {locked ? (
+                      <div className="text-center py-6">
+                        <div className="text-3xl mb-2">🔒</div>
+                        <p className="text-xs text-gray-400">Investiere {tier.requirement >= 1000000 ? `${(tier.requirement / 1000000).toFixed(0)}M` : tier.requirement >= 1000 ? `${(tier.requirement / 1000).toFixed(0)}K` : tier.requirement} in Skills/Pets</p>
+                        <p className="text-[10px] text-gray-600 mt-1">Aktuell: {tierSlots.totalInvested.toLocaleString()}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-center gap-1 mb-3">
+                          {reels.map((sym, i) => (
+                            <div key={i} className="w-14 h-14 rounded-lg flex items-center justify-center text-2xl" style={{
+                              background: "linear-gradient(180deg,#1a1a1a,#0a0a0a)",
+                              border: "2px solid rgba(145,71,255,0.3)",
+                              boxShadow: "inset 0 0 15px rgba(0,0,0,0.8)",
+                              transition: "transform 0.1s",
+                              transform: spinning ? "scaleY(0.95)" : "scaleY(1)",
+                            }}>{sym}</div>
+                          ))}
+                        </div>
+                        {result && <div className={`text-center mb-2 text-xs font-bold rounded-lg py-1.5 px-2 ${resultClass(result)}`}>{result.text}</div>}
+                        <button onClick={() => playTierSlots(tier.id)} disabled={spinning || !user}
+                          className="casino-btn w-full py-2 rounded-xl font-black text-sm text-black"
+                          style={{ background: spinning ? "#666" : (gradients[tier.id] || gradients.diamond_slots) }}>
+                          {spinning ? "SPINNING..." : `${tier.emoji} SPIN!`}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

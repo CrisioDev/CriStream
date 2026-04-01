@@ -235,12 +235,18 @@ export async function viewerRoutes(app: FastifyInstance) {
       const { checkAchievements } = await import("../casino/achievements.js");
       const { updateQuestProgress } = await import("../casino/quests.js");
       const { addXp } = await import("../casino/battlepass.js");
-      const { getSkills, getLuckBonus, getPayoutMultiplier, getShieldBonus, getExtraFreePlays, getCombatMultiplier } = await import("../casino/skilltree.js");
-      const { getPetBonuses } = await import("../casino/pets.js");
+      const { getSkills, getLuckBonus, getPayoutMultiplier, getShieldBonus, getExtraFreePlays, getCombatMultiplier, getTotalInvested } = await import("../casino/skilltree.js");
+      const { getPetBonuses, getPet } = await import("../casino/pets.js");
+      const { applyDiminishing } = await import("../casino/diminishing.js");
+      const { getPrestige } = await import("../casino/autoflip.js");
       const skills = await getSkills(channel.id, user.twitchId);
       const petBonus = await getPetBonuses(channel.id, user.twitchId);
-      const profitMult = getPayoutMultiplier(skills) + petBonus.payout;
-      const shieldBonus = getShieldBonus(skills) + petBonus.shield;
+      const prestige = await getPrestige(channel.id, user.twitchId);
+      const prestigeMultiplier = 1 + prestige * 0.05; // +5% per prestige level
+      const rawPayout = getPayoutMultiplier(skills) - 1.0 + petBonus.payout;
+      const profitMult = 1.0 + applyDiminishing("payout", rawPayout);
+      const rawShield = getShieldBonus(skills) + petBonus.shield;
+      const shieldBonus = Math.round(applyDiminishing("shield", rawShield));
 
       const logResult = async (g: string, payout: number, cost: number, detail: string) => {
         const entry = JSON.stringify({
@@ -260,7 +266,8 @@ export async function viewerRoutes(app: FastifyInstance) {
       };
 
       // Free play helper (speed skill adds extra free plays)
-      const maxFree = 10 + getExtraFreePlays(skills) + petBonus.freePlays;
+      const rawFree = getExtraFreePlays(skills) + petBonus.freePlays;
+      const maxFree = 10 + Math.round(applyDiminishing("free_plays", rawFree));
       const useFree = async (g: string) => {
         const k = `free:${g}:${channel.id}:${user.twitchId}`;
         const c = await redis.get(k);
@@ -427,9 +434,10 @@ export async function viewerRoutes(app: FastifyInstance) {
         const cost = free ? 0 : 1;
         if (!free && channelUser.points < 1) return reply.status(400).send({ success: false, error: "Keine Gratis-Flips mehr & keine Punkte!" });
         if (!free) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { decrement: 1 } } });
-        const winChance = (pre.winChanceOverride ?? 0.50) + getLuckBonus(skills, "flip") + petBonus.flipLuck;
+        const rawLuck = getLuckBonus(skills, "flip") + petBonus.flipLuck;
+        const winChance = (pre.winChanceOverride ?? 0.50) + applyDiminishing("luck_flip", rawLuck);
         const win = pre.forceWin || Math.random() < winChance;
-        const basePayout = win ? Math.round(2 * profitMult) : 0;
+        const basePayout = win ? Math.round(2 * profitMult * prestigeMultiplier) : 0;
         if (basePayout > 0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: basePayout } } });
         const side = Math.random() < 0.5 ? "Kopf" : "Zahl";
         const post = await postPlaySpecials({ ...specCtx, game: "flip", win, payout: basePayout, cost });
@@ -461,7 +469,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         let payout=8+shieldBonus,label="Trostpreis";
         if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};[payout,label]=p[r1]??[55,"TRIPLE!"];}
         else if(r1===r2||r2===r3||r1===r3){payout=22;label="Doppelt!";}
-        payout = Math.round(payout * profitMult);
+        payout = Math.round(payout * profitMult * prestigeMultiplier);
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = r1===r2&&r2===r3;
         const is777 = isTriple && r1==="7️⃣";
@@ -494,7 +502,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         let payout=15+shieldBonus,label="Trostpreis";
         if(s1===s2&&s2===s3){const p:any={"🌟":[1000,"MEGA GEWINN!!!"],"💎":[500,"DIAMANT!"],"👑":[300,"KÖNIGLICH!"],"🎁":[175,"GESCHENK!"],"💰":[120,"GELDREGEN!"],"🍀":[85,"GLÜCKSKLEE!"]};[payout,label]=p[s1]??[85,"DREIER!"];}
         else if(s1===s2||s2===s3||s1===s3){payout=30;label="Zweier!";}
-        payout = Math.round(payout * profitMult);
+        payout = Math.round(payout * profitMult * prestigeMultiplier);
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = s1===s2&&s2===s3;
         const post = await postPlaySpecials({ ...specCtx, game: "scratch", win: payout > cost, payout, cost, reels: [s1,s2,s3], isTriple });
@@ -514,15 +522,16 @@ export async function viewerRoutes(app: FastifyInstance) {
         const pre = await prePlaySpecials({ ...specCtx, game: "double" });
         await pointsService.deductPoints(channel.id, user.twitchId, amount);
         const win = pre.forceWin || Math.random() < 0.48;
+        const doublePayout = win ? Math.round(amount * 2 * prestigeMultiplier) : 0;
         if (win) {
-          await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: amount * 2 } } });
+          await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: doublePayout } } });
         }
-        const post = await postPlaySpecials({ ...specCtx, game: "double", win, payout: win ? amount * 2 : 0, cost: amount });
-        await logResult("double", win ? amount * 2 : 0, amount, win ? `⚡ x2 → ${amount * 2}` : `💥 Verloren`);
+        const post = await postPlaySpecials({ ...specCtx, game: "double", win, payout: doublePayout, cost: amount });
+        await logResult("double", doublePayout, amount, win ? `⚡ x2 → ${doublePayout}` : `💥 Verloren`);
         const specials = [...pre.specials, ...post.specials];
-        const progression = await runProgression("double", win, win ? amount * 2 : 0, amount, specials);
+        const progression = await runProgression("double", win, doublePayout, amount, specials);
         broadcastAfterGame();
-        return { success: true, data: { win, amount, payout: win ? amount * 2 : 0, specials, ...progression } };
+        return { success: true, data: { win, amount, payout: doublePayout, specials, ...progression } };
       }
 
       // ── All-In ──
@@ -538,7 +547,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         });
 
         const win = Math.random() < 0.40;
-        const payout = win ? Math.floor(allInAmount * 2.5) : 0;
+        const payout = win ? Math.round(allInAmount * 2.5 * prestigeMultiplier) : 0;
 
         if (win) {
           await prisma.channelUser.update({
@@ -579,7 +588,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         });
 
         const win = Math.random() < 0.35; // 35% — harder than normal all-in
-        const payout = win ? Math.floor(allInAmount * 3) : 0; // 3x reward for the risk
+        const payout = win ? Math.round(allInAmount * 3 * prestigeMultiplier) : 0; // 3x reward for the risk
 
         if (win) {
           await prisma.channelUser.update({
@@ -608,6 +617,67 @@ export async function viewerRoutes(app: FastifyInstance) {
             ...progression,
           },
         };
+      }
+
+      // ── Tiered Slot Machines ──
+      const TIER_SLOTS: Record<string, { cost: number; multiplier: number; requirement: number; label: string }> = {
+        diamond_slots:  { cost: 500,    multiplier: 25,    requirement: 10000,    label: "Diamond" },
+        royal_slots:    { cost: 5000,   multiplier: 250,   requirement: 100000,   label: "Royal" },
+        cosmic_slots:   { cost: 50000,  multiplier: 2500,  requirement: 1000000,  label: "Cosmic" },
+        infinity_slots: { cost: 500000, multiplier: 25000, requirement: 10000000, label: "Infinity" },
+      };
+
+      const tierDef = TIER_SLOTS[game];
+      if (tierDef) {
+        // Check requirement: total invested in skills + pets
+        const petData = await getPet(channel.id, user.twitchId);
+        const skillInvested = getTotalInvested(skills);
+        const petInvested = petData?.totalSpent ?? 0;
+        const totalInvested = skillInvested + petInvested;
+
+        if (totalInvested < tierDef.requirement) {
+          return reply.status(400).send({
+            success: false,
+            error: `Investiere mindestens ${tierDef.requirement.toLocaleString("de-DE")} Punkte in Skills/Pets! (Aktuell: ${totalInvested.toLocaleString("de-DE")})`,
+          });
+        }
+
+        const pre = await prePlaySpecials({ ...specCtx, game: "slots" });
+        if (channelUser.points < tierDef.cost) {
+          return reply.status(400).send({ success: false, error: `Brauchst ${tierDef.cost.toLocaleString("de-DE")} Punkte für ${tierDef.label} Slots!` });
+        }
+        await prisma.channelUser.update({
+          where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+          data: { points: { decrement: tierDef.cost } },
+        });
+
+        const SYMS = ["🍒","🍋","🍊","🍇","⭐","💎","7️⃣"];
+        const W = [25,22,18,15,10,6,4];
+        function pickTierSlot() { const t=W.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<SYMS.length;i++){r-=W[i]!;if(r<=0)return SYMS[i]!;} return SYMS[0]!; }
+        let r1: string, r2: string, r3: string;
+        if (pre.forceWin) {
+          const forced = ["🍇","🍊","🍋","⭐"][Math.floor(Math.random()*4)]!;
+          r1 = r2 = r3 = forced;
+        } else {
+          r1=pickTierSlot(); r2=pickTierSlot(); r3=pickTierSlot();
+        }
+        // Base payouts same as regular slots, then multiplied by tier multiplier
+        let payout=8+shieldBonus, label="Trostpreis";
+        if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};[payout,label]=p[r1]??[55,"TRIPLE!"];}
+        else if(r1===r2||r2===r3||r1===r3){payout=22;label="Doppelt!";}
+        // Apply tier multiplier, then profit mult and prestige
+        payout = Math.round(payout * tierDef.multiplier * profitMult * prestigeMultiplier);
+        // Trostpreis also gets tier multiplier via shieldBonus already in base
+        if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
+        const isTriple = r1===r2&&r2===r3;
+        const is777 = isTriple && r1==="7️⃣";
+        const post = await postPlaySpecials({ ...specCtx, game: "slots", win: payout > tierDef.cost, payout, cost: tierDef.cost, reels: [r1,r2,r3], isTriple, is777 });
+        const finalPayout = post.adjustedPayout;
+        await logResult(game, finalPayout, tierDef.cost, `💎 ${tierDef.label} ${r1}${r2}${r3} ${label}`);
+        const specials = [...pre.specials, ...post.specials];
+        const progression = await runProgression("slots", payout > tierDef.cost, finalPayout, tierDef.cost, specials, { isTriple, is777 });
+        broadcastAfterGame();
+        return { success: true, data: { reels: [r1,r2,r3], payout: finalPayout, cost: tierDef.cost, label, tier: tierDef.label, specials, ...progression } };
       }
 
       return reply.status(400).send({ success: false, error: "Unbekanntes Spiel" });
@@ -1128,6 +1198,29 @@ export async function viewerRoutes(app: FastifyInstance) {
       const result = await upgradeSkill(channel.id, user.twitchId, request.body.skill as any);
       if (!result.success) return reply.status(400).send({ success: false, error: result.error });
       return { success: true, data: result };
+    }
+  );
+
+  // ── Tier Slots Info ──
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/tier-slots",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getSkills, getTotalInvested } = await import("../casino/skilltree.js");
+      const { getPet } = await import("../casino/pets.js");
+      const skills = await getSkills(channel.id, user.twitchId);
+      const petData = await getPet(channel.id, user.twitchId);
+      const totalInvested = getTotalInvested(skills) + (petData?.totalSpent ?? 0);
+      const tiers = [
+        { id: "diamond_slots", name: "Diamond Slots", emoji: "💎", cost: 500, requirement: 10000 },
+        { id: "royal_slots", name: "Royal Slots", emoji: "👑", cost: 5000, requirement: 100000 },
+        { id: "cosmic_slots", name: "Cosmic Slots", emoji: "🌌", cost: 50000, requirement: 1000000 },
+        { id: "infinity_slots", name: "Infinity Slots", emoji: "♾️", cost: 500000, requirement: 10000000 },
+      ].map(t => ({ ...t, unlocked: totalInvested >= t.requirement }));
+      return { success: true, data: { tiers, totalInvested } };
     }
   );
 

@@ -251,6 +251,10 @@ export function CasinoPage() {
   // Auto-Flip & Prestige
   const [autoFlip, setAutoFlip] = useState<{ active: boolean; prestige: number; interval: number; totalFlips: number; totalWon: number } | null>(null);
 
+  // Skill Tree
+  const [skillData, setSkillData] = useState<{ skills: any; details: any[]; totalLevel: number; totalInvested: number } | null>(null);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+
   // ── NEW: All-In ──
   const [allInPlaying, setAllInPlaying] = useState(false);
   const [allInResult, setAllInResult] = useState<{ text: string; win: boolean } | null>(null);
@@ -393,9 +397,11 @@ export function CasinoPage() {
     try {
       const res = await api.get<any>(`/viewer/${channelName}/casino/season`) as any;
       if (res.data) setSeason(res.data);
-      // Also fetch auto-flip status
+      // Also fetch auto-flip status + skills
       const af = await api.get<any>(`/viewer/${channelName}/casino/autoflip`) as any;
       if (af.data) setAutoFlip(af.data);
+      const sk = await api.get<any>(`/viewer/${channelName}/casino/skills`) as any;
+      if (sk.data) setSkillData(sk.data);
     } catch { /* */ }
   }, [user, channelName]);
 
@@ -1617,6 +1623,55 @@ export function CasinoPage() {
           )}
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SKILL TREE
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && skillData && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5" style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.05), rgba(0,0,0,0.2))", border: "1px solid rgba(168,85,247,0.2)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black text-lg text-purple-300">🌳 SKILL TREE</h3>
+              <div className="text-xs text-gray-500">Level {skillData.totalLevel} · {skillData.totalInvested.toLocaleString()} Pts investiert</div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {skillData.details.map((skill: any) => (
+                <div key={skill.id} className="rounded-xl p-3 text-center" style={{
+                  background: skill.level > 0 ? "rgba(168,85,247,0.1)" : "rgba(255,255,255,0.02)",
+                  border: `2px solid ${skill.level > 0 ? "rgba(168,85,247,0.4)" : "rgba(255,255,255,0.08)"}`,
+                }}>
+                  <div className="text-2xl mb-1">{skill.emoji}</div>
+                  <div className="text-xs font-bold text-white mb-0.5">{skill.name}</div>
+                  <div className="text-lg font-black text-purple-300">LVL {skill.level}</div>
+                  <div className="text-[10px] text-gray-400 mb-1">{skill.perLevel}</div>
+                  <div className="text-[10px] text-purple-400 mb-2">{skill.effect}</div>
+                  <button
+                    onClick={async () => {
+                      setUpgrading(skill.id);
+                      try {
+                        const res = await api.post<any>(`/viewer/${channelName}/casino/skills/upgrade`, { skill: skill.id }) as any;
+                        if (res.success) {
+                          const sk = await api.get<any>(`/viewer/${channelName}/casino/skills`) as any;
+                          if (sk.data) setSkillData(sk.data);
+                          fetchPoints();
+                        } else {
+                          setMessage(res.error ?? "Fehler!");
+                        }
+                      } catch { setMessage("Fehler!"); }
+                      setUpgrading(null);
+                    }}
+                    disabled={upgrading !== null}
+                    className="casino-btn w-full py-1.5 rounded-lg text-xs font-bold text-black"
+                    style={{ background: upgrading === skill.id ? "#666" : "linear-gradient(135deg, #9146ff, #6441a5)" }}
+                  >
+                    {upgrading === skill.id ? "..." : `⬆ ${skill.nextCost.toLocaleString()} Pts`}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════
           6. PLAYER STATS (collapsible)

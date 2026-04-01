@@ -130,25 +130,43 @@ export async function getActiveHeist(channelId: string): Promise<Heist | null> {
   const heist = await getHeist(channelId);
   if (!heist || heist.status === "finished") return null;
 
+  let changed = false;
+
   // Auto-transition from lobby to playing after 2 minutes
   if (heist.status === "lobby" && Date.now() - heist.createdAt > 120000) {
     if (heist.players.length < 2) {
-      // Not enough players, refund and cancel
-      for (const p of heist.players) {
-        const refund = p.userId === heist.creatorId ? HEIST_COST_CREATOR : HEIST_COST_JOIN;
-        await prisma.channelUser.update({
-          where: { channelId_twitchUserId: { channelId, twitchUserId: p.userId } },
-          data: { points: { increment: refund } },
-        });
-      }
-      heist.status = "finished";
-      await saveHeist(heist);
-      return null;
+      // Not enough players — solo heist: just play solo
+      // Don't cancel, let the single player play
     }
     heist.status = "playing";
-    await saveHeist(heist);
+    changed = true;
   }
 
+  // Auto-transition from playing to betrayal if all rounds done OR 5 min since playing started
+  if (heist.status === "playing") {
+    const allDone = heist.players.every(
+      (p) => heist.rounds.filter((r) => r.userId === p.userId).length >= ROUNDS_PER_PLAYER,
+    );
+    if (allDone) {
+      heist.status = "betrayal";
+      changed = true;
+    }
+  }
+
+  // Auto-finish betrayal after 30 seconds
+  if (heist.status === "betrayal") {
+    const lastRoundTime = heist.rounds.length > 0
+      ? Math.max(...heist.rounds.map(() => Date.now())) // approximate
+      : heist.createdAt;
+    // If betrayal phase has been active for 30+ seconds, auto-finish
+    const betrayalStart = heist.rounds.length > 0 ? heist.createdAt + 120000 + (heist.rounds.length * 1000) : heist.createdAt + 150000;
+    if (Date.now() - betrayalStart > 30000) {
+      const result = await finishHeist(channelId, heist.id);
+      if ("heist" in result) return result.heist;
+    }
+  }
+
+  if (changed) await saveHeist(heist);
   return heist;
 }
 

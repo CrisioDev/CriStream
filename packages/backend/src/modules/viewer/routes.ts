@@ -1211,43 +1211,49 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
-  app.post<{ Params: { channelName: string }; Body: { heistId: string; game: string } }>(
+  app.post<{ Params: { channelName: string }; Body: { game: string; heistId?: string } }>(
     "/:channelName/casino/heist/play",
     async (request, reply) => {
       const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-      const { playHeistRound } = await import("../casino/heists.js");
-      const result = await playHeistRound(channel.id, request.body.heistId, user.twitchId, request.body.game);
+      const { playHeistRound, getActiveHeist } = await import("../casino/heists.js");
+      const heist = await getActiveHeist(channel.id);
+      if (!heist) return reply.status(400).send({ success: false, error: "Kein aktiver Heist!" });
+      const result = await playHeistRound(channel.id, heist.id, user.twitchId, request.body.game);
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
       return { success: true, data: result };
     }
   );
 
-  app.post<{ Params: { channelName: string }; Body: { heistId: string } }>(
+  app.post<{ Params: { channelName: string }; Body: { heistId?: string } }>(
     "/:channelName/casino/heist/betray",
     async (request, reply) => {
       const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-      const { chooseBetray } = await import("../casino/heists.js");
-      const result = await chooseBetray(channel.id, request.body.heistId, user.twitchId);
+      const { chooseBetray, getActiveHeist } = await import("../casino/heists.js");
+      const heist = await getActiveHeist(channel.id);
+      if (!heist) return reply.status(400).send({ success: false, error: "Kein aktiver Heist!" });
+      const result = await chooseBetray(channel.id, heist.id, user.twitchId);
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
       return { success: true, data: result };
     }
   );
 
-  app.post<{ Params: { channelName: string }; Body: { heistId: string } }>(
+  app.post<{ Params: { channelName: string }; Body: { heistId?: string } }>(
     "/:channelName/casino/heist/finish",
     async (request, reply) => {
       const user = getUser(request);
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-      const { finishHeist } = await import("../casino/heists.js");
-      const result = await finishHeist(channel.id, request.body.heistId);
+      const { finishHeist, getActiveHeist } = await import("../casino/heists.js");
+      const heist = await getActiveHeist(channel.id);
+      if (!heist) return reply.status(400).send({ success: false, error: "Kein aktiver Heist!" });
+      const result = await finishHeist(channel.id, heist.id);
       if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
 
       // Track heist wins for all winners

@@ -164,11 +164,9 @@ export async function getBreedInfo(channelId: string, userId: string): Promise<{
     ? JSON.parse(raw)
     : { lastBreed: 0, breedCount: 0 };
 
-  const cooldownLeft = Math.max(0, data.lastBreed + COOLDOWN_MS - Date.now());
-
   return {
     breedCount: data.breedCount,
     nextCost: 10000 * (data.breedCount + 1),
-    cooldownLeft,
+    cooldownLeft: 0,
   };
 }

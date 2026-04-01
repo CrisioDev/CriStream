@@ -32,31 +32,46 @@ export async function getFullBonusSummary(channelId: string, userId: string): Pr
   if (petData) {
     const active = petData.pets.find(p => p.petId === petData.activePetId);
     if (active) {
-      const petDef = PET_CATALOG.find(p => p.id === active.petId);
-      if (petDef) {
-        mood = petData.care ? Math.round(getMoodMultiplier(petData.care) * 100) : 100;
-        const moodFactor = mood / 100;
-        const effectiveVal = +(petDef.perLevel * active.level * moodFactor).toFixed(3);
+      mood = petData.care ? Math.round(getMoodMultiplier(petData.care) * 100) : 100;
+      const moodFactor = mood / 100;
 
-        const bonusLabels: Record<string, string> = {
-          flip_luck: "Flip-Chance", shield: "Trostpreis", free_plays: "Free Plays",
-          specials: "Special-Rate", payout: "Payout", boss_dmg: "Boss-DMG",
-          slots_luck: "Slot-Chance", scratch_luck: "Scratch-Chance",
-          mystery: "Mystery Bonus", xp: "XP Bonus", heist: "Heist Bonus", all: "ALLES",
-        };
-        const catMap: Record<string, string> = {
-          flip_luck: "luck_flip", shield: "shield", free_plays: "free_plays",
-          specials: "specials", payout: "payout", boss_dmg: "boss_dmg",
-          slots_luck: "luck_slots", scratch_luck: "luck_scratch",
-          mystery: "mystery", xp: "xp", heist: "heist", all: "all",
-        };
+      const bonusLabels: Record<string, string> = {
+        flip_luck: "Flip-Chance", shield: "Trostpreis", free_plays: "Free Plays",
+        specials: "Special-Rate", payout: "Payout", boss_dmg: "Boss-DMG",
+        slots_luck: "Slot-Chance", scratch_luck: "Scratch-Chance",
+        mystery: "Mystery Bonus", xp: "XP Bonus", heist: "Heist Bonus", all: "ALLES",
+      };
+      const catMap: Record<string, string> = {
+        flip_luck: "luck_flip", shield: "shield", free_plays: "free_plays",
+        specials: "specials", payout: "payout", boss_dmg: "boss_dmg",
+        slots_luck: "luck_slots", scratch_luck: "luck_scratch",
+        mystery: "mystery", xp: "xp", heist: "heist", all: "all",
+      };
 
-        lines.push({
-          source: `🐾 ${petDef.emoji} ${active.petName} LVL ${active.level} (${mood}% Stimmung)`,
-          effect: `+${(effectiveVal * 100).toFixed(1)}% ${bonusLabels[petDef.bonus] ?? petDef.bonus}`,
-          value: effectiveVal * 100,
-          category: catMap[petDef.bonus] ?? petDef.bonus,
-        });
+      // Bred pets: show all combined bonuses
+      const bredBonuses = (active as any).bredBonuses as { bonus: string; perLevel: number }[] | undefined;
+      if (bredBonuses && bredBonuses.length > 0) {
+        for (const b of bredBonuses) {
+          const val = +(b.perLevel * active.level * moodFactor * 100).toFixed(1);
+          lines.push({
+            source: `🧬 ${active.petName} LVL ${active.level} (${mood}%)`,
+            effect: `+${val}% ${bonusLabels[b.bonus] ?? b.bonus}`,
+            value: val,
+            category: catMap[b.bonus] ?? b.bonus,
+          });
+        }
+      } else {
+        // Normal catalog pet
+        const petDef = PET_CATALOG.find(p => p.id === active.petId);
+        if (petDef) {
+          const effectiveVal = +(petDef.perLevel * active.level * moodFactor).toFixed(3);
+          lines.push({
+            source: `🐾 ${petDef.emoji} ${active.petName} LVL ${active.level} (${mood}%)`,
+            effect: `+${(effectiveVal * 100).toFixed(1)}% ${bonusLabels[petDef.bonus] ?? petDef.bonus}`,
+            value: effectiveVal * 100,
+            category: catMap[petDef.bonus] ?? petDef.bonus,
+          });
+        }
       }
 
       // ── Item Bonuses ──

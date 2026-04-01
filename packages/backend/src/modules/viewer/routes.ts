@@ -1013,6 +1013,97 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Minigames (Snake, Connect 4, Memory) ──
+  app.post<{ Params: { channelName: string }; Body: { score: number } }>(
+    "/:channelName/casino/minigame/snake/submit",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { submitSnakeScore } = await import("../casino/minigames.js");
+      const result = await submitSnakeScore(channel.id, user.twitchId, request.body.score);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, leaderboard: true, points: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
+    "/:channelName/casino/minigame/connect4/create",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { createConnect4 } = await import("../casino/minigames.js");
+      const result = await createConnect4(channel.id, user.twitchId, (request as any).body.displayName || user.twitchId, request.body.bet);
+      if (result.error) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { points: true }).catch(() => {});
+      return { success: true, data: result.state };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/minigame/connect4/join",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { joinConnect4 } = await import("../casino/minigames.js");
+      const result = await joinConnect4(channel.id, user.twitchId, (request as any).body.displayName || user.twitchId);
+      if (result.error) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { points: true }).catch(() => {});
+      return { success: true, data: result.state };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { col: number } }>(
+    "/:channelName/casino/minigame/connect4/play",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { playConnect4 } = await import("../casino/minigames.js");
+      const result = await playConnect4(channel.id, user.twitchId, request.body.col);
+      if (result.error) return reply.status(400).send({ success: false, error: result.error });
+      if (result.state?.status === "finished") {
+        broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, leaderboard: true, points: true }).catch(() => {});
+      }
+      return { success: true, data: result.state };
+    }
+  );
+
+  app.get<{ Params: { channelName: string } }>(
+    "/:channelName/casino/minigame/connect4",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getConnect4 } = await import("../casino/minigames.js");
+      const state = await getConnect4(channel.id);
+      return { success: true, data: state };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { pairs: number; timeMs: number; moves: number } }>(
+    "/:channelName/casino/minigame/memory/submit",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { submitMemoryScore } = await import("../casino/minigames.js");
+      const result = await submitMemoryScore(channel.id, user.twitchId, request.body.pairs, request.body.timeMs, request.body.moves);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, leaderboard: true, points: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
   // ── Skill Tree ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/casino/skills",

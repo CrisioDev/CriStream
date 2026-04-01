@@ -162,6 +162,16 @@ function formatQuestReset(): string {
   return `${h}h ${m}m`;
 }
 
+// ── Memory Timer sub-component ──
+function MemoryTimer({ start }: { start: number }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setElapsed(Date.now() - start), 100);
+    return () => clearInterval(iv);
+  }, [start]);
+  return <span className="text-purple-400 font-bold">{(elapsed / 1000).toFixed(1)}s</span>;
+}
+
 // ── Component ──
 export function CasinoPage() {
   const { user } = useAuthStore();
@@ -228,6 +238,31 @@ export function CasinoPage() {
   const [wheelSpinning, setWheelSpinning] = useState(false);
   const [wheelResult, setWheelResult] = useState<string | null>(null);
   const [wheelUsed, setWheelUsed] = useState(false);
+
+  // ── Minigames ──
+  const [activeMinigame, setActiveMinigame] = useState<"snake" | "connect4" | "memory" | null>(null);
+  // Snake
+  const [snakeScore, setSnakeScore] = useState(0);
+  const [snakeGameOver, setSnakeGameOver] = useState(false);
+  const [snakeSubmitted, setSnakeSubmitted] = useState(false);
+  const [snakePoints, setSnakePoints] = useState(0);
+  const snakeRef = useRef<{ dir: { x: number; y: number }; snake: { x: number; y: number }[]; apple: { x: number; y: number }; score: number; running: boolean }>({ dir: { x: 1, y: 0 }, snake: [{ x: 10, y: 10 }], apple: { x: 15, y: 10 }, score: 0, running: false });
+  const snakeTimerRef = useRef<any>(null);
+  const snakeCanvasRef = useRef<HTMLCanvasElement>(null);
+  // Connect 4
+  const [connect4, setConnect4] = useState<any>(null);
+  const [connect4Bet, setConnect4Bet] = useState(10);
+  const [connect4Loading, setConnect4Loading] = useState(false);
+  const [connect4Msg, setConnect4Msg] = useState<string | null>(null);
+  const connect4PollRef = useRef<any>(null);
+  // Memory
+  const [memoryCards, setMemoryCards] = useState<{ emoji: string; flipped: boolean; matched: boolean }[]>([]);
+  const [memoryFlipped, setMemoryFlipped] = useState<number[]>([]);
+  const [memoryMoves, setMemoryMoves] = useState(0);
+  const [memoryStartTime, setMemoryStartTime] = useState(0);
+  const [memoryComplete, setMemoryComplete] = useState(false);
+  const [memoryPoints, setMemoryPoints] = useState(0);
+  const memoryLockRef = useRef(false);
 
   // Boss Fight
   const [boss, setBoss] = useState<{ active: boolean; name?: string; hp?: number; maxHp?: number; participants?: number } | null>(null);
@@ -811,6 +846,226 @@ export function CasinoPage() {
         fetchPoints();
       }, 2000);
     } catch { setWheelSpinning(false); setWheelResult("Fehler!"); }
+  };
+
+  // ── Minigame: Snake ──
+  const startSnake = () => {
+    setSnakeScore(0); setSnakeGameOver(false); setSnakeSubmitted(false); setSnakePoints(0);
+    const g = snakeRef.current;
+    g.snake = [{ x: 10, y: 10 }];
+    g.dir = { x: 1, y: 0 };
+    g.apple = { x: Math.floor(Math.random() * 20), y: Math.floor(Math.random() * 20) };
+    g.score = 0; g.running = true;
+    if (snakeTimerRef.current) clearInterval(snakeTimerRef.current);
+    snakeTimerRef.current = setInterval(snakeTick, 120);
+    drawSnake();
+  };
+
+  const snakeTick = () => {
+    const g = snakeRef.current;
+    if (!g.running) return;
+    const head = { x: g.snake[0].x + g.dir.x, y: g.snake[0].y + g.dir.y };
+    // Wall collision
+    if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) { endSnake(); return; }
+    // Self collision
+    if (g.snake.some(s => s.x === head.x && s.y === head.y)) { endSnake(); return; }
+    g.snake.unshift(head);
+    if (head.x === g.apple.x && head.y === g.apple.y) {
+      g.score++;
+      setSnakeScore(g.score);
+      // New apple not on snake
+      let ax: number, ay: number;
+      do { ax = Math.floor(Math.random() * 20); ay = Math.floor(Math.random() * 20); }
+      while (g.snake.some(s => s.x === ax && s.y === ay));
+      g.apple = { x: ax, y: ay };
+    } else {
+      g.snake.pop();
+    }
+    drawSnake();
+  };
+
+  const drawSnake = () => {
+    const canvas = snakeCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const g = snakeRef.current;
+    const cell = canvas.width / 20;
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Grid lines
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    for (let i = 0; i <= 20; i++) { ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, canvas.height); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(canvas.width, i * cell); ctx.stroke(); }
+    // Apple
+    ctx.fillStyle = "#ef4444";
+    ctx.beginPath(); ctx.arc(g.apple.x * cell + cell / 2, g.apple.y * cell + cell / 2, cell / 2.5, 0, Math.PI * 2); ctx.fill();
+    // Snake
+    g.snake.forEach((s, i) => {
+      ctx.fillStyle = i === 0 ? "#22c55e" : "#16a34a";
+      ctx.fillRect(s.x * cell + 1, s.y * cell + 1, cell - 2, cell - 2);
+    });
+  };
+
+  const endSnake = () => {
+    const g = snakeRef.current;
+    g.running = false;
+    if (snakeTimerRef.current) { clearInterval(snakeTimerRef.current); snakeTimerRef.current = null; }
+    setSnakeGameOver(true);
+    drawSnake();
+  };
+
+  const submitSnake = async () => {
+    if (!user || snakeSubmitted) return;
+    setSnakeSubmitted(true);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/snake/submit`, { score: snakeRef.current.score }) as any;
+      if (res.success) { setSnakePoints(res.data.points); fetchPoints(); }
+      else setConnect4Msg(res.error ?? "Fehler!");
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (activeMinigame !== "snake" || !snakeRef.current.running) return;
+      const g = snakeRef.current;
+      switch (e.key) {
+        case "ArrowUp": case "w": case "W": if (g.dir.y !== 1) g.dir = { x: 0, y: -1 }; break;
+        case "ArrowDown": case "s": case "S": if (g.dir.y !== -1) g.dir = { x: 0, y: 1 }; break;
+        case "ArrowLeft": case "a": case "A": if (g.dir.x !== 1) g.dir = { x: -1, y: 0 }; break;
+        case "ArrowRight": case "d": case "D": if (g.dir.x !== -1) g.dir = { x: 1, y: 0 }; break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeMinigame]);
+
+  // Cleanup snake timer
+  useEffect(() => { return () => { if (snakeTimerRef.current) clearInterval(snakeTimerRef.current); }; }, []);
+
+  // ── Minigame: Connect 4 ──
+  const fetchConnect4 = async () => {
+    if (!user) return;
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/minigame/connect4`) as any;
+      if (res.success) setConnect4(res.data);
+    } catch { /* ignore */ }
+  };
+
+  const createConnect4Game = async () => {
+    if (!user || connect4Loading) return;
+    setConnect4Loading(true); setConnect4Msg(null);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/connect4/create`, { bet: connect4Bet, displayName: user.displayName }) as any;
+      if (res.success) { setConnect4(res.data); fetchPoints(); }
+      else setConnect4Msg(res.error ?? "Fehler!");
+    } catch { setConnect4Msg("Fehler!"); }
+    setConnect4Loading(false);
+  };
+
+  const joinConnect4Game = async () => {
+    if (!user || connect4Loading) return;
+    setConnect4Loading(true); setConnect4Msg(null);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/connect4/join`, { displayName: user.displayName }) as any;
+      if (res.success) { setConnect4(res.data); fetchPoints(); }
+      else setConnect4Msg(res.error ?? "Fehler!");
+    } catch { setConnect4Msg("Fehler!"); }
+    setConnect4Loading(false);
+  };
+
+  const playConnect4Move = async (col: number) => {
+    if (!user || connect4Loading) return;
+    setConnect4Loading(true);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/connect4/play`, { col }) as any;
+      if (res.success) { setConnect4(res.data); if (res.data.status === "finished") fetchPoints(); }
+      else setConnect4Msg(res.error ?? "Fehler!");
+    } catch { setConnect4Msg("Fehler!"); }
+    setConnect4Loading(false);
+  };
+
+  // Poll Connect 4 state
+  useEffect(() => {
+    if (activeMinigame === "connect4" && connect4 && (connect4.status === "waiting" || connect4.status === "playing")) {
+      connect4PollRef.current = setInterval(fetchConnect4, 2000);
+      return () => clearInterval(connect4PollRef.current);
+    } else {
+      if (connect4PollRef.current) clearInterval(connect4PollRef.current);
+    }
+  }, [activeMinigame, connect4?.status]);
+
+  // ── Minigame: Memory ──
+  const MEMORY_EMOJIS = ["🎰", "🎲", "🃏", "💎", "🍀", "🔥", "⭐", "🎁"];
+
+  const startMemory = () => {
+    const pairs = [...MEMORY_EMOJIS, ...MEMORY_EMOJIS];
+    // Shuffle
+    for (let i = pairs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
+    setMemoryCards(pairs.map(emoji => ({ emoji, flipped: false, matched: false })));
+    setMemoryFlipped([]); setMemoryMoves(0); setMemoryComplete(false); setMemoryPoints(0);
+    setMemoryStartTime(Date.now());
+    memoryLockRef.current = false;
+  };
+
+  const flipMemoryCard = (index: number) => {
+    if (memoryLockRef.current || memoryComplete) return;
+    if (memoryCards[index].flipped || memoryCards[index].matched) return;
+    if (memoryFlipped.length >= 2) return;
+
+    const newCards = [...memoryCards];
+    newCards[index] = { ...newCards[index], flipped: true };
+    const newFlipped = [...memoryFlipped, index];
+    setMemoryCards(newCards);
+    setMemoryFlipped(newFlipped);
+
+    if (newFlipped.length === 2) {
+      const newMoves = memoryMoves + 1;
+      setMemoryMoves(newMoves);
+      memoryLockRef.current = true;
+
+      const [a, b] = newFlipped;
+      if (newCards[a].emoji === newCards[b].emoji) {
+        // Match
+        setTimeout(() => {
+          setMemoryCards(prev => {
+            const updated = [...prev];
+            updated[a] = { ...updated[a], matched: true };
+            updated[b] = { ...updated[b], matched: true };
+            const allMatched = updated.every(c => c.matched);
+            if (allMatched) {
+              setMemoryComplete(true);
+              submitMemory(8, Date.now() - memoryStartTime, newMoves);
+            }
+            return updated;
+          });
+          setMemoryFlipped([]);
+          memoryLockRef.current = false;
+        }, 400);
+      } else {
+        // No match — flip back
+        setTimeout(() => {
+          setMemoryCards(prev => {
+            const updated = [...prev];
+            updated[a] = { ...updated[a], flipped: false };
+            updated[b] = { ...updated[b], flipped: false };
+            return updated;
+          });
+          setMemoryFlipped([]);
+          memoryLockRef.current = false;
+        }, 800);
+      }
+    }
+  };
+
+  const submitMemory = async (pairs: number, timeMs: number, moves: number) => {
+    if (!user) return;
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/memory/submit`, { pairs, timeMs, moves }) as any;
+      if (res.success) { setMemoryPoints(res.data.points); fetchPoints(); }
+    } catch { /* ignore */ }
   };
 
   // ── Season actions ──
@@ -1488,6 +1743,196 @@ export function CasinoPage() {
             <button onClick={spinWheel} disabled={wheelSpinning || wheelUsed} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: wheelSpinning || wheelUsed ? "#666" : "linear-gradient(135deg,#22d3ee,#0891b2)" }}>
               {wheelSpinning ? "DREHT..." : wheelUsed ? "MORGEN WIEDER" : "🎡 DREHEN!"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          MINIGAMES
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <h3 className="font-black text-lg text-purple-300 mb-3">🎮 MINIGAMES</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Snake */}
+            <button onClick={() => { setActiveMinigame("snake"); setTimeout(startSnake, 100); }} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(34,197,94,0.3)" }}>
+              <div className="text-4xl mb-2">🐍</div>
+              <div className="font-black text-green-400">Snake</div>
+              <div className="text-xs text-gray-500 mt-1">1 Pt pro Apfel · Max 50</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80" }}>Spielen</div>
+            </button>
+            {/* Connect 4 */}
+            <button onClick={() => { setActiveMinigame("connect4"); fetchConnect4(); }} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(239,68,68,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(239,68,68,0.3)" }}>
+              <div className="text-4xl mb-2">🔴</div>
+              <div className="font-black text-red-400">4 Gewinnt</div>
+              <div className="text-xs text-gray-500 mt-1">Fordere jemanden heraus! Ab 5 Pts</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(239,68,68,0.2)", color: "#f87171" }}>Spielen</div>
+            </button>
+            {/* Memory */}
+            <button onClick={() => { setActiveMinigame("memory"); startMemory(); }} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(168,85,247,0.3)" }}>
+              <div className="text-4xl mb-2">🧠</div>
+              <div className="font-black text-purple-400">Memory</div>
+              <div className="text-xs text-gray-500 mt-1">Finde alle Paare! Bis zu 26 Pts</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(168,85,247,0.2)", color: "#c084fc" }}>Spielen</div>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Snake Modal ── */}
+      {activeMinigame === "snake" && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 35, background: "rgba(0,0,0,0.85)" }}>
+          <div className="relative rounded-2xl p-6 w-full max-w-lg mx-4" style={{ background: "linear-gradient(180deg, #1a1a2e, #0a0a14)", border: "1px solid rgba(34,197,94,0.3)" }}>
+            <button onClick={() => { setActiveMinigame(null); if (snakeTimerRef.current) clearInterval(snakeTimerRef.current); snakeRef.current.running = false; }} className="absolute top-3 right-3 text-gray-500 hover:text-white text-xl font-bold">✕</button>
+            <h3 className="font-black text-xl text-green-400 text-center mb-1">🐍 Snake</h3>
+            <div className="text-center text-sm text-gray-400 mb-3">Score: <span className="text-green-400 font-bold">{snakeScore}</span></div>
+            <div className="flex justify-center mb-3">
+              <canvas ref={snakeCanvasRef} width={400} height={400} className="rounded-xl" style={{ width: "min(400px, 80vw)", height: "min(400px, 80vw)", background: "#0a0a0a", border: "1px solid rgba(34,197,94,0.2)" }} />
+            </div>
+            {/* Mobile controls */}
+            <div className="flex justify-center gap-1 mb-2 md:hidden">
+              <div className="grid grid-cols-3 gap-1" style={{ width: 120 }}>
+                <div />
+                <button onClick={() => { if (snakeRef.current.dir.y !== 1) snakeRef.current.dir = { x: 0, y: -1 }; }} className="bg-gray-800 rounded p-2 text-center text-white font-bold">▲</button>
+                <div />
+                <button onClick={() => { if (snakeRef.current.dir.x !== 1) snakeRef.current.dir = { x: -1, y: 0 }; }} className="bg-gray-800 rounded p-2 text-center text-white font-bold">◀</button>
+                <button onClick={() => { if (snakeRef.current.dir.y !== -1) snakeRef.current.dir = { x: 0, y: 1 }; }} className="bg-gray-800 rounded p-2 text-center text-white font-bold">▼</button>
+                <button onClick={() => { if (snakeRef.current.dir.x !== -1) snakeRef.current.dir = { x: 1, y: 0 }; }} className="bg-gray-800 rounded p-2 text-center text-white font-bold">▶</button>
+              </div>
+            </div>
+            {snakeGameOver && (
+              <div className="text-center space-y-2">
+                <div className="text-lg font-bold text-red-400">Game Over!</div>
+                <div className="text-sm text-gray-400">Score: <span className="text-green-400 font-bold">{snakeScore}</span> Äpfel</div>
+                {snakeSubmitted ? (
+                  <div className="text-sm text-green-400 font-bold">+{snakePoints} Punkte erhalten!</div>
+                ) : (
+                  <button onClick={submitSnake} className="px-6 py-2 rounded-xl font-bold text-sm text-black" style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>Punkte einlösen</button>
+                )}
+                <button onClick={startSnake} className="px-6 py-2 rounded-xl font-bold text-sm text-white ml-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}>Nochmal</button>
+              </div>
+            )}
+            {!snakeGameOver && <div className="text-center text-xs text-gray-600">Pfeiltasten / WASD zum Steuern</div>}
+          </div>
+        </div>
+      )}
+
+      {/* ── Connect 4 Modal ── */}
+      {activeMinigame === "connect4" && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 35, background: "rgba(0,0,0,0.85)" }}>
+          <div className="relative rounded-2xl p-6 w-full max-w-lg mx-4" style={{ background: "linear-gradient(180deg, #1a1a2e, #0a0a14)", border: "1px solid rgba(239,68,68,0.3)" }}>
+            <button onClick={() => { setActiveMinigame(null); if (connect4PollRef.current) clearInterval(connect4PollRef.current); }} className="absolute top-3 right-3 text-gray-500 hover:text-white text-xl font-bold">✕</button>
+            <h3 className="font-black text-xl text-red-400 text-center mb-3">🔴 4 Gewinnt</h3>
+            {connect4Msg && <div className="text-center text-sm text-yellow-400 mb-2">{connect4Msg}</div>}
+
+            {/* No active game — create */}
+            {(!connect4 || connect4.status === "finished") && (
+              <div className="text-center space-y-3">
+                {connect4?.status === "finished" && (
+                  <div className="mb-3">
+                    <div className={`text-lg font-bold ${connect4.winner === "draw" ? "text-yellow-400" : connect4.winner === user?.twitchId ? "text-green-400" : "text-red-400"}`}>
+                      {connect4.winner === "draw" ? "Unentschieden! Einsätze zurück." : connect4.winner === user?.twitchId ? `Gewonnen! +${connect4.bet * 2} Pts!` : "Verloren!"}
+                    </div>
+                  </div>
+                )}
+                <div className="text-sm text-gray-400">Einsatz wählen:</div>
+                <div className="flex items-center justify-center gap-2">
+                  <input type="number" min={5} value={connect4Bet} onChange={(e) => setConnect4Bet(Math.max(5, parseInt(e.target.value) || 5))} className="w-20 px-3 py-2 rounded-lg bg-gray-800 text-white text-center border border-gray-700 text-sm" />
+                  <span className="text-xs text-gray-500">Pts</span>
+                </div>
+                <button onClick={createConnect4Game} disabled={connect4Loading} className="px-6 py-2 rounded-xl font-bold text-sm text-black" style={{ background: connect4Loading ? "#666" : "linear-gradient(135deg, #ef4444, #dc2626)" }}>
+                  Herausforderung erstellen
+                </button>
+              </div>
+            )}
+
+            {/* Waiting for opponent */}
+            {connect4?.status === "waiting" && (
+              <div className="text-center space-y-3">
+                <div className="text-sm text-gray-400">Einsatz: <span className="text-yellow-400 font-bold">{connect4.bet} Pts</span></div>
+                {connect4.player1.userId === user?.twitchId ? (
+                  <div className="text-yellow-400 animate-pulse">Warte auf Gegner...</div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-400">{connect4.player1.displayName} fordert heraus!</div>
+                    <button onClick={joinConnect4Game} disabled={connect4Loading} className="px-6 py-2 rounded-xl font-bold text-sm text-black" style={{ background: connect4Loading ? "#666" : "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+                      Annehmen ({connect4.bet} Pts)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Active game board */}
+            {connect4?.status === "playing" && connect4.board && (
+              <div className="space-y-2">
+                <div className="text-center text-sm mb-2">
+                  <span className={connect4.currentTurn === 1 ? "text-red-400 font-bold" : "text-gray-500"}>{connect4.player1.displayName}</span>
+                  <span className="text-gray-600 mx-2">vs</span>
+                  <span className={connect4.currentTurn === 2 ? "text-yellow-400 font-bold" : "text-gray-500"}>{connect4.player2?.displayName}</span>
+                </div>
+                <div className="text-center text-xs text-gray-500 mb-1">
+                  {((connect4.currentTurn === 1 && connect4.player1.userId === user?.twitchId) || (connect4.currentTurn === 2 && connect4.player2?.userId === user?.twitchId)) ? "Dein Zug!" : "Gegner ist dran..."}
+                </div>
+                {/* Column buttons */}
+                <div className="flex justify-center gap-1 mb-1">
+                  {Array.from({ length: 7 }).map((_, c) => (
+                    <button key={c} onClick={() => playConnect4Move(c)} className="w-10 h-6 rounded text-xs font-bold hover:bg-gray-700 transition-colors" style={{ background: "rgba(255,255,255,0.05)" }}>▼</button>
+                  ))}
+                </div>
+                {/* Board */}
+                <div className="flex justify-center">
+                  <div className="rounded-xl p-2" style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)" }}>
+                    {connect4.board.map((row: number[], r: number) => (
+                      <div key={r} className="flex gap-1">
+                        {row.map((cell: number, c: number) => (
+                          <div key={c} className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                            background: cell === 0 ? "rgba(0,0,0,0.4)" : cell === 1 ? "#ef4444" : "#eab308",
+                            border: cell === 0 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                            boxShadow: cell !== 0 ? `0 0 8px ${cell === 1 ? "rgba(239,68,68,0.4)" : "rgba(234,179,8,0.4)"}` : "none",
+                          }} />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Memory Modal ── */}
+      {activeMinigame === "memory" && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 35, background: "rgba(0,0,0,0.85)" }}>
+          <div className="relative rounded-2xl p-6 w-full max-w-md mx-4" style={{ background: "linear-gradient(180deg, #1a1a2e, #0a0a14)", border: "1px solid rgba(168,85,247,0.3)" }}>
+            <button onClick={() => setActiveMinigame(null)} className="absolute top-3 right-3 text-gray-500 hover:text-white text-xl font-bold">✕</button>
+            <h3 className="font-black text-xl text-purple-400 text-center mb-1">🧠 Memory</h3>
+            <div className="text-center text-sm text-gray-400 mb-3">
+              Züge: <span className="text-purple-400 font-bold">{memoryMoves}</span>
+              {memoryStartTime > 0 && !memoryComplete && <span className="ml-3">Zeit: <MemoryTimer start={memoryStartTime} /></span>}
+              {memoryComplete && <span className="ml-3">Zeit: <span className="text-purple-400 font-bold">{((Date.now() - memoryStartTime) / 1000).toFixed(1)}s</span></span>}
+            </div>
+            {/* Card grid */}
+            <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto mb-4">
+              {memoryCards.map((card, i) => (
+                <button key={i} onClick={() => flipMemoryCard(i)} className="aspect-square rounded-xl text-2xl flex items-center justify-center transition-all duration-300 font-bold" style={{
+                  background: card.matched ? "rgba(34,197,94,0.2)" : card.flipped ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)",
+                  border: card.matched ? "1px solid rgba(34,197,94,0.4)" : card.flipped ? "1px solid rgba(168,85,247,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                  transform: card.flipped || card.matched ? "rotateY(0deg)" : "rotateY(0deg)",
+                  cursor: card.flipped || card.matched || memoryComplete ? "default" : "pointer",
+                }}>
+                  {card.flipped || card.matched ? card.emoji : "❓"}
+                </button>
+              ))}
+            </div>
+            {memoryComplete && (
+              <div className="text-center space-y-2">
+                <div className="text-lg font-bold text-green-400">Alle Paare gefunden!</div>
+                {memoryPoints > 0 && <div className="text-sm text-purple-400 font-bold">+{memoryPoints} Punkte erhalten!</div>}
+                <button onClick={startMemory} className="px-6 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.4)" }}>Nochmal</button>
+              </div>
+            )}
           </div>
         </div>
       )}

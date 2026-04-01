@@ -255,6 +255,12 @@ export function CasinoPage() {
   const [skillData, setSkillData] = useState<{ skills: any; details: any[]; totalLevel: number; totalInvested: number } | null>(null);
   const [upgrading, setUpgrading] = useState<string | null>(null);
 
+  // V-Pet
+  const [pet, setPet] = useState<any>(null);
+  const [shop, setShop] = useState<any>(null);
+  const [showShop, setShowShop] = useState(false);
+  const [buyingPet, setBuyingPet] = useState(false);
+
   // ── NEW: All-In ──
   const [allInPlaying, setAllInPlaying] = useState(false);
   const [allInResult, setAllInResult] = useState<{ text: string; win: boolean } | null>(null);
@@ -403,6 +409,8 @@ export function CasinoPage() {
       if (af.data) setAutoFlip(af.data);
       const sk = await api.get<any>(`/viewer/${channelName}/casino/skills`) as any;
       if (sk.data) setSkillData(sk.data);
+      const pt = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any;
+      setPet(pt.data);
     } catch { /* */ }
   }, [user, channelName]);
 
@@ -1624,6 +1632,136 @@ export function CasinoPage() {
           )}
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          V-PET + SHOP
+         ══════════════════════════════════════════════════════════════════ */}
+      {user && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5" style={{ background: "linear-gradient(180deg, rgba(255,182,193,0.06), rgba(0,0,0,0.2))", border: "1px solid rgba(255,182,193,0.2)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black text-lg text-pink-300">🐾 V-PET</h3>
+              {pet && <span className="text-xs text-gray-500">LVL {pet.level} · {pet.totalSpent?.toLocaleString()} Pts ausgegeben</span>}
+            </div>
+
+            {!pet ? (
+              <div className="text-center py-4">
+                <p className="text-gray-400 mb-4">Du hast noch kein Pet! Wähle dein erstes:</p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {!shop ? (
+                    <button onClick={async () => {
+                      const res = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any;
+                      if (res.data) setShop(res.data);
+                    }} className="casino-btn px-6 py-2 rounded-xl font-bold text-sm text-black" style={{ background: "linear-gradient(135deg, #f472b6, #ec4899)" }}>
+                      🛒 Shop öffnen
+                    </button>
+                  ) : (
+                    shop.pets.map((p: any) => (
+                      <button key={p.id} onClick={async () => {
+                        setBuyingPet(true);
+                        const res = await api.post<any>(`/viewer/${channelName}/casino/pet/buy`, { petId: p.id }) as any;
+                        if (res.success) { setPet(res.data); fetchPoints(); }
+                        else setMessage(res.error ?? "Fehler!");
+                        setBuyingPet(false);
+                      }} disabled={buyingPet} className="rounded-xl p-3 text-center hover:scale-105 transition-transform" style={{
+                        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                        minWidth: "80px",
+                      }}>
+                        <div className="text-3xl mb-1">{p.emoji}</div>
+                        <div className="text-xs font-bold text-white">{p.name}</div>
+                        <div className="text-[10px] text-yellow-400">{p.price.toLocaleString()} Pts</div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                {/* Pet Display */}
+                <div className="flex items-center gap-6 mb-4">
+                  <div className="relative text-center">
+                    {pet.equipped?.aura && <div className="absolute -inset-2 text-4xl opacity-30 animate-pulse flex items-center justify-center">{pet.equipped.aura}</div>}
+                    <div className="text-6xl relative">
+                      {pet.equipped?.hat && <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl">{pet.equipped.hat}</div>}
+                      {pet.equipped?.glasses && <div className="absolute top-2 left-1/2 -translate-x-1/2 text-lg">{pet.equipped.glasses}</div>}
+                      {(() => { const pd = [{id:"cat",emoji:"🐱"},{id:"dog",emoji:"🐶"},{id:"bunny",emoji:"🐰"},{id:"fox",emoji:"🦊"},{id:"panda",emoji:"🐼"},{id:"dragon",emoji:"🐉"},{id:"unicorn",emoji:"🦄"},{id:"phoenix",emoji:"🔥"},{id:"alien",emoji:"👾"},{id:"robot",emoji:"🤖"},{id:"kraken",emoji:"🦑"},{id:"void",emoji:"🕳️"}]; return pd.find(p=>p.id===pet.petId)?.emoji ?? "🐱"; })()}
+                      {pet.equipped?.weapon && <div className="absolute -right-4 top-1/2 -translate-y-1/2 text-2xl">{pet.equipped.weapon}</div>}
+                      {pet.equipped?.cape && <div className="absolute -left-4 top-1/2 -translate-y-1/2 text-xl">{pet.equipped.cape}</div>}
+                    </div>
+                    {pet.equipped?.food && <div className="text-lg mt-1">{pet.equipped.food}</div>}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-black text-white text-lg">{pet.petName}</div>
+                    <div className="text-xs text-gray-400">Level {pet.level} · {pet.xp}/{pet.level * 50} XP</div>
+                    <div className="h-2 rounded-full bg-black/40 mt-1 overflow-hidden" style={{ border: "1px solid rgba(255,182,193,0.2)" }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${(pet.xp / (pet.level * 50)) * 100}%`, background: "linear-gradient(90deg, #f472b6, #ec4899)" }} />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={() => { setShowShop(!showShop); if (!showShop && !shop) { api.get<any>(`/viewer/${channelName}/casino/pet/shop`).then((r: any) => { if (r.data) setShop(r.data); }); } }}
+                        className="casino-btn px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "linear-gradient(135deg, rgba(244,114,182,0.2), rgba(236,72,153,0.1))", border: "1px solid rgba(244,114,182,0.4)", color: "#f472b6" }}>
+                        {showShop ? "Shop schließen" : "🛒 Shop"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Item Shop */}
+                {showShop && shop && (
+                  <div className="border-t border-pink-500/20 pt-4 space-y-4">
+                    {shop.categories.map((cat: any) => (
+                      <div key={cat.category}>
+                        <h4 className="font-bold text-sm text-pink-300 mb-2">{cat.emoji} {cat.name}</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {cat.tiers.map((item: any) => (
+                            <div key={item.index} className={`rounded-lg p-2 text-center min-w-[70px] ${item.equipped ? "ring-2 ring-pink-500" : ""}`} style={{
+                              background: item.owned ? "rgba(244,114,182,0.1)" : "rgba(255,255,255,0.02)",
+                              border: `1px solid ${item.owned ? "rgba(244,114,182,0.4)" : "rgba(255,255,255,0.08)"}`,
+                            }}>
+                              <div className="text-xl">{item.emoji}</div>
+                              <div className="text-[10px] text-gray-300">{item.name}</div>
+                              {item.owned && <div className="text-[9px] text-pink-400">x{item.ownedCount}</div>}
+                              <div className="mt-1 flex gap-1 justify-center">
+                                {!item.equipped && item.owned && (
+                                  <button onClick={async () => {
+                                    await api.post<any>(`/viewer/${channelName}/casino/pet/equip`, { category: cat.category, itemIndex: item.index });
+                                    const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                    const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                  }} className="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 hover:bg-pink-500/30">
+                                    Anlegen
+                                  </button>
+                                )}
+                                {item.equipped && (
+                                  <button onClick={async () => {
+                                    await api.post<any>(`/viewer/${channelName}/casino/pet/unequip`, { category: cat.category });
+                                    const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                    const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                  }} className="text-[9px] px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400 hover:bg-gray-500/30">
+                                    Ablegen
+                                  </button>
+                                )}
+                                <button onClick={async () => {
+                                  const res = await api.post<any>(`/viewer/${channelName}/casino/pet/buy-item`, { category: cat.category, itemIndex: item.index }) as any;
+                                  if (res.success) {
+                                    fetchPoints();
+                                    const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                                    const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
+                                  } else setMessage(res.error ?? "Fehler!");
+                                }} className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
+                                  {item.price.toLocaleString()} Pts
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════
           SKILL TREE

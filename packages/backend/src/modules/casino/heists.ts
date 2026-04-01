@@ -130,8 +130,16 @@ export async function joinHeist(
 export async function getActiveHeist(channelId: string): Promise<Heist | null> {
   const heist = await getHeist(channelId);
   if (!heist) return null;
-  // Show finished heists for 30s so players can see results
-  if (heist.status === "finished") return heist;
+  // Show finished heists briefly so players can see results, then clean up
+  if (heist.status === "finished") {
+    // Auto-delete after 60 seconds
+    const finishedAt = (heist as any).finishedAt ?? heist.createdAt;
+    if (Date.now() - finishedAt > 60000) {
+      await redis.del(heistKey(channelId));
+      return null;
+    }
+    return heist;
+  }
 
   let changed = false;
 
@@ -253,6 +261,7 @@ export async function finishHeist(
   }
 
   heist.status = "finished";
+  (heist as any).finishedAt = Date.now();
   const results: any[] = [];
   (heist as any).finishedResults = []; // store results on heist for frontend
   const pot = heist.pot;

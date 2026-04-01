@@ -20,7 +20,7 @@
   .card-green { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.05); }
   .card-red { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
   .card-cyan { border-color: rgba(34,211,238,0.3); background: rgba(34,211,238,0.05); }
-  .emoji { font-size: 1.5rem; margin-right: 0.5rem; }
+  .card-orange { border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.05); }
   table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
   th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
   th { color: #9ca3af; font-size: 0.8rem; text-transform: uppercase; }
@@ -35,405 +35,425 @@
   .toc { list-style: none; columns: 2; margin: 1rem 0 2rem; }
   .toc li { margin-bottom: 0.4rem; }
   .toc a { color: #c084fc; font-size: 0.9rem; }
+  ul.features { margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1; }
+  ul.features li { margin-bottom: 0.3rem; }
   @media (max-width: 640px) { .toc { columns: 1; } h1 { font-size: 1.8rem; } }
 </style>
 </head>
 <body>
 <div class="container">
 
-<a href="/casino" class="back">← Zurück zum Casino</a>
+<a href="/casino" class="back">&larr; Zur&uuml;ck zum Casino</a>
 
 <h1>CRISINO Guide</h1>
-<p class="subtitle">Alles was du wissen musst um im Casino durchzustarten</p>
+<p class="subtitle">Vollst&auml;ndige Anleitung &mdash; Alle Features erkl&auml;rt</p>
 
 <h2>Inhaltsverzeichnis</h2>
 <ul class="toc">
-  <li><a href="#spiele">🎰 Spiele</a></li>
-  <li><a href="#specials">🎁 Casino Specials</a></li>
-  <li><a href="#quests">📋 Tägliche Quests</a></li>
-  <li><a href="#season">🎖️ Battle Pass</a></li>
-  <li><a href="#prestige">⭐ Prestige & Auto-Flip</a></li>
-  <li><a href="#skills">🌳 Skill Tree</a></li>
-  <li><a href="#pets">🐾 V-Pets</a></li>
-  <li><a href="#petcare">🍖 Pet-Pflege</a></li>
-  <li><a href="#breeding">🧬 Pet-Zucht</a></li>
-  <li><a href="#battles">⚔️ Pet Battles</a></li>
-  <li><a href="#heists">🏴‍☠️ Heists</a></li>
-  <li><a href="#guilds">🏰 Gilden</a></li>
-  <li><a href="#tournament">🏆 Turniere</a></li>
-  <li><a href="#bingo">🎱 Bingo & Lotto</a></li>
-  <li><a href="#achievements">🏆 Achievements</a></li>
-  <li><a href="#lootbox">📦 Lootboxen</a></li>
-  <li><a href="#drops">✨ Legendäre Drops</a></li>
-  <li><a href="#login">🔥 Login-Streaks</a></li>
-  <li><a href="#commands">💬 Chat-Befehle</a></li>
+  <li><a href="#spiele">&#127920; Spiele (7 St&uuml;ck)</a></li>
+  <li><a href="#premium">&#128142; Premium Slots (unendlich)</a></li>
+  <li><a href="#minigames">&#127918; Minispiele</a></li>
+  <li><a href="#specials">&#127873; Casino Specials</a></li>
+  <li><a href="#quests">&#128203; T&auml;gliche Quests</a></li>
+  <li><a href="#season">&#127894; Battle Pass</a></li>
+  <li><a href="#prestige">&#11088; Prestige & Auto-Flip</a></li>
+  <li><a href="#skills">&#127795; Skill Tree</a></li>
+  <li><a href="#diminishing">&#128202; Diminishing Returns</a></li>
+  <li><a href="#pets">&#128062; V-Pets</a></li>
+  <li><a href="#petcare">&#127830; Pet-Pflege</a></li>
+  <li><a href="#breeding">&#129516; Pet-Zucht</a></li>
+  <li><a href="#battles">&#9876; Pet Battles</a></li>
+  <li><a href="#heists">&#127988; Heists</a></li>
+  <li><a href="#guilds">&#127984; Gilden</a></li>
+  <li><a href="#tournament">&#127942; Turniere</a></li>
+  <li><a href="#bingo">&#127921; Bingo & Lotto</a></li>
+  <li><a href="#achievements">&#127942; Achievements</a></li>
+  <li><a href="#lootbox">&#128230; Lootboxen</a></li>
+  <li><a href="#drops">&#10024; Legend&auml;re Drops</a></li>
+  <li><a href="#login">&#128293; Login-Streaks</a></li>
+  <li><a href="#sounds">&#128266; Sounds</a></li>
+  <li><a href="#sse">&#9889; Live-Updates (SSE)</a></li>
+  <li><a href="#commands">&#128172; Chat-Befehle</a></li>
 </ul>
 
 <!-- SPIELE -->
-<h2 id="spiele">🎰 Spiele</h2>
+<h2 id="spiele">&#127920; Spiele</h2>
 
 <div class="card">
-  <h3><span class="emoji">🎰</span> Slots</h3>
-  <p>Kostet <strong>20 Punkte</strong>. Drei Walzen drehen sich — gleiche Symbole gewinnen!</p>
+  <h3>&#127920; Slots (20 Punkte)</h3>
+  <p>Drei Walzen drehen sich &mdash; gleiche Symbole gewinnen!</p>
   <table>
     <tr><th>Ergebnis</th><th>Auszahlung</th></tr>
-    <tr><td>Trostpreis (nichts passt)</td><td>8 Pts</td></tr>
-    <tr><td>Doppelt (2 gleiche)</td><td>22 Pts</td></tr>
-    <tr><td>Triple 🍒🍒🍒</td><td>45-175 Pts</td></tr>
-    <tr><td>Diamant Triple 💎💎💎</td><td>350 Pts</td></tr>
-    <tr><td>JACKPOT 7️⃣7️⃣7️⃣</td><td>777 Pts!</td></tr>
+    <tr><td>Trostpreis</td><td>8 + Shield-Bonus</td></tr>
+    <tr><td>Doppelt (2 gleiche)</td><td>22</td></tr>
+    <tr><td>Triple</td><td>45-175</td></tr>
+    <tr><td>Diamant Triple</td><td>350</td></tr>
+    <tr><td>JACKPOT 777</td><td>777</td></tr>
+  </table>
+  <p>Alle Auszahlungen werden durch Profit-Bonus, Prestige-Multiplikator und Diminishing Returns beeinflusst.</p>
+</div>
+
+<div class="card">
+  <h3>&#127903; Rubbellos (40 Punkte)</h3>
+  <table>
+    <tr><td>Trostpreis</td><td>15 + Shield</td></tr>
+    <tr><td>Zweier</td><td>30</td></tr>
+    <tr><td>Triple</td><td>85-1000</td></tr>
   </table>
 </div>
 
 <div class="card">
-  <h3><span class="emoji">🎟️</span> Rubbellos</h3>
-  <p>Kostet <strong>40 Punkte</strong>. Drei Felder werden aufgekratzt.</p>
-  <table>
-    <tr><th>Ergebnis</th><th>Auszahlung</th></tr>
-    <tr><td>Trostpreis</td><td>15 Pts</td></tr>
-    <tr><td>Zweier</td><td>30 Pts</td></tr>
-    <tr><td>Triple 🍀🍀🍀 bis 🌟🌟🌟</td><td>85-1000 Pts</td></tr>
-  </table>
-</div>
-
-<div class="card">
-  <h3><span class="emoji">🪙</span> Münzwurf</h3>
-  <p>Kostet <strong>1 Punkt</strong>. 50/50 Chance — Kopf oder Zahl!</p>
-  <p>Gewinn: 2 Punkte zurück (+1 Profit). Verlust: 0 zurück (-1).</p>
+  <h3>&#129689; M&uuml;nzwurf (1 Punkt)</h3>
+  <p>50% Chance + Luck-Bonus. Gewinn: 2 Punkte. Verlust: 0.</p>
 </div>
 
 <div class="card card-gold">
-  <h3><span class="emoji">⚡</span> Doppelt oder Nichts</h3>
-  <p>Nach jedem Gewinn kannst du deinen Gewinn verdoppeln! 48% Chance.</p>
-  <p>Klicke <strong>DOPPELN</strong> um zu riskieren oder <strong>EINSACKEN</strong> um den Gewinn zu sichern.</p>
+  <h3>&#9889; Doppelt oder Nichts</h3>
+  <p>Nach jedem Gewinn: 48% Chance zu verdoppeln. Erscheint als Overlay &uuml;ber den Spielautomaten.</p>
 </div>
 
 <div class="card card-red">
-  <h3><span class="emoji">💀</span> All-In</h3>
-  <p>Setze <strong>ALLE deine Punkte</strong> auf einmal! 40% Chance, 2.5x Auszahlung.</p>
-  <p>1 Stunde Cooldown. Mindestens 10 Punkte nötig.</p>
-  <div class="warning">Verlierst du, sind alle Punkte weg!</div>
+  <h3>&#128128; All-In (2 Varianten)</h3>
+  <table>
+    <tr><th>Modus</th><th>Einsatz</th><th>Chance</th><th>Payout</th></tr>
+    <tr><td>90% All-In</td><td>90% deiner Punkte</td><td>40%</td><td>x2.5</td></tr>
+    <tr><td>&#9760; Deadly All-In</td><td>100% (ALLES)</td><td>35%</td><td>x3</td></tr>
+  </table>
+  <p>Kein Cooldown &mdash; jederzeit spielbar.</p>
 </div>
 
 <div class="card card-cyan">
-  <h3><span class="emoji">🎡</span> Glücksrad</h3>
-  <p><strong>Einmal täglich gratis!</strong> Drehe das Rad für 1-100 Punkte.</p>
+  <h3>&#127905; Gl&uuml;cksrad</h3>
+  <p><strong>Einmal t&auml;glich gratis!</strong> 1-100 Punkte (gewichtet: niedrige Werte wahrscheinlicher).</p>
 </div>
 
 <div class="card">
-  <h3><span class="emoji">🆓</span> Gratis-Spiele</h3>
-  <p>Jeden Tag bekommst du <strong>10 Gratis-Spins</strong> pro Spieltyp (Flip, Slots, Scratch). Die Skill-Tree-Fähigkeit "Tempo" gibt extra Free Plays.</p>
+  <h3>&#127383; Gratis-Spiele</h3>
+  <p>Jeden Tag 10 Gratis-Spins pro Spieltyp. Tempo-Skill und Hasen-Pet geben extra Free Plays.</p>
+</div>
+
+<!-- PREMIUM SLOTS -->
+<h2 id="premium">&#128142; Premium Slots (Unendliche Tiers)</h2>
+<div class="card card-gold">
+  <p>Je mehr du in Skills und Pets investierst, desto h&ouml;here Slot-Tiers werden freigeschaltet. <strong>Es gibt kein Limit!</strong></p>
+  <table>
+    <tr><th>Tier</th><th>Kosten</th><th>777 Jackpot</th><th>Investiert n&ouml;tig</th></tr>
+    <tr><td>&#128142; Diamond</td><td>500</td><td>19.425</td><td>10K</td></tr>
+    <tr><td>&#128081; Royal</td><td>12.500</td><td>485.625</td><td>250K</td></tr>
+    <tr><td>&#127756; Cosmic</td><td>312.500</td><td>12.140.625</td><td>6.25M</td></tr>
+    <tr><td>&#9854; Infinity</td><td>7.812.500</td><td>303.515.625</td><td>156M</td></tr>
+    <tr><td>&#128302; Mythic</td><td>195M</td><td>7.58 Mrd</td><td>3.9 Mrd</td></tr>
+    <tr><td>&#9883; Quantum</td><td>4.88 Mrd</td><td>189 Mrd</td><td>...</td></tr>
+    <tr><td colspan="4" style="text-align:center; color:#9ca3af;">...und so weiter, unendlich!</td></tr>
+  </table>
+  <p>Formel: Tier N &rarr; Kosten = 20 &times; 25<sup>N</sup>, Jackpot = 777 &times; 25<sup>N</sup></p>
+  <p>Prestige-Multiplikator und Profit-Bonus werden auf alle Tier-Gewinne angewendet!</p>
+</div>
+
+<!-- MINISPIELE -->
+<h2 id="minigames">&#127918; Minispiele</h2>
+
+<div class="card card-green">
+  <h3>&#128013; Snake</h3>
+  <p>Klassisches Snake auf 20x20 Grid. 1 Punkt pro Apfel, max 50 pro Spiel. WASD/Pfeiltasten + Mobile D-Pad. 30s Cooldown.</p>
+</div>
+
+<div class="card card-red">
+  <h3>&#128308; 4 Gewinnt (PvP)</h3>
+  <p>Fordere andere Spieler heraus! Wetteinatz ab 5 Pts. 7&times;6 Board, 4 in einer Reihe gewinnt. Gewinner bekommt den ganzen Pot.</p>
+</div>
+
+<div class="card card-purple">
+  <h3>&#129504; Memory</h3>
+  <p>4&times;4 Grid, 8 Emoji-Paare. 2 Pts pro Paar + Zeitbonus (unter 30s: +10, unter 60s: +5). Max 26 Pts. 60s Cooldown.</p>
+</div>
+
+<div class="card card-orange">
+  <h3>&#127922; W&uuml;rfel 21</h3>
+  <p>Wirf W&uuml;rfel (1-6) und sammle Punkte. Stoppe vor 21 &mdash; oder riskiere alles!</p>
+  <table>
+    <tr><td>20-21</td><td>x3</td></tr>
+    <tr><td>18-19</td><td>x2.5</td></tr>
+    <tr><td>16-17</td><td>x2</td></tr>
+    <tr><td>14-15</td><td>x1.5</td></tr>
+    <tr><td>12-13</td><td>x1.2</td></tr>
+    <tr><td>&lt;12</td><td>x1 (Einsatz zur&uuml;ck)</td></tr>
+    <tr><td>&Uuml;ber 21</td><td>BUST! Alles verloren</td></tr>
+    <tr><td>Genau 21</td><td>x3! Perfekt!</td></tr>
+  </table>
+</div>
+
+<div class="card card-cyan">
+  <h3>&#127919; Dr&uuml;ber / Drunter</h3>
+  <p>2 W&uuml;rfel (Summe 2-12). Rate ob &uuml;ber oder unter 7!</p>
+  <table>
+    <tr><td>Dr&uuml;ber (&gt;7) richtig</td><td>x2</td></tr>
+    <tr><td>Drunter (&lt;7) richtig</td><td>x2</td></tr>
+    <tr><td>Genau 7 getippt</td><td>x5!</td></tr>
+    <tr><td>7 bei Dr&uuml;ber/Drunter</td><td>Verloren (House wins)</td></tr>
+  </table>
 </div>
 
 <!-- SPECIALS -->
-<h2 id="specials">🎁 Casino Specials</h2>
-<p>Besondere Events die zufällig beim Spielen ausgelöst werden:</p>
-
+<h2 id="specials">&#127873; Casino Specials</h2>
 <div class="card">
   <table>
     <tr><th>Special</th><th>Trigger</th><th>Effekt</th></tr>
-    <tr><td>😢 Mitleids-Punkte</td><td>3x hintereinander verloren</td><td>+5 Trostpunkte</td></tr>
-    <tr><td>🔥 Verfluchte Münze</td><td>5x Flip verloren</td><td>Nächster Flip: 75% Win!</td></tr>
-    <tr><td>🐈‍⬛ Schwarze Katze</td><td>3% Chance bei Verlust</td><td>Nächstes Spiel: Garantie-Gewinn!</td></tr>
-    <tr><td>😱 Beinahe-Jackpot</td><td>2 von 3 gleich</td><td>Animation (visuell)</td></tr>
-    <tr><td>🎁 Rage Quit Bonus</td><td>5+ Verluste, dann Pause</td><td>+25 Willkommens-Bonus</td></tr>
-    <tr><td>🌟 Goldener Regen</td><td>Triple getroffen</td><td>Gold-Confetti!</td></tr>
-    <tr><td>🎡 Multiplikator-Rad</td><td>Gewinn ≥ 100 Pts</td><td>2x-5x Bonus!</td></tr>
-    <tr><td>🚨 Jackpot-Sirene</td><td>777 Jackpot</td><td>Screen flasht rot/gold!</td></tr>
-    <tr><td>🎁 Geschenk an Chat</td><td>Gewinn ≥ 500 Pts</td><td>5 Zuschauer bekommen je 10 Pts</td></tr>
-    <tr><td>📦 Mystery Box</td><td>Alle 20 Spiele</td><td>1-50 Gratis-Punkte!</td></tr>
-    <tr><td>⚔️ Boss Fight</td><td>Alle ~100 Spiele spawnt ein Boss</td><td>Gewinne dealen Schaden, Boss-Kill = +50 für alle!</td></tr>
+    <tr><td>&#128546; Mitleids-Punkte</td><td>3x verloren</td><td>+5 Trostpunkte</td></tr>
+    <tr><td>&#128293; Verfluchte M&uuml;nze</td><td>5x Flip verloren</td><td>N&auml;chster Flip: 75% Win!</td></tr>
+    <tr><td>&#128008; Schwarze Katze</td><td>3% bei Verlust</td><td>N&auml;chstes Spiel: Garantie-Gewinn!</td></tr>
+    <tr><td>&#128561; Beinahe-Jackpot</td><td>2 von 3 gleich</td><td>"SO KNAPP!" Animation</td></tr>
+    <tr><td>&#127873; Rage Quit Bonus</td><td>5+ Verluste, Pause</td><td>+25 Willkommens-Bonus</td></tr>
+    <tr><td>&#127775; Goldener Regen</td><td>Triple</td><td>Gold-Confetti!</td></tr>
+    <tr><td>&#127905; Multiplikator-Rad</td><td>Gewinn &ge;100</td><td>x2-x5 Bonus!</td></tr>
+    <tr><td>&#128680; Jackpot-Sirene</td><td>777</td><td>Screen flasht rot/gold!</td></tr>
+    <tr><td>&#127873; Geschenk an Chat</td><td>Gewinn &ge;500</td><td>5 Zuschauer je +10 Pts</td></tr>
+    <tr><td>&#128230; Mystery Box</td><td>Alle 20 Spiele</td><td>1-50 Gratis-Punkte!</td></tr>
+    <tr><td>&#9876; Boss Fight</td><td>~Alle 100 Spiele</td><td>Community-Boss, Kill = +50 f&uuml;r alle!</td></tr>
   </table>
 </div>
 
 <!-- QUESTS -->
-<h2 id="quests">📋 Tägliche Quests</h2>
+<h2 id="quests">&#128203; T&auml;gliche Quests</h2>
 <div class="card card-green">
-  <p>Jeden Tag bekommst du <strong>3 zufällige Quests</strong> (1 leicht, 1 mittel, 1 schwer). Quests werden aus Bausteinen kombiniert — tausende Variationen!</p>
+  <p><strong>3 zuf&auml;llige Quests pro Tag</strong> (1 leicht, 1 mittel, 1 schwer). Generiert aus Bausteinen &mdash; tausende Variationen!</p>
   <p>Beispiele: "Gewinne 5 Flips", "Sammle 200 Punkte", "Erziele einen Triple"</p>
-  <p>Belohnungen: 10-200 Punkte pro Quest. Alle 3 schaffen = Bonus-XP!</p>
-  <p>Reset: <strong>Mitternacht</strong>. Nicht geschaffte Quests verfallen.</p>
+  <p>Belohnungen: 10-200 Punkte. Alle 3 schaffen = Bonus-XP! Reset um Mitternacht.</p>
 </div>
 
 <!-- SEASON -->
-<h2 id="season">🎖️ Battle Pass / Saison</h2>
+<h2 id="season">&#127894; Battle Pass / Saison</h2>
 <div class="card card-purple">
-  <p>30-Tage-Saisons mit <strong>50 Leveln</strong>. Sammle XP durch Spielen!</p>
+  <p>30-Tage-Saisons mit <strong>50 Leveln</strong>. XP durch Spielen, Quests, Achievements.</p>
   <h3>XP-Quellen</h3>
   <table>
     <tr><td>Spiel spielen</td><td>+5 XP</td></tr>
     <tr><td>Spiel gewinnen</td><td>+10 XP</td></tr>
     <tr><td>Triple</td><td>+25 XP</td></tr>
     <tr><td>777 Jackpot</td><td>+100 XP</td></tr>
-    <tr><td>Quest abschließen</td><td>+30 XP</td></tr>
-    <tr><td>Achievement freischalten</td><td>+20 XP</td></tr>
+    <tr><td>Quest abschlie&szlig;en</td><td>+30 XP</td></tr>
+    <tr><td>Achievement</td><td>+20 XP</td></tr>
     <tr><td>Erster Spiel des Tages</td><td>+15 XP</td></tr>
   </table>
-  <h3>Free Track Belohnungen</h3>
-  <p>LVL 5: Titel · LVL 10: 100 Pts · LVL 15: Lootbox · LVL 20: 200 Pts · ... · LVL 50: 1000 Pts + Titel + Auto-Flip Bot!</p>
-  <h3>Premium Pass (500 Punkte)</h3>
-  <p>Schaltet <strong>10 zusätzliche Belohnungen</strong> frei — extra Punkte, exklusive Titel, Lootboxen.</p>
+  <p><strong>Free Track:</strong> Titel, Punkte, Lootboxen alle 5 Level. Level 50: 1000 Pts + Titel + Auto-Flip Bot!</p>
+  <p><strong>Premium Pass (500 Pts):</strong> 10 zus&auml;tzliche Belohnungen mit exklusiven Titeln.</p>
 </div>
 
 <!-- PRESTIGE -->
-<h2 id="prestige">⭐ Prestige & Auto-Flip Bot</h2>
+<h2 id="prestige">&#11088; Prestige & Auto-Flip Bot</h2>
 <div class="card card-gold">
-  <p>Bei <strong>Level 50</strong> kannst du <strong>Prestige</strong> machen:</p>
-  <ul style="margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1;">
-    <li>Battle Pass wird auf Level 0 zurückgesetzt</li>
-    <li>Du bekommst einen Prestige-Titel (Prestige I, II, III...)</li>
-    <li>Der <strong>Auto-Münzwurf Bot</strong> wird freigeschaltet!</li>
-  </ul>
+  <p>Bei <strong>Level 50</strong>: Prestige machen &rarr; Battle Pass reset, Prestige-Titel, Auto-Flipper freigeschaltet!</p>
+  <h3>Prestige-Multiplikator</h3>
+  <p>Jedes Prestige-Level gibt <strong>+5% auf ALLE Gewinne</strong> permanent. Prestige 10 = +50%, Prestige 20 = +100%!</p>
   <h3>Auto-Flip Bot</h3>
-  <p>Wirft automatisch Münzen für dich — passiv Punkte verdienen!</p>
+  <p>Wirft automatisch M&uuml;nzen &mdash; auch wenn du offline bist! Wird mit jedem Prestige schneller.</p>
   <table>
     <tr><th>Prestige</th><th>Intervall</th></tr>
-    <tr><td>1</td><td>Alle 50 Sekunden</td></tr>
-    <tr><td>3</td><td>Alle 30 Sekunden</td></tr>
-    <tr><td>5</td><td>Alle 20 Sekunden</td></tr>
-    <tr><td>10+</td><td>Alle 5 Sekunden</td></tr>
+    <tr><td>1</td><td>50s</td></tr>
+    <tr><td>3</td><td>30s</td></tr>
+    <tr><td>5</td><td>20s</td></tr>
+    <tr><td>10+</td><td>5s</td></tr>
   </table>
-  <p>Kann ein/ausgeschaltet werden. Läuft serverseitig — auch wenn du offline bist!</p>
+  <p>Live-Widget unten links zeigt Flips, Wins und Rate.</p>
 </div>
 
 <!-- SKILLS -->
-<h2 id="skills">🌳 Skill Tree</h2>
+<h2 id="skills">&#127795; Skill Tree</h2>
 <div class="card card-purple">
-  <p>Investiere Punkte in <strong>8 Skill-Branches</strong>. Kosten steigen exponentiell: <code>50 × 2^Level</code></p>
+  <p>8 Branches, exponentiell teurer: <code>50 &times; 2^Level</code></p>
   <table>
-    <tr><th>Branch</th><th>Effekt pro Level</th><th>Kosten LVL 1 → 5 → 10</th></tr>
-    <tr><td>🪙 Münzglück</td><td>+0.5% Flip-Chance</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>🎰 Slot-Glück</td><td>+0.5% Slot-Chance</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>🎟️ Rubbelglück</td><td>+0.5% Scratch-Chance</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>💰 Profit</td><td>+2% Auszahlung</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>🛡️ Schutz</td><td>+1 Trostpreis</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>⚡ Tempo</td><td>+1 Free Play / 5 LVL</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>🌟 Specials</td><td>+0.5% Special-Rate</td><td>50 → 800 → 25.600</td></tr>
-    <tr><td>⚔️ Kampf</td><td>+5% Boss-Schaden</td><td>50 → 800 → 25.600</td></tr>
+    <tr><th>Branch</th><th>Effekt pro Level</th></tr>
+    <tr><td>&#129689; M&uuml;nzgl&uuml;ck</td><td>+0.5% Flip-Chance</td></tr>
+    <tr><td>&#127920; Slot-Gl&uuml;ck</td><td>+0.5% Slot-Chance</td></tr>
+    <tr><td>&#127903; Rubbelgl&uuml;ck</td><td>+0.5% Scratch-Chance</td></tr>
+    <tr><td>&#128176; Profit</td><td>+2% Auszahlung</td></tr>
+    <tr><td>&#128737; Schutz</td><td>+1 Trostpreis</td></tr>
+    <tr><td>&#9889; Tempo</td><td>+1 Free Play / 5 LVL</td></tr>
+    <tr><td>&#127775; Specials</td><td>+0.5% Special-Rate</td></tr>
+    <tr><td>&#9876; Kampf</td><td>+5% Boss-Schaden</td></tr>
   </table>
-  <div class="tip">Tipp: Skill-Boni stacken mit Pet-Boni und Item-Boni!</div>
+  <p>Boni stacken mit Pet-Boni und Item-Boni, unterliegen aber Diminishing Returns.</p>
+</div>
+
+<!-- DIMINISHING RETURNS -->
+<h2 id="diminishing">&#128202; Diminishing Returns (Soft Caps)</h2>
+<div class="card">
+  <p>Boni werden durch Soft Caps begrenzt. Je h&ouml;her der Rohwert, desto weniger bringt jeder weitere Punkt.</p>
+  <table>
+    <tr><th>Kategorie</th><th>Max Cap</th><th>10% raw</th><th>30% raw</th><th>100% raw</th></tr>
+    <tr><td>Luck (Flip/Slots/Scratch)</td><td>25%</td><td>9.5%</td><td>15.8%</td><td>24.3%</td></tr>
+    <tr><td>Payout</td><td>40%</td><td>9.5%</td><td>23.5%</td><td>36.2%</td></tr>
+    <tr><td>Special-Rate</td><td>20%</td><td>9.5%</td><td>15.8%</td><td>19.3%</td></tr>
+    <tr><td>Boss-Schaden</td><td>50%</td><td>9.5%</td><td>25.9%</td><td>43.2%</td></tr>
+    <tr><td>Shield (Trostpreis)</td><td>15</td><td colspan="3">Linear bis Cap</td></tr>
+    <tr><td>Free Plays</td><td>10</td><td colspan="3">Linear bis Cap</td></tr>
+    <tr><td>XP, Heist, Mystery</td><td>Kein Cap</td><td colspan="3">Unbegrenzt!</td></tr>
+  </table>
+  <p>Die Boni-Seitenleiste (rechts) zeigt effektive Werte mit Cap-Angabe.</p>
 </div>
 
 <!-- PETS -->
-<h2 id="pets">🐾 V-Pets</h2>
+<h2 id="pets">&#128062; V-Pets</h2>
 <div class="card card-pink">
-  <p>Kaufe virtuelle Haustiere! Jedes Pet gibt einen <strong>passiven Bonus</strong> der mit dem Level skaliert.</p>
+  <p>Kaufe Pets im Shop! Jedes gibt einen <strong>passiven Bonus</strong> der mit Pet-Level skaliert. Mehrere Pets sammelbar, eins aktiv.</p>
   <table>
     <tr><th>Pet</th><th>Preis</th><th>Bonus</th></tr>
-    <tr><td>🐱 Katze</td><td>500</td><td>+1% Flip-Glück/LVL</td></tr>
-    <tr><td>🐶 Hund</td><td>1.000</td><td>+1 Trostpreis/LVL</td></tr>
-    <tr><td>🐰 Hase</td><td>2.500</td><td>+1 Free Play/3 LVL</td></tr>
-    <tr><td>🦊 Fuchs</td><td>5.000</td><td>+0.5% Special-Rate/LVL</td></tr>
-    <tr><td>🐼 Panda</td><td>15.000</td><td>+2% Payout/LVL</td></tr>
-    <tr><td>🐉 Drache</td><td>50.000</td><td>+3% Boss-DMG/LVL</td></tr>
-    <tr><td>🦄 Einhorn</td><td>150.000</td><td>+1% Slot-Glück/LVL</td></tr>
-    <tr><td>🔥 Phoenix</td><td>500.000</td><td>+1% Scratch-Glück/LVL</td></tr>
-    <tr><td>👾 Alien</td><td>1.500.000</td><td>+5% Mystery Reward/LVL</td></tr>
-    <tr><td>🤖 Roboter</td><td>5.000.000</td><td>+3% XP/LVL</td></tr>
-    <tr><td>🦑 Kraken</td><td>15.000.000</td><td>+2% Heist-Pot/LVL</td></tr>
-    <tr><td>🕳️ Void Entity</td><td>50.000.000</td><td>+1% auf ALLES/LVL</td></tr>
+    <tr><td>&#128049; Katze</td><td>500</td><td>+1% Flip/LVL</td></tr>
+    <tr><td>&#128054; Hund</td><td>1K</td><td>+1 Shield/LVL</td></tr>
+    <tr><td>&#128048; Hase</td><td>2.5K</td><td>+1 Free Play/3 LVL</td></tr>
+    <tr><td>&#129418; Fuchs</td><td>5K</td><td>+0.5% Specials/LVL</td></tr>
+    <tr><td>&#128060; Panda</td><td>15K</td><td>+2% Payout/LVL</td></tr>
+    <tr><td>&#128009; Drache</td><td>50K</td><td>+3% Boss-DMG/LVL</td></tr>
+    <tr><td>&#129412; Einhorn</td><td>150K</td><td>+1% Slot/LVL</td></tr>
+    <tr><td>&#128293; Phoenix</td><td>500K</td><td>+1% Scratch/LVL</td></tr>
+    <tr><td>&#128126; Alien</td><td>1.5M</td><td>+5% Mystery/LVL</td></tr>
+    <tr><td>&#129302; Roboter</td><td>5M</td><td>+3% XP/LVL</td></tr>
+    <tr><td>&#129425; Kraken</td><td>15M</td><td>+2% Heist/LVL</td></tr>
+    <tr><td>&#128371; Void Entity</td><td>50M</td><td>+1% ALLES/LVL</td></tr>
   </table>
-  <p>Du kannst <strong>mehrere Pets</strong> besitzen aber nur eins ist aktiv. Pet-Level steigt durch Spielen (exponentiell schwerer).</p>
-
-  <h3>Pet-Items (Shop)</h3>
-  <p>Rüste dein Pet mit Items aus — jedes gibt einen Bonus der mit dem Pet-Level skaliert!</p>
+  <h3>Legend&auml;re Pets (nur aus Lootbox-Drops, 0.1%)</h3>
   <table>
-    <tr><th>Kategorie</th><th>Bonus</th><th>Preis ab</th></tr>
-    <tr><td>🎩 Hüte</td><td>+XP pro Spiel</td><td>200</td></tr>
-    <tr><td>🕶️ Brillen</td><td>+Trostpreis</td><td>200</td></tr>
-    <tr><td>🧣 Umhänge</td><td>+Special-Rate</td><td>300</td></tr>
-    <tr><td>⚔️ Accessoires</td><td>+Boss-Schaden</td><td>500</td></tr>
-    <tr><td>✨ Auren</td><td>+Payout</td><td>1.000</td></tr>
-    <tr><td>🍕 Snacks</td><td>+Fütter-Effekt</td><td>100</td></tr>
+    <tr><td>&#128123;&#128049; Geister-Katze</td><td>+1.5% ALLES/LVL</td></tr>
+    <tr><td>&#10024;&#128009; Goldener Drache</td><td>+4% Payout/LVL</td></tr>
+    <tr><td>&#128142;&#128058; Kristall-Wolf</td><td>+6% Boss-DMG/LVL</td></tr>
+    <tr><td>&#127761;&#128293; Schatten-Phoenix</td><td>+2% Specials/LVL</td></tr>
+    <tr><td>&#127756;&#128048; Kosmischer Hase</td><td>+5% XP/LVL</td></tr>
   </table>
-  <p>Items werden beim erneuten Kauf <strong>doppelt so teuer</strong> (exponentiell).</p>
+  <h3>Pet-Items (Shop)</h3>
+  <p>6 Kategorien: H&uuml;te (+XP), Brillen (+Shield), Umh&auml;nge (+Specials), Accessoires (+Boss-DMG), Auren (+Payout), Snacks (+F&uuml;tter-Effekt). Alle skalieren mit Pet-Level!</p>
+  <p>Pet-Level steigt exponentiell schwerer: <code>50 &times; 1.5^(Level-1)</code> XP ben&ouml;tigt.</p>
 </div>
 
 <!-- PET CARE -->
-<h2 id="petcare">🍖 Pet-Pflege</h2>
+<h2 id="petcare">&#127830; Pet-Pflege</h2>
 <div class="card card-pink">
-  <p>Dein Pet hat drei Bedürfnisse die über Zeit abfallen:</p>
   <table>
-    <tr><th>Bedürfnis</th><th>Abfall</th><th>Aktion</th><th>Cooldown</th></tr>
-    <tr><td>😊 Glück</td><td>-5%/Stunde</td><td>🐾 Gassi gehen</td><td>15 Min</td></tr>
-    <tr><td>🍖 Hunger</td><td>-8%/Stunde</td><td>🍖 Füttern</td><td>10 Min</td></tr>
-    <tr><td>✨ Sauberkeit</td><td>Sinkt bei 💩</td><td>💩 Aufräumen</td><td>Sofort</td></tr>
+    <tr><th>Bed&uuml;rfnis</th><th>Abfall</th><th>Aktion</th><th>Cooldown</th></tr>
+    <tr><td>&#128522; Gl&uuml;ck</td><td>-5%/h</td><td>&#128062; Gassi gehen (+30)</td><td>15 Min</td></tr>
+    <tr><td>&#127830; Hunger</td><td>-8%/h</td><td>&#127830; F&uuml;ttern (+40 + Food-Bonus)</td><td>10 Min</td></tr>
+    <tr><td>&#10024; Sauberkeit</td><td>Sinkt bei &#128169;</td><td>&#128169; Aufr&auml;umen</td><td>Sofort</td></tr>
   </table>
-  <p><strong>Stimmung</strong> = Durchschnitt aller drei Werte. Niedrige Stimmung = reduzierte Pet-Boni (min. 10%)!</p>
-  <p>Beim Gassi gehen: 60% Chance dass 💩 erscheint — die klebt auf den Spielautomaten bis du aufräumst!</p>
-  <div class="tip">Tipp: Besseres Essen (aus dem Shop) stellt mehr Hunger wieder her!</div>
+  <p><strong>Stimmung</strong> = Durchschnitt aller 3 Werte. Niedrige Stimmung = reduzierte Pet-Boni (min 10%)!</p>
+  <p>60% Chance auf &#128169; nach Gassi &mdash; klebt auf den Spielautomaten bis aufger&auml;umt!</p>
 </div>
 
 <!-- BREEDING -->
-<h2 id="breeding">🧬 Pet-Zucht</h2>
+<h2 id="breeding">&#129516; Pet-Zucht</h2>
 <div class="card card-pink">
-  <p>Kombiniere zwei Pets zu einem <strong>Hybrid</strong> mit gemischten Boni!</p>
-  <ul style="margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1;">
-    <li>Brauchst mindestens 2 Pets</li>
-    <li>Kosten: <code>10.000 × (Anzahl bisheriger Zuchten + 1)</code></li>
-    <li>Cooldown: 24 Stunden</li>
-    <li>Hybrid bekommt gemischte Boni mit +10% Bonus</li>
-    <li>Einzigartiger Name (z.B. "Phoenix-Katze" 🔥🐱)</li>
-  </ul>
+  <p>Kombiniere 2 Pets zu einem <strong>Hybrid</strong> mit <strong>BEIDEN Eltern-Boni + 10% Zuchtbonus!</strong></p>
+  <p>Beispiel: Drache (+3% Boss) + Panda (+2% Payout) = Hybrid mit +3.3% Boss UND +2.2% Payout!</p>
+  <p>Kosten: <code>10.000 &times; (Anzahl Zuchten + 1)</code>. Kein Cooldown. Mehrgenerationen-Zucht stackt alle Boni!</p>
 </div>
 
 <!-- BATTLES -->
-<h2 id="battles">⚔️ Pet Battles</h2>
+<h2 id="battles">&#9876; Pet Battles (PvP)</h2>
 <div class="card card-red">
-  <p>Fordere andere Spieler zum Pet-Kampf heraus!</p>
-  <p><strong>Pet-Power</strong> = (Level × 10) + Item-Boni + Legendary-Bonus(50)</p>
-  <ol style="margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1;">
-    <li>Erstelle eine Herausforderung mit Wetteinsatz</li>
-    <li>Ein anderer Spieler akzeptiert</li>
-    <li>Beide Pets würfeln 1-100 + ihre Power</li>
-    <li>Höherer Wert gewinnt den Einsatz!</li>
-  </ol>
-  <p>Herausforderungen verfallen nach 2 Minuten.</p>
+  <p>Pet-Power = (Level &times; 10) + Item-Boni + Legendary-Bonus(50). Beide w&uuml;rfeln 1-100 + Power. H&ouml;herer Wert gewinnt.</p>
 </div>
 
 <!-- HEISTS -->
-<h2 id="heists">🏴‍☠️ Heists</h2>
+<h2 id="heists">&#127988; Heists</h2>
 <div class="card card-red">
-  <p>Multiplayer-Raubzüge für 1-5 Spieler!</p>
-  <ol style="margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1;">
-    <li><strong>Erstellen:</strong> 50 Punkte Eintritt</li>
-    <li><strong>Beitreten:</strong> 25 Punkte (2 Min Lobby)</li>
-    <li><strong>Spielen:</strong> Jeder spielt 3 Runden (Flip/Slots/Scratch)</li>
-    <li><strong>Verrat?</strong> 30 Sekunden zum Entscheiden</li>
-    <li><strong>Auszahlung!</strong></li>
-  </ol>
+  <p>1-5 Spieler. Erstellen: 50 Pts, Beitreten: 25 Pts. 2 Min Lobby, 3 Runden, Verratsphase (30s).</p>
   <table>
-    <tr><th>Szenario</th><th>Ergebnis</th></tr>
-    <tr><td>Niemand verrät</td><td>Pot × 1.5, gleichmäßig verteilt</td></tr>
-    <tr><td>Einer verrät</td><td>Verräter: 80% · Rest: 20%</td></tr>
-    <tr><td>Mehrere verraten</td><td>Verräter: 0 · Treue: voller Pot</td></tr>
-    <tr><td>Alle verraten</td><td>Alle verlieren alles!</td></tr>
+    <tr><td>Niemand verr&auml;t</td><td>Pot &times; 1.5, gleichm&auml;&szlig;ig</td></tr>
+    <tr><td>Einer verr&auml;t</td><td>Verr&auml;ter: 80%, Rest: 20%</td></tr>
+    <tr><td>Mehrere verraten</td><td>Verr&auml;ter: 0, Treue: voller Pot</td></tr>
+    <tr><td>Alle verraten</td><td>Alle verlieren!</td></tr>
   </table>
 </div>
 
 <!-- GUILDS -->
-<h2 id="guilds">🏰 Gilden</h2>
+<h2 id="guilds">&#127984; Gilden</h2>
 <div class="card card-green">
-  <p>Erstelle oder trete einer Gilde bei!</p>
-  <ul style="margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1;">
-    <li><strong>Erstellen:</strong> 1.000 Punkte, Name + Emoji wählen</li>
-    <li><strong>Beitreten:</strong> Kostenlos, max. 20 Mitglieder</li>
-    <li>Gilde sammelt gemeinsam XP</li>
-    <li>Gilden-Rangliste zeigt die aktivste Gruppe</li>
-  </ul>
-  <p>Gilden sind rein sozial — kein Gameplay-Vorteil, nur Gemeinschaft!</p>
+  <p>Erstellen: 1.000 Pts. Beitreten: kostenlos. Max 20 Mitglieder. Guild-XP-Leaderboard. Rein sozial, kein Gameplay-Vorteil.</p>
 </div>
 
 <!-- TOURNAMENT -->
-<h2 id="tournament">🏆 Wöchentliches Turnier</h2>
+<h2 id="tournament">&#127942; Wöchentliches Turnier</h2>
 <div class="card card-purple">
-  <p>Jeden Montag startet ein neues Turnier (Mo-So).</p>
-  <table>
-    <tr><th>Aktion</th><th>Turnier-Punkte</th></tr>
-    <tr><td>Flip gewinnen</td><td>+1</td></tr>
-    <tr><td>Slots/Scratch gewinnen</td><td>+3</td></tr>
-    <tr><td>Triple</td><td>+10</td></tr>
-    <tr><td>777 Jackpot</td><td>+50</td></tr>
-    <tr><td>Double gewinnen</td><td>+2</td></tr>
-  </table>
-  <p>Am Sonntag: Top 3 bekommen Preise (1000/500/250 Pts). Platz 1 bekommt einen exklusiven Titel!</p>
+  <p>Mo-So. Turnier-Punkte: Flip=1, Slots/Scratch=3, Triple=10, 777=50, Double=2. Top 3 am Sonntag: 1000/500/250 Pts.</p>
 </div>
 
 <!-- BINGO -->
-<h2 id="bingo">🎱 Bingo & 🍀 Lotto</h2>
+<h2 id="bingo">&#127921; Bingo & Lotto</h2>
 <div class="card">
-  <h3>Bingo (täglich)</h3>
-  <p>Schreibe <code class="cmd">!bingo</code> im Chat (10 Pts). Du bekommst 5 Zahlen (1-30). Ziehung täglich um 07:00.</p>
-  <table>
-    <tr><td>3 Treffer</td><td>25 Pts</td></tr>
-    <tr><td>4 Treffer</td><td>100 Pts</td></tr>
-    <tr><td>5 Treffer</td><td>500 Pts!</td></tr>
-  </table>
-
-  <h3>Lotto (wöchentlich)</h3>
-  <p>Schreibe <code class="cmd">!lotto</code> im Chat (50 Pts). Du bekommst 6 Zahlen (1-49). Ziehung Sonntag 10:00.</p>
-  <table>
-    <tr><td>3 Richtige</td><td>100 Pts</td></tr>
-    <tr><td>4 Richtige</td><td>500 Pts</td></tr>
-    <tr><td>5 Richtige</td><td>2.500 Pts</td></tr>
-    <tr><td>6 Richtige</td><td>10.000 Pts JACKPOT!</td></tr>
-  </table>
+  <p><strong>Bingo:</strong> <code class="cmd">!bingo</code> (10 Pts), 5 Zahlen, Ziehung 07:00. 3/4/5 Treffer = 25/100/500 Pts.</p>
+  <p><strong>Lotto:</strong> <code class="cmd">!lotto</code> (50 Pts), 6 Zahlen, Ziehung Sonntag 10:00. 3-6 Richtige = 100-10.000 Pts.</p>
 </div>
 
 <!-- ACHIEVEMENTS -->
-<h2 id="achievements">🏆 Achievements</h2>
+<h2 id="achievements">&#127942; Achievements</h2>
 <div class="card">
-  <p><strong>60+ Achievements</strong> in 9 Kategorien: Erste Schritte, Meilensteine, Glück, Pech, Specials, Doppelt-oder-Nichts, Sozial, Ausdauer, Legendär.</p>
-  <p>Jedes Achievement gibt einmalige Belohnungen (Punkte, Titel). Seltene Achievements haben goldene Rahmen!</p>
-  <div class="tip">Tipp: Achievements geben auch +20 XP für den Battle Pass!</div>
+  <p><strong>60+ Achievements</strong> in 9 Kategorien. Jedes gibt einmalige Belohnungen (Punkte, Titel) + 20 XP f&uuml;r den Battle Pass.</p>
 </div>
 
 <!-- LOOTBOX -->
-<h2 id="lootbox">📦 Lootboxen</h2>
+<h2 id="lootbox">&#128230; Lootboxen</h2>
 <div class="card">
-  <p>Schreibe <code class="cmd">!lootbox</code> im Chat. Kosten: je nach Kanal-Einstellungen. Enthält ~950 verschiedene Items:</p>
-  <ul style="margin: 0.5rem 0 0.5rem 1.5rem; color: #cbd5e1;">
-    <li>Titel (equipbar mit <code class="cmd">!equip Titel-Name</code>)</li>
-    <li>Sammelkarten (13 Serien)</li>
-    <li>Bonus-Punkte</li>
-    <li>Aktions-Tokens</li>
-    <li>Punkt-Multiplikatoren</li>
-  </ul>
+  <p><code class="cmd">!lootbox</code> im Chat. ~950 Items: Titel, Sammelkarten, Bonus-Punkte, Multiplikatoren.</p>
 </div>
 
 <!-- DROPS -->
-<h2 id="drops">✨ Legendäre Drops</h2>
+<h2 id="drops">&#10024; Legend&auml;re Drops</h2>
 <div class="card card-gold">
-  <p>Bei <strong>jedem Spiel</strong> hast du eine Chance auf seltene Drops:</p>
+  <p>Bei <strong>jedem Spiel</strong> automatische Chance auf seltene Drops:</p>
   <table>
-    <tr><th>Drop</th><th>Chance</th><th>Beispiele</th></tr>
-    <tr><td>Legendäres Pet</td><td>0.1% (1/1000)</td><td>👻🐱 Geister-Katze, ✨🐉 Goldener Drache, 💎🐺 Kristall-Wolf</td></tr>
-    <tr><td>Episches Item</td><td>0.5% (1/200)</td><td>💎👑 Diamant-Krone, ⚡🗡️ Plasma-Schwert, 🌠 Sternenstaub</td></tr>
+    <tr><td>Legend&auml;res Pet</td><td>0.1% (1/1000)</td><td>St&auml;rkere Boni als kaufbare Pets</td></tr>
+    <tr><td>Episches Item</td><td>0.5% (1/200)</td><td>H&ouml;here Bonus-Werte als Shop-Items</td></tr>
   </table>
-  <p>Legendäre Pets haben stärkere Boni als kaufbare Pets. Epische Items haben höhere Bonus-Werte als Shop-Items.</p>
-  <p>Drops werden mit einer <strong>großen Animation</strong> angezeigt!</p>
+  <p>Drops werden mit einer gro&szlig;en goldenen Animation angezeigt!</p>
 </div>
 
 <!-- LOGIN -->
-<h2 id="login">🔥 Login-Streaks</h2>
+<h2 id="login">&#128293; Login-Streaks</h2>
 <div class="card">
-  <p>Spiele jeden Tag um deine Streak zu halten!</p>
   <table>
-    <tr><td>Tag 1</td><td>10 Pts</td></tr>
-    <tr><td>Tag 3</td><td>25 Pts</td></tr>
+    <tr><td>Tag 1-6</td><td>10-75 Pts (steigend)</td></tr>
     <tr><td>Tag 7</td><td>100 Pts + Lootbox</td></tr>
     <tr><td>Tag 14</td><td>200 Pts + Titel</td></tr>
     <tr><td>Tag 30</td><td>500 Pts + Item</td></tr>
-    <tr><td>Tag 100</td><td>5.000 Pts + Legendärer Titel</td></tr>
+    <tr><td>Tag 100</td><td>5.000 Pts + Legend&auml;rer Titel</td></tr>
   </table>
-  <p>Wenn du einen Tag verpasst, wird die Streak zurückgesetzt!</p>
+</div>
+
+<!-- SOUNDS -->
+<h2 id="sounds">&#128266; Casino Sounds</h2>
+<div class="card">
+  <p>21 synthetische Sound-Effekte f&uuml;r alle Aktionen (Web Audio API, keine Downloads). Mute-Button unten links.</p>
+</div>
+
+<!-- SSE -->
+<h2 id="sse">&#9889; Live-Updates (SSE)</h2>
+<div class="card card-cyan">
+  <p>Alle Updates in Echtzeit via Server-Sent Events. Kein manuelles Neuladen n&ouml;tig! Feed, Leaderboard, Boss, Heists, Punkte &mdash; alles live.</p>
+  <p><strong>Passive Punkte:</strong> 5 Punkte pro Minute f&uuml;r jeden eingeloggten Casino-Besucher!</p>
 </div>
 
 <!-- COMMANDS -->
-<h2 id="commands">💬 Chat-Befehle</h2>
+<h2 id="commands">&#128172; Chat-Befehle (Twitch & Discord)</h2>
 <div class="card">
   <table>
     <tr><th>Befehl</th><th>Beschreibung</th></tr>
-    <tr><td><code class="cmd">!slots</code></td><td>Slot Machine spielen (20 Pts)</td></tr>
-    <tr><td><code class="cmd">!rubbellos</code></td><td>Rubbellos kratzen (40 Pts)</td></tr>
-    <tr><td><code class="cmd">!flip</code></td><td>Münze werfen (1 Pt)</td></tr>
-    <tr><td><code class="cmd">!bingo</code></td><td>Bingo-Ticket kaufen (10 Pts)</td></tr>
-    <tr><td><code class="cmd">!lotto</code></td><td>Lottoschein kaufen (50 Pts)</td></tr>
+    <tr><td><code class="cmd">!slots</code></td><td>Slot Machine (20 Pts)</td></tr>
+    <tr><td><code class="cmd">!rubbellos</code></td><td>Rubbellos (40 Pts)</td></tr>
+    <tr><td><code class="cmd">!flip</code></td><td>M&uuml;nzwurf (1 Pt)</td></tr>
+    <tr><td><code class="cmd">!bingo</code></td><td>Bingo-Ticket (10 Pts)</td></tr>
+    <tr><td><code class="cmd">!lotto</code></td><td>Lottoschein (50 Pts)</td></tr>
     <tr><td><code class="cmd">!casino</code></td><td>Link zur Casino-Webseite</td></tr>
-    <tr><td><code class="cmd">!points</code></td><td>Aktuelle Punkte anzeigen</td></tr>
-    <tr><td><code class="cmd">!lootbox</code></td><td>Lootbox öffnen</td></tr>
+    <tr><td><code class="cmd">!points</code></td><td>Aktuelle Punkte</td></tr>
+    <tr><td><code class="cmd">!lootbox</code></td><td>Lootbox &ouml;ffnen</td></tr>
     <tr><td><code class="cmd">!inventory</code></td><td>Inventar anzeigen</td></tr>
-    <tr><td><code class="cmd">!equip Name</code></td><td>Titel anlegen</td></tr>
+    <tr><td><code class="cmd">!equip Name</code></td><td>Titel anlegen (Lootbox + Season + Prestige + Achievements)</td></tr>
     <tr><td><code class="cmd">!unequip</code></td><td>Titel ablegen</td></tr>
     <tr><td><code class="cmd">!profil</code></td><td>Link zum Profil</td></tr>
-    <tr><td><code class="cmd">!link</code></td><td>Discord ↔ Twitch verknüpfen</td></tr>
+    <tr><td><code class="cmd">!link</code></td><td>Discord &harr; Twitch verkn&uuml;pfen</td></tr>
   </table>
-  <p>Alle Befehle funktionieren auf <strong>Twitch und Discord</strong>!</p>
 </div>
 
 <div style="text-align: center; margin: 3rem 0; color: #4b5563; font-size: 0.8rem;">
-  <p>⚠️ Kein echtes Geld · Verantwortungsvolles Fake-Gambling™</p>
-  <p><a href="/casino">← Zurück zum Casino</a></p>
+  <p>&WarningSign; Kein echtes Geld &middot; Verantwortungsvolles Fake-Gambling&trade;</p>
+  <p><a href="/casino">&larr; Zur&uuml;ck zum Casino</a></p>
 </div>
 
 </div>

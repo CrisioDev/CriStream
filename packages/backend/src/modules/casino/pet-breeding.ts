@@ -90,11 +90,7 @@ export async function breedPets(
     ? JSON.parse(breedRaw)
     : { lastBreed: 0, breedCount: 0 };
 
-  const cooldownLeft = breedData.lastBreed + COOLDOWN_MS - Date.now();
-  if (cooldownLeft > 0) {
-    const hours = Math.ceil(cooldownLeft / 3600000);
-    return { success: false, error: `Zucht-Cooldown! Noch ${hours} Stunden.` };
-  }
+  // No cooldown — breed anytime
 
   // Calculate cost
   const cost = 10000 * (breedData.breedCount + 1);

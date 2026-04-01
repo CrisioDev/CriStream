@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
+import { casinoSounds } from "@/lib/casino-sounds";
 
 // ── Types ──
 interface CasinoSpecial {
@@ -192,6 +193,14 @@ export function CasinoPage() {
     }
   }, []);
 
+  // ── Audio init ──
+  useEffect(() => {
+    const initAudio = () => { casinoSounds.init(); document.removeEventListener("click", initAudio); };
+    document.addEventListener("click", initAudio);
+    casinoSounds.setMute(soundMuted);
+    return () => document.removeEventListener("click", initAudio);
+  }, []);
+
   const [points, setPoints] = useState<number | null>(null);
 
   // Slots
@@ -354,9 +363,13 @@ export function CasinoPage() {
   const [renamingPet, setRenamingPet] = useState(false);
   const [petNewName, setPetNewName] = useState("");
 
+  // ── Sound ──
+  const [soundMuted, setSoundMuted] = useState(() => localStorage.getItem("casino-mute") === "1");
+
   // ── Process specials queue ──
   const processSpecial = useCallback((special: CasinoSpecial) => {
     setActiveSpecial(special);
+    casinoSounds.special();
     const t = special.type;
     if (t === "goldener_regen" && confettiRef.current) spawnConfetti(confettiRef.current, 100, true);
     if (t === "jackpot_sirene") { setSirenActive(true); setTimeout(() => setSirenActive(false), 3000); }
@@ -395,6 +408,7 @@ export function CasinoPage() {
           if (idx >= 0) {
             updated[idx] = { ...updated[idx]!, progress: qu.progress, done: qu.done };
             if (qu.done && !prev[idx]!.done) {
+              casinoSounds.questComplete();
               setQuestBonusAnim(`+${qu.reward} Quest Bonus!`);
               setTimeout(() => setQuestBonusAnim(null), 2500);
             }
@@ -410,6 +424,7 @@ export function CasinoPage() {
         const ach = progression.newAchievements[i]!;
         setTimeout(() => {
           setNewAchievementPopup({ name: ach.name, reward: ach.reward });
+          casinoSounds.achievement();
           if (confettiRef.current) spawnConfetti(confettiRef.current, 50, true);
           setTimeout(() => setNewAchievementPopup(null), 3000);
         }, i * 3500);
@@ -442,6 +457,7 @@ export function CasinoPage() {
     if ((progression as any).lootboxDrop) {
       const drop = (progression as any).lootboxDrop;
       setLootboxDropAnim(drop);
+      casinoSounds.jackpot();
       if (confettiRef.current) spawnConfetti(confettiRef.current, drop.type === "pet" ? 200 : 100, true);
       setTimeout(() => setLootboxDropAnim(null), 5000);
       // Refresh pet data
@@ -654,7 +670,7 @@ export function CasinoPage() {
       if (h) setHeist(transformHeist(h));
       else setHeist(null);
     });
-    es.addEventListener("points", (e) => setPoints(JSON.parse(e.data).points));
+    es.addEventListener("points", (e) => { const d = JSON.parse(e.data); if (d.points > (points ?? 0)) casinoSounds.points(); setPoints(d.points); });
     es.addEventListener("season", (e) => setSeason(JSON.parse(e.data)));
     es.addEventListener("autoflip", (e) => { setAutoFlip(JSON.parse(e.data)); setAutoFlipTick(t => t + 1); });
     es.addEventListener("pet", (e) => setPet(JSON.parse(e.data)));
@@ -713,6 +729,7 @@ export function CasinoPage() {
   const playDouble = async () => {
     if (!user || doubleAmount <= 0) return;
     setDoubleFlipping(true); setDoubleResult(null);
+    casinoSounds.double();
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "double", amount: doubleAmount }) as any;
       setTimeout(() => {
@@ -725,10 +742,12 @@ export function CasinoPage() {
           setDoubleResult(`VERDOPPELT! ${newAmount} Punkte!`);
           setDoubleAmount(newAmount);
           showWin(doubleAmount);
+          casinoSounds.bigWin();
           if (confettiRef.current && newAmount >= 200) spawnConfetti(confettiRef.current, 40);
         } else {
           setDoubleResult(`VERLOREN! ${doubleAmount} Punkte weg!`);
           showLoss(doubleAmount);
+          casinoSounds.loss();
           setDoubleAmount(0); setDoubleActive(false);
         }
         fetchPoints();
@@ -742,6 +761,7 @@ export function CasinoPage() {
   const playSlots = async () => {
     if (!user) { setMessage("Erst einloggen!"); return; }
     setSlotSpinning(true); setSlotResult(null); setDoubleActive(false);
+    casinoSounds.spin();
     const symbols = ["🍒","🍋","🍊","🍇","⭐","💎","7️⃣"];
     const iv = setInterval(() => setSlotReels([symbols[Math.floor(Math.random()*7)]!,symbols[Math.floor(Math.random()*7)]!,symbols[Math.floor(Math.random()*7)]!]), 80);
     try {
@@ -753,7 +773,7 @@ export function CasinoPage() {
         const profit = res.data.payout - res.data.cost;
         setSlotResult({ text: `${res.data.label} → ${res.data.payout} Pts (${profit>=0?"+":""}${profit})${res.data.free ? " [GRATIS]" : ""}`, win: profit > 0 });
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, slots: res.data.freeLeft } : f);
-        if (profit > 0) { showWin(profit); startDouble(res.data.payout); } else showLoss(-profit);
+        if (profit > 0) { showWin(profit); startDouble(res.data.payout); if (profit >= 50) casinoSounds.bigWin(); else casinoSounds.win(); } else { showLoss(-profit); casinoSounds.loss(); }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         processProgression(res.data.progression);
         setSlotSpinning(false); fetchPoints();
@@ -767,14 +787,14 @@ export function CasinoPage() {
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "scratch" }) as any;
       if (!res.success) { setScratchResult({ text: res.error, win: false }); return; }
-      setTimeout(() => setScratchCards([res.data.symbols[0],"❓","❓"]), 400);
-      setTimeout(() => setScratchCards([res.data.symbols[0],res.data.symbols[1],"❓"]), 900);
+      setTimeout(() => { setScratchCards([res.data.symbols[0],"❓","❓"]); casinoSounds.reveal(); }, 400);
+      setTimeout(() => { setScratchCards([res.data.symbols[0],res.data.symbols[1],"❓"]); casinoSounds.reveal(); }, 900);
       setTimeout(() => {
-        setScratchCards(res.data.symbols);
+        setScratchCards(res.data.symbols); casinoSounds.reveal();
         const profit = res.data.payout - res.data.cost;
         setScratchResult({ text: `${res.data.label} → ${res.data.payout} Pts (${profit>=0?"+":""}${profit})${res.data.free ? " [GRATIS]" : ""}`, win: profit > 0 });
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, scratch: res.data.freeLeft } : f);
-        if (profit > 0) { showWin(profit); startDouble(res.data.payout); } else showLoss(-profit);
+        if (profit > 0) { showWin(profit); startDouble(res.data.payout); casinoSounds.win(); } else { showLoss(-profit); casinoSounds.loss(); }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         processProgression(res.data.progression);
         fetchPoints();
@@ -785,6 +805,7 @@ export function CasinoPage() {
   const playFlip = async () => {
     if (!user) { setMessage("Erst einloggen!"); return; }
     setCoinFlipping(true); setCoinSide(null); setFlipResult(null);
+    casinoSounds.coinFlip();
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "flip" }) as any;
       setTimeout(() => {
@@ -793,7 +814,7 @@ export function CasinoPage() {
         setCoinSide(res.data.result);
         setFlipResult({ text: `${res.data.win ? "GEWONNEN!" : "Verloren!"} ${res.data.payout - res.data.cost >= 0 ? "+" : ""}${res.data.payout - res.data.cost}${res.data.free ? " [GRATIS]" : ""}`, win: res.data.win });
         if (res.data.freeLeft !== undefined) setFreePlays(f => f ? { ...f, flip: res.data.freeLeft } : f);
-        if (res.data.win) showWin(1); else showLoss(1);
+        if (res.data.win) { showWin(1); casinoSounds.win(); } else { showLoss(1); casinoSounds.loss(); }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         processProgression(res.data.progression);
         fetchPoints();
@@ -805,6 +826,7 @@ export function CasinoPage() {
   const playAllIn = async () => {
     if (!user || allInPlaying || !points || points <= 0) return;
     setAllInPlaying(true); setAllInResult(null); setAllInShake(true);
+    casinoSounds.allIn();
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "allin" }) as any;
       // Dramatic slow reveal
@@ -820,11 +842,13 @@ export function CasinoPage() {
         if (res.data.win) {
           setAllInResult({ text: `ALL-IN GEWONNEN! +${res.data.payout} Punkte!`, win: true });
           showWin(res.data.payout);
+          casinoSounds.jackpot();
           if (confettiRef.current) spawnConfetti(confettiRef.current, 200, true);
           showMultiplier("ALL-IN WIN!");
         } else {
           setAllInResult({ text: `ALL-IN VERLOREN! ${res.data.amount} Punkte weg!`, win: false });
           showLoss(res.data.amount || 0);
+          casinoSounds.loss();
         }
         fetchPoints();
       }, 2500);
@@ -835,6 +859,7 @@ export function CasinoPage() {
   const spinWheel = async () => {
     if (!user || wheelSpinning) return;
     setWheelSpinning(true); setWheelResult(null);
+    casinoSounds.spin();
     try {
       const res = await api.post<any>(`/viewer/${channelName}/casino/gluecksrad`, {}) as any;
       setTimeout(() => {
@@ -1341,6 +1366,16 @@ export function CasinoPage() {
           </div>
         </div>
       )}
+
+      {/* Sound mute/unmute button */}
+      <button
+        onClick={() => { const next = !soundMuted; setSoundMuted(next); casinoSounds.setMute(next); if (!next) casinoSounds.toggle(); }}
+        className="fixed bottom-4 left-4 z-[60] w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110"
+        style={{ background: "rgba(20,20,40,0.85)", border: "1px solid rgba(145,71,255,0.4)", color: soundMuted ? "#666" : "#c084fc" }}
+        title={soundMuted ? "Sound einschalten" : "Sound ausschalten"}
+      >
+        {soundMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A"}
+      </button>
 
       {/* Siren flash overlay */}
       {sirenActive && (
@@ -2601,6 +2636,7 @@ export function CasinoPage() {
                       <button onClick={async () => {
                         const res = await api.post<any>(`/viewer/${channelName}/casino/pet/walk`, {}) as any;
                         if (res.success) {
+                          casinoSounds.walk();
                           setPetWalkAnim(true); setTimeout(() => setPetWalkAnim(false), 3000);
                           const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
                         } else setMessage(res.error ?? "Fehler!");
@@ -2610,6 +2646,7 @@ export function CasinoPage() {
                       <button onClick={async () => {
                         const res = await api.post<any>(`/viewer/${channelName}/casino/pet/feed`, {}) as any;
                         if (res.success) {
+                          casinoSounds.feed();
                           setPetFeedAnim(true); setTimeout(() => setPetFeedAnim(false), 2000);
                           const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
                         } else setMessage(res.error ?? "Fehler!");
@@ -2618,6 +2655,7 @@ export function CasinoPage() {
                       </button>
                       {pet.careState?.needsPoop && (
                         <button onClick={async () => {
+                          casinoSounds.poop();
                           setPetCleanAnim(true); setTimeout(() => setPetCleanAnim(false), 1500);
                           await api.post<any>(`/viewer/${channelName}/casino/pet/clean`, {});
                           const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);

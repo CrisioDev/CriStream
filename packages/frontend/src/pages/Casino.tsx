@@ -1675,26 +1675,29 @@ export function CasinoPage() {
                   )}
                 </div>
               </div>
-            ) : (
+            ) : (() => {
+                const PET_EMOJIS: Record<string,string> = {cat:"🐱",dog:"🐶",bunny:"🐰",fox:"🦊",panda:"🐼",dragon:"🐉",unicorn:"🦄",phoenix:"🔥",alien:"👾",robot:"🤖",kraken:"🦑",void:"🕳️"};
+                const activePet = pet.pets?.find((p:any) => p.petId === pet.activePetId);
+                return activePet ? (
               <div>
-                {/* Pet Display */}
+                {/* Active Pet Display */}
                 <div className="flex items-center gap-6 mb-4">
                   <div className="relative text-center">
                     {pet.equipped?.aura && <div className="absolute -inset-2 text-4xl opacity-30 animate-pulse flex items-center justify-center">{pet.equipped.aura}</div>}
                     <div className="text-6xl relative">
                       {pet.equipped?.hat && <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl">{pet.equipped.hat}</div>}
                       {pet.equipped?.glasses && <div className="absolute top-2 left-1/2 -translate-x-1/2 text-lg">{pet.equipped.glasses}</div>}
-                      {(() => { const pd = [{id:"cat",emoji:"🐱"},{id:"dog",emoji:"🐶"},{id:"bunny",emoji:"🐰"},{id:"fox",emoji:"🦊"},{id:"panda",emoji:"🐼"},{id:"dragon",emoji:"🐉"},{id:"unicorn",emoji:"🦄"},{id:"phoenix",emoji:"🔥"},{id:"alien",emoji:"👾"},{id:"robot",emoji:"🤖"},{id:"kraken",emoji:"🦑"},{id:"void",emoji:"🕳️"}]; return pd.find(p=>p.id===pet.petId)?.emoji ?? "🐱"; })()}
+                      {PET_EMOJIS[activePet.petId] ?? "🐱"}
                       {pet.equipped?.weapon && <div className="absolute -right-4 top-1/2 -translate-y-1/2 text-2xl">{pet.equipped.weapon}</div>}
                       {pet.equipped?.cape && <div className="absolute -left-4 top-1/2 -translate-y-1/2 text-xl">{pet.equipped.cape}</div>}
                     </div>
                     {pet.equipped?.food && <div className="text-lg mt-1">{pet.equipped.food}</div>}
                   </div>
                   <div className="flex-1">
-                    <div className="font-black text-white text-lg">{pet.petName}</div>
-                    <div className="text-xs text-gray-400">Level {pet.level} · {pet.xp}/{pet.level * 50} XP</div>
+                    <div className="font-black text-white text-lg">{activePet.petName} <span className="text-xs text-pink-400 font-normal">(aktiv)</span></div>
+                    <div className="text-xs text-gray-400">Level {activePet.level} · {activePet.xp}/{activePet.level * 50} XP</div>
                     <div className="h-2 rounded-full bg-black/40 mt-1 overflow-hidden" style={{ border: "1px solid rgba(255,182,193,0.2)" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${(pet.xp / (pet.level * 50)) * 100}%`, background: "linear-gradient(90deg, #f472b6, #ec4899)" }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: `${(activePet.xp / (activePet.level * 50)) * 100}%`, background: "linear-gradient(90deg, #f472b6, #ec4899)" }} />
                     </div>
                     <div className="flex gap-2 mt-2">
                       <button onClick={() => { setShowShop(!showShop); if (!showShop && !shop) { api.get<any>(`/viewer/${channelName}/casino/pet/shop`).then((r: any) => { if (r.data) setShop(r.data); }); } }}
@@ -1704,6 +1707,22 @@ export function CasinoPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Owned Pets Row (switch active) */}
+                {pet.pets.length > 1 && (
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    {pet.pets.map((p: any) => (
+                      <button key={p.petId} onClick={async () => {
+                        await api.post<any>(`/viewer/${channelName}/casino/pet/activate`, { petId: p.petId });
+                        const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                      }} className={`rounded-lg px-3 py-2 text-center transition-all ${p.petId === pet.activePetId ? "ring-2 ring-pink-500 bg-pink-500/10" : "bg-white/3 hover:bg-white/5"}`}
+                        style={{ border: `1px solid ${p.petId === pet.activePetId ? "rgba(244,114,182,0.5)" : "rgba(255,255,255,0.08)"}` }}>
+                        <div className="text-2xl">{PET_EMOJIS[p.petId] ?? "🐱"}</div>
+                        <div className="text-[10px] text-gray-400">LVL {p.level}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Item Shop */}
                 {showShop && shop && (
@@ -1758,7 +1777,8 @@ export function CasinoPage() {
                   </div>
                 )}
               </div>
-            )}
+            ) : null;
+              })()}
           </div>
         </div>
       )}

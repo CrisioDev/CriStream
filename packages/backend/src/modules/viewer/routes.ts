@@ -179,9 +179,11 @@ export async function viewerRoutes(app: FastifyInstance) {
       const { updateQuestProgress } = await import("../casino/quests.js");
       const { addXp } = await import("../casino/battlepass.js");
       const { getSkills, getLuckBonus, getPayoutMultiplier, getShieldBonus, getExtraFreePlays, getCombatMultiplier } = await import("../casino/skilltree.js");
+      const { getPetBonuses } = await import("../casino/pets.js");
       const skills = await getSkills(channel.id, user.twitchId);
-      const profitMult = getPayoutMultiplier(skills);
-      const shieldBonus = getShieldBonus(skills);
+      const petBonus = await getPetBonuses(channel.id, user.twitchId);
+      const profitMult = getPayoutMultiplier(skills) + petBonus.payout;
+      const shieldBonus = getShieldBonus(skills) + petBonus.shield;
 
       const logResult = async (g: string, payout: number, cost: number, detail: string) => {
         const entry = JSON.stringify({
@@ -194,7 +196,7 @@ export async function viewerRoutes(app: FastifyInstance) {
       };
 
       // Free play helper (speed skill adds extra free plays)
-      const maxFree = 10 + getExtraFreePlays(skills);
+      const maxFree = 10 + getExtraFreePlays(skills) + petBonus.freePlays;
       const useFree = async (g: string) => {
         const k = `free:${g}:${channel.id}:${user.twitchId}`;
         const c = await redis.get(k);
@@ -307,7 +309,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         const cost = free ? 0 : 1;
         if (!free && channelUser.points < 1) return reply.status(400).send({ success: false, error: "Keine Gratis-Flips mehr & keine Punkte!" });
         if (!free) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { decrement: 1 } } });
-        const winChance = (pre.winChanceOverride ?? 0.50) + getLuckBonus(skills, "flip");
+        const winChance = (pre.winChanceOverride ?? 0.50) + getLuckBonus(skills, "flip") + petBonus.flipLuck;
         const win = pre.forceWin || Math.random() < winChance;
         const basePayout = win ? Math.round(2 * profitMult) : 0;
         if (basePayout > 0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: basePayout } } });
@@ -569,6 +571,20 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
       const { unequipItem } = await import("../casino/pets.js");
       await unequipItem(channel.id, user.twitchId, request.body.category);
+      return { success: true };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { petId: string } }>(
+    "/:channelName/casino/pet/activate",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { setActivePet } = await import("../casino/pets.js");
+      const result = await setActivePet(channel.id, user.twitchId, request.body.petId);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
       return { success: true };
     }
   );

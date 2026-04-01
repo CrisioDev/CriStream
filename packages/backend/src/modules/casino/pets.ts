@@ -11,18 +11,18 @@ import { prisma } from "../../lib/prisma.js";
 
 // ── Pet Types ──
 export const PET_CATALOG = [
-  { id: "cat", name: "Katze", emoji: "🐱", price: 500 },
-  { id: "dog", name: "Hund", emoji: "🐶", price: 1000 },
-  { id: "bunny", name: "Hase", emoji: "🐰", price: 2500 },
-  { id: "fox", name: "Fuchs", emoji: "🦊", price: 5000 },
-  { id: "panda", name: "Panda", emoji: "🐼", price: 15000 },
-  { id: "dragon", name: "Drache", emoji: "🐉", price: 50000 },
-  { id: "unicorn", name: "Einhorn", emoji: "🦄", price: 150000 },
-  { id: "phoenix", name: "Phoenix", emoji: "🔥", price: 500000 },
-  { id: "alien", name: "Alien", emoji: "👾", price: 1500000 },
-  { id: "robot", name: "Roboter", emoji: "🤖", price: 5000000 },
-  { id: "kraken", name: "Kraken", emoji: "🦑", price: 15000000 },
-  { id: "void", name: "Void Entity", emoji: "🕳️", price: 50000000 },
+  { id: "cat", name: "Katze", emoji: "🐱", price: 500, bonus: "flip_luck", bonusDesc: "+1% Flip-Glück/LVL", perLevel: 0.01 },
+  { id: "dog", name: "Hund", emoji: "🐶", price: 1000, bonus: "shield", bonusDesc: "+1 Trostpreis/LVL", perLevel: 1 },
+  { id: "bunny", name: "Hase", emoji: "🐰", price: 2500, bonus: "free_plays", bonusDesc: "+1 Free Play/3 LVL", perLevel: 0.333 },
+  { id: "fox", name: "Fuchs", emoji: "🦊", price: 5000, bonus: "specials", bonusDesc: "+0.5% Special-Rate/LVL", perLevel: 0.005 },
+  { id: "panda", name: "Panda", emoji: "🐼", price: 15000, bonus: "payout", bonusDesc: "+2% Payout/LVL", perLevel: 0.02 },
+  { id: "dragon", name: "Drache", emoji: "🐉", price: 50000, bonus: "boss_dmg", bonusDesc: "+3% Boss-DMG/LVL", perLevel: 0.03 },
+  { id: "unicorn", name: "Einhorn", emoji: "🦄", price: 150000, bonus: "slots_luck", bonusDesc: "+1% Slot-Glück/LVL", perLevel: 0.01 },
+  { id: "phoenix", name: "Phoenix", emoji: "🔥", price: 500000, bonus: "scratch_luck", bonusDesc: "+1% Scratch-Glück/LVL", perLevel: 0.01 },
+  { id: "alien", name: "Alien", emoji: "👾", price: 1500000, bonus: "mystery", bonusDesc: "+5% Mystery Reward/LVL", perLevel: 0.05 },
+  { id: "robot", name: "Roboter", emoji: "🤖", price: 5000000, bonus: "xp", bonusDesc: "+3% XP/LVL", perLevel: 0.03 },
+  { id: "kraken", name: "Kraken", emoji: "🦑", price: 15000000, bonus: "heist", bonusDesc: "+2% Heist-Pot/LVL", perLevel: 0.02 },
+  { id: "void", name: "Void Entity", emoji: "🕳️", price: 50000000, bonus: "all", bonusDesc: "+1% auf ALLES/LVL", perLevel: 0.01 },
 ];
 
 // ── Item Categories with tier-based pricing ──
@@ -95,21 +95,31 @@ export const ITEM_CATEGORIES = [
 ];
 
 // ── Pet Data Structure ──
-export interface PetData {
+export interface OwnedPet {
   petId: string;
   petName: string;
   level: number;
   xp: number;
+}
+
+export interface PetData {
+  activePetId: string;
+  pets: OwnedPet[];
   equipped: {
-    hat?: string;    // item emoji
+    hat?: string;
     glasses?: string;
     cape?: string;
     weapon?: string;
     aura?: string;
     food?: string;
   };
-  ownedItems: string[]; // list of "category:tierIndex" keys
+  ownedItems: string[];
   totalSpent: number;
+}
+
+/** Get the active pet from the collection */
+function getActivePet(data: PetData): OwnedPet | undefined {
+  return data.pets.find(p => p.petId === data.activePetId);
 }
 
 function petKey(channelId: string, userId: string): string {
@@ -124,7 +134,9 @@ export async function getPet(channelId: string, userId: string): Promise<PetData
 
 export async function buyPet(channelId: string, userId: string, petId: string, customName?: string): Promise<{ success: boolean; pet?: PetData; error?: string }> {
   const existing = await getPet(channelId, userId);
-  if (existing) return { success: false, error: "Du hast bereits ein Pet!" };
+  if (existing?.pets.some(p => p.petId === petId)) {
+    return { success: false, error: "Du hast dieses Pet bereits!" };
+  }
 
   const petDef = PET_CATALOG.find(p => p.id === petId);
   if (!petDef) return { success: false, error: "Unbekanntes Pet!" };
@@ -141,18 +153,25 @@ export async function buyPet(channelId: string, userId: string, petId: string, c
     data: { points: { decrement: petDef.price } },
   });
 
-  const pet: PetData = {
-    petId,
-    petName: customName || petDef.name,
-    level: 1,
-    xp: 0,
-    equipped: {},
-    ownedItems: [],
-    totalSpent: petDef.price,
-  };
+  const newOwnedPet: OwnedPet = { petId, petName: customName || petDef.name, level: 1, xp: 0 };
 
-  await redis.set(petKey(channelId, userId), JSON.stringify(pet));
-  return { success: true, pet };
+  let data: PetData;
+  if (existing) {
+    existing.pets.push(newOwnedPet);
+    existing.totalSpent += petDef.price;
+    data = existing;
+  } else {
+    data = {
+      activePetId: petId,
+      pets: [newOwnedPet],
+      equipped: {},
+      ownedItems: [],
+      totalSpent: petDef.price,
+    };
+  }
+
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+  return { success: true, pet: data };
 }
 
 export function getItemPrice(basePrice: number, tier: number): number {
@@ -241,29 +260,82 @@ export async function renamePet(
   userId: string,
   newName: string,
 ): Promise<{ success: boolean }> {
-  const pet = await getPet(channelId, userId);
-  if (!pet) return { success: false };
-  pet.petName = newName.slice(0, 20);
-  await redis.set(petKey(channelId, userId), JSON.stringify(pet));
+  const data = await getPet(channelId, userId);
+  if (!data) return { success: false };
+  const active = data.pets.find(p => p.petId === data.activePetId);
+  if (!active) return { success: false };
+  active.petName = newName.slice(0, 20);
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
   return { success: true };
 }
 
-/** Add XP to pet (called after each game) */
+/** Add XP to active pet (called after each game) */
 export async function addPetXp(channelId: string, userId: string, xp: number): Promise<{ levelUp: boolean; newLevel: number } | null> {
-  const pet = await getPet(channelId, userId);
-  if (!pet) return null;
+  const data = await getPet(channelId, userId);
+  if (!data) return null;
 
-  pet.xp += xp;
-  const xpNeeded = pet.level * 50; // 50, 100, 150, 200...
+  const active = data.pets.find(p => p.petId === data.activePetId);
+  if (!active) return null;
+
+  active.xp += xp;
   let levelUp = false;
-  while (pet.xp >= xpNeeded && pet.level < 999) {
-    pet.xp -= pet.level * 50;
-    pet.level++;
+  let xpNeeded = active.level * 50;
+  while (active.xp >= xpNeeded && active.level < 999) {
+    active.xp -= xpNeeded;
+    active.level++;
+    xpNeeded = active.level * 50;
     levelUp = true;
   }
 
-  await redis.set(petKey(channelId, userId), JSON.stringify(pet));
-  return { levelUp, newLevel: pet.level };
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+  return { levelUp, newLevel: active.level };
+}
+
+/** Switch active pet */
+export async function setActivePet(channelId: string, userId: string, petId: string): Promise<{ success: boolean; error?: string }> {
+  const data = await getPet(channelId, userId);
+  if (!data) return { success: false, error: "Keine Pets!" };
+  if (!data.pets.some(p => p.petId === petId)) return { success: false, error: "Du besitzt dieses Pet nicht!" };
+  data.activePetId = petId;
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+  return { success: true };
+}
+
+/** Get active pet's passive bonus values */
+export async function getPetBonuses(channelId: string, userId: string): Promise<{
+  flipLuck: number; slotsLuck: number; scratchLuck: number;
+  payout: number; shield: number; freePlays: number;
+  specials: number; bossDmg: number; xpBonus: number; heistBonus: number;
+  mysteryBonus: number;
+}> {
+  const defaults = { flipLuck: 0, slotsLuck: 0, scratchLuck: 0, payout: 0, shield: 0, freePlays: 0, specials: 0, bossDmg: 0, xpBonus: 0, heistBonus: 0, mysteryBonus: 0 };
+  const data = await getPet(channelId, userId);
+  if (!data) return defaults;
+  const active = data.pets.find(p => p.petId === data.activePetId);
+  if (!active) return defaults;
+
+  const def = PET_CATALOG.find(p => p.id === active.petId);
+  if (!def) return defaults;
+
+  const lvl = active.level;
+  const val = def.perLevel * lvl;
+
+  switch (def.bonus) {
+    case "flip_luck": return { ...defaults, flipLuck: val };
+    case "shield": return { ...defaults, shield: Math.floor(val) };
+    case "free_plays": return { ...defaults, freePlays: Math.floor(val) };
+    case "specials": return { ...defaults, specials: val };
+    case "payout": return { ...defaults, payout: val };
+    case "boss_dmg": return { ...defaults, bossDmg: val };
+    case "slots_luck": return { ...defaults, slotsLuck: val };
+    case "scratch_luck": return { ...defaults, scratchLuck: val };
+    case "mystery": return { ...defaults, mysteryBonus: val };
+    case "xp": return { ...defaults, xpBonus: val };
+    case "heist": return { ...defaults, heistBonus: val };
+    case "all":
+      return { flipLuck: val, slotsLuck: val, scratchLuck: val, payout: val, shield: Math.floor(val * 100), freePlays: 0, specials: val, bossDmg: val, xpBonus: val, heistBonus: val, mysteryBonus: val };
+    default: return defaults;
+  }
 }
 
 /** Get shop catalog with prices adjusted for what the player owns */
@@ -272,7 +344,12 @@ export async function getShop(channelId: string, userId: string) {
   const ownedItems = pet?.ownedItems ?? [];
 
   return {
-    pets: PET_CATALOG.map(p => ({ ...p, owned: pet?.petId === p.id })),
+    pets: PET_CATALOG.map(p => ({
+      ...p,
+      owned: pet?.pets.some(op => op.petId === p.id) ?? false,
+      active: pet?.activePetId === p.id,
+      level: pet?.pets.find(op => op.petId === p.id)?.level ?? 0,
+    })),
     categories: ITEM_CATEGORIES.map(cat => ({
       ...cat,
       tiers: cat.tiers.map((item, idx) => {

@@ -24,6 +24,7 @@ export interface Heist {
   rounds: HeistRound[];
   betrayals: string[];
   createdAt: number;
+  betrayalStartedAt?: number;
 }
 
 const HEIST_COST_CREATOR = 50;
@@ -128,7 +129,9 @@ export async function joinHeist(
 
 export async function getActiveHeist(channelId: string): Promise<Heist | null> {
   const heist = await getHeist(channelId);
-  if (!heist || heist.status === "finished") return null;
+  if (!heist) return null;
+  // Show finished heists for 30s so players can see results
+  if (heist.status === "finished") return heist;
 
   let changed = false;
 
@@ -142,25 +145,21 @@ export async function getActiveHeist(channelId: string): Promise<Heist | null> {
     changed = true;
   }
 
-  // Auto-transition from playing to betrayal if all rounds done OR 5 min since playing started
+  // Auto-transition from playing to betrayal if all rounds done
   if (heist.status === "playing") {
     const allDone = heist.players.every(
       (p) => heist.rounds.filter((r) => r.userId === p.userId).length >= ROUNDS_PER_PLAYER,
     );
     if (allDone) {
       heist.status = "betrayal";
+      heist.betrayalStartedAt = Date.now();
       changed = true;
     }
   }
 
   // Auto-finish betrayal after 30 seconds
-  if (heist.status === "betrayal") {
-    const lastRoundTime = heist.rounds.length > 0
-      ? Math.max(...heist.rounds.map(() => Date.now())) // approximate
-      : heist.createdAt;
-    // If betrayal phase has been active for 30+ seconds, auto-finish
-    const betrayalStart = heist.rounds.length > 0 ? heist.createdAt + 120000 + (heist.rounds.length * 1000) : heist.createdAt + 150000;
-    if (Date.now() - betrayalStart > 30000) {
+  if (heist.status === "betrayal" && heist.betrayalStartedAt) {
+    if (Date.now() - heist.betrayalStartedAt > 30000) {
       const result = await finishHeist(channelId, heist.id);
       if ("heist" in result) return result.heist;
     }
@@ -220,6 +219,7 @@ export async function playHeistRound(
 
   if (allDone) {
     heist.status = "betrayal";
+    heist.betrayalStartedAt = Date.now();
   }
 
   await saveHeist(heist);
@@ -254,6 +254,7 @@ export async function finishHeist(
 
   heist.status = "finished";
   const results: any[] = [];
+  (heist as any).finishedResults = []; // store results on heist for frontend
   const pot = heist.pot;
   const numPlayers = heist.players.length;
   const numBetrayers = heist.betrayals.length;
@@ -312,6 +313,7 @@ export async function finishHeist(
     }
   }
 
+  (heist as any).finishedResults = results;
   await saveHeist(heist);
 
   // Log to feed

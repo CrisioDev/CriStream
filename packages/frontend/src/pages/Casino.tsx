@@ -260,6 +260,9 @@ export function CasinoPage() {
   const [shop, setShop] = useState<any>(null);
   const [showShop, setShowShop] = useState(false);
   const [buyingPet, setBuyingPet] = useState(false);
+  const [petWalkAnim, setPetWalkAnim] = useState(false);
+  const [petFeedAnim, setPetFeedAnim] = useState(false);
+  const [petCleanAnim, setPetCleanAnim] = useState(false);
 
   // ── NEW: All-In ──
   const [allInPlaying, setAllInPlaying] = useState(false);
@@ -803,6 +806,13 @@ export function CasinoPage() {
         .casino-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 8px 25px rgba(255,215,0,0.3); }
         .casino-btn:active { transform: scale(0.98); }
         .casino-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        @keyframes pet-walk { 0% { transform: translateX(-100px) scaleX(1); } 25% { transform: translateX(25vw) scaleX(1) translateY(-10px); } 50% { transform: translateX(50vw) scaleX(1); } 75% { transform: translateX(75vw) scaleX(1) translateY(-10px); } 100% { transform: translateX(calc(100vw + 50px)) scaleX(1); } }
+        @keyframes pet-feed-chomp { 0%,100% { transform: scale(1) rotate(0); } 25% { transform: scale(1.2) rotate(-5deg); } 50% { transform: scale(0.9) rotate(5deg); } 75% { transform: scale(1.15) rotate(-3deg); } }
+        @keyframes pet-feed-hearts { 0% { opacity: 1; transform: translateY(0) scale(0.5); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
+        @keyframes poop-wobble { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        @keyframes poop-splat { 0% { transform: scale(0) rotate(0); opacity: 0; } 50% { transform: scale(1.3) rotate(10deg); opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+        @keyframes clean-wipe { 0% { transform: translateX(0) rotate(0); opacity: 1; } 50% { transform: translateX(30px) rotate(15deg); opacity: 0.8; } 100% { transform: translateX(0) rotate(0); opacity: 0; } }
+        @keyframes paw-print { 0% { opacity: 0; transform: scale(0); } 30% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(0.8); } }
         .allin-shake { animation: allin-screen-shake 0.5s ease-in-out infinite; }
         .allin-btn-pulse { animation: allin-pulse 1.5s ease-in-out infinite; }
         .quest-bonus-anim { animation: quest-bonus-float 2.5s ease-out forwards; }
@@ -820,6 +830,33 @@ export function CasinoPage() {
       {/* Siren flash overlay */}
       {sirenActive && (
         <div className="fixed inset-0 pointer-events-none z-40" style={{ animation: "siren-flash 0.3s ease-in-out infinite" }} />
+      )}
+
+      {/* Pet Walk Animation */}
+      {petWalkAnim && pet && (
+        <div className="fixed bottom-20 left-0 pointer-events-none z-40" style={{ animation: "pet-walk 3s ease-in-out forwards" }}>
+          <div className="text-6xl">{(() => { const e: Record<string,string> = {cat:"🐱",dog:"🐶",bunny:"🐰",fox:"🦊",panda:"🐼",dragon:"🐉",unicorn:"🦄",phoenix:"🔥",alien:"👾",robot:"🤖",kraken:"🦑",void:"🕳️"}; return e[pet.activePetId] ?? "🐱"; })()}</div>
+          <div className="text-sm absolute -bottom-4 left-0" style={{ animation: "paw-print 0.5s ease-out forwards", animationDelay: "0.3s" }}>🐾</div>
+          <div className="text-sm absolute -bottom-4 left-6" style={{ animation: "paw-print 0.5s ease-out forwards", animationDelay: "0.6s" }}>🐾</div>
+          <div className="text-sm absolute -bottom-4 left-12" style={{ animation: "paw-print 0.5s ease-out forwards", animationDelay: "0.9s" }}>🐾</div>
+        </div>
+      )}
+
+      {/* Pet Feed Animation */}
+      {petFeedAnim && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+          <div style={{ animation: "pet-feed-chomp 0.4s ease-in-out 4" }}>
+            <div className="text-7xl">😋🍖</div>
+          </div>
+          <div className="absolute text-3xl" style={{ animation: "pet-feed-hearts 2s ease-out forwards" }}>❤️❤️❤️</div>
+        </div>
+      )}
+
+      {/* Pet Clean Animation */}
+      {petCleanAnim && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+          <div className="text-7xl" style={{ animation: "clean-wipe 0.5s ease-in-out 3" }}>🧹✨</div>
+        </div>
       )}
 
       {/* Cat walk */}
@@ -1077,7 +1114,8 @@ export function CasinoPage() {
          ══════════════════════════════════════════════════════════════════ */}
       <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* SLOT MACHINE */}
-        <div className="slot-machine rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
+        <div className="slot-machine rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
+          {pet?.careState?.needsPoop && <div className="absolute -top-3 -right-3 text-3xl z-10" style={{ animation: "poop-wobble 1s ease-in-out infinite" }}>💩</div>}
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-purple-300 mb-1">🎰 SLOTS</h2>
             <p className="text-center text-xs text-gray-500 mb-1">20 Punkte + Specials</p>
@@ -1099,7 +1137,8 @@ export function CasinoPage() {
         </div>
 
         {/* RUBBELLOS */}
-        <div className="rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
+        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
+          {pet?.careState?.needsPoop && <div className="absolute -top-2 left-1/2 text-2xl z-10" style={{ animation: "poop-wobble 1.2s ease-in-out infinite" }}>💩</div>}
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#0a1a15,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-emerald-300 mb-1">🎟️ RUBBELLOS</h2>
             <p className="text-center text-xs text-gray-500 mb-1">40 Punkte + Specials</p>
@@ -1121,7 +1160,8 @@ export function CasinoPage() {
         </div>
 
         {/* MÜNZWURF */}
-        <div className="rounded-3xl p-1" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
+        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
+          {pet?.careState?.needsPoop && <div className="absolute -top-3 -left-2 text-2xl z-10" style={{ animation: "poop-wobble 0.8s ease-in-out infinite", animationDelay: "0.3s" }}>💩</div>}
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1508,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-yellow-300 mb-1">🪙 MÜNZWURF</h2>
             <p className="text-center text-xs text-gray-500 mb-1">1 Punkt · 50/50 + Specials</p>
@@ -1706,20 +1746,25 @@ export function CasinoPage() {
                       </button>
                       <button onClick={async () => {
                         const res = await api.post<any>(`/viewer/${channelName}/casino/pet/walk`, {}) as any;
-                        if (res.success) { const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data); }
-                        else setMessage(res.error ?? "Fehler!");
+                        if (res.success) {
+                          setPetWalkAnim(true); setTimeout(() => setPetWalkAnim(false), 3000);
+                          const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                        } else setMessage(res.error ?? "Fehler!");
                       }} className="casino-btn px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#4ade80" }}>
                         🐾 Gassi
                       </button>
                       <button onClick={async () => {
                         const res = await api.post<any>(`/viewer/${channelName}/casino/pet/feed`, {}) as any;
-                        if (res.success) { const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data); }
-                        else setMessage(res.error ?? "Fehler!");
+                        if (res.success) {
+                          setPetFeedAnim(true); setTimeout(() => setPetFeedAnim(false), 2000);
+                          const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                        } else setMessage(res.error ?? "Fehler!");
                       }} className="casino-btn px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "rgba(251,146,60,0.15)", border: "1px solid rgba(251,146,60,0.4)", color: "#fb923c" }}>
                         🍖 Füttern
                       </button>
                       {pet.careState?.needsPoop && (
                         <button onClick={async () => {
+                          setPetCleanAnim(true); setTimeout(() => setPetCleanAnim(false), 1500);
                           await api.post<any>(`/viewer/${channelName}/casino/pet/clean`, {});
                           const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
                         }} className="casino-btn px-3 py-1 rounded-lg text-xs font-bold animate-bounce" style={{ background: "rgba(139,92,46,0.3)", border: "1px solid rgba(139,92,46,0.6)", color: "#d4a574" }}>

@@ -206,7 +206,7 @@ export async function viewerRoutes(app: FastifyInstance) {
 
       const specCtx = { channelId: channel.id, userId: user.twitchId, displayName: channelUser.displayName };
 
-      // Progression helper: runs after every game
+      // Progression helper: runs after every game (wrapped in try-catch so games work even if progression fails)
       const runProgression = async (
         gameType: "flip" | "slots" | "scratch" | "double" | "allin",
         win: boolean,
@@ -215,6 +215,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         specials: any[],
         opts?: { isTriple?: boolean; is777?: boolean },
       ) => {
+        try {
         const specialTypes = specials.map((s: any) => s.type);
         const stats = await recordPlay(channel.id, user.twitchId, {
           game: gameType,
@@ -227,7 +228,7 @@ export async function viewerRoutes(app: FastifyInstance) {
         });
 
         const [achievements, questResult] = await Promise.all([
-          checkAchievements(channel.id, user.twitchId, stats),
+          checkAchievements(channel.id, user.twitchId, stats).catch(() => []),
           updateQuestProgress(channel.id, user.twitchId, {
             game: gameType,
             win,
@@ -239,7 +240,7 @@ export async function viewerRoutes(app: FastifyInstance) {
             is777: opts?.is777,
             isBossHit: specialTypes.includes("boss_damage") || specialTypes.includes("boss_kill"),
             isAllinWin: gameType === "allin" && win,
-          }),
+          }).catch(() => ({ completed: [] })),
         ]);
 
         // XP: base 5 for playing, +5 for win, +15 for triple, +90 for 777
@@ -276,7 +277,7 @@ export async function viewerRoutes(app: FastifyInstance) {
           xp += achievements.length * 20;
         }
 
-        const xpResult = await addXp(channel.id, user.twitchId, xp, gameType);
+        const xpResult = await addXp(channel.id, user.twitchId, xp, gameType).catch(() => ({ levelUp: false, newLevel: 0, rewards: [] }));
 
         return {
           stats,
@@ -284,6 +285,10 @@ export async function viewerRoutes(app: FastifyInstance) {
           questsCompleted: questResult.completed,
           xp: { gained: xp, levelUp: xpResult.levelUp, newLevel: xpResult.newLevel, rewards: xpResult.rewards },
         };
+        } catch (err) {
+          // Progression is non-critical — don't break the game
+          return {};
+        }
       };
 
       // ── Flip ──

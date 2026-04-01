@@ -485,11 +485,8 @@ export async function getPetBonuses(channelId: string, userId: string): Promise<
   if (!active) return defaults;
 
   const def = PET_CATALOG.find(p => p.id === active.petId);
-  if (!def) return defaults;
-
   const mood = data.care ? getMoodMultiplier(data.care) : 1;
   const lvl = active.level;
-  const val = def.perLevel * lvl * mood;
   const itemBonus = getItemBonuses(data, lvl);
 
   // Start with item bonuses (always apply regardless of pet type)
@@ -499,8 +496,40 @@ export async function getPetBonuses(channelId: string, userId: string): Promise<
     specials: defaults.specials + itemBonus.specials,
     bossDmg: defaults.bossDmg + itemBonus.bossDmg,
     payout: defaults.payout + itemBonus.payout,
-    xpBonus: defaults.xpBonus + itemBonus.xp / 100, // normalize to multiplier
+    xpBonus: defaults.xpBonus + itemBonus.xp / 100,
   };
+
+  // Bred pets: apply ALL combined bonuses
+  const bredBonuses = (active as any).bredBonuses as { bonus: string; perLevel: number }[] | undefined;
+  if (bredBonuses && bredBonuses.length > 0) {
+    const result = { ...base };
+    for (const b of bredBonuses) {
+      const v = b.perLevel * lvl * mood;
+      switch (b.bonus) {
+        case "flip_luck": result.flipLuck += v; break;
+        case "shield": result.shield += Math.floor(v); break;
+        case "free_plays": result.freePlays += Math.floor(v); break;
+        case "specials": result.specials += v; break;
+        case "payout": result.payout += v; break;
+        case "boss_dmg": result.bossDmg += v; break;
+        case "slots_luck": result.slotsLuck += v; break;
+        case "scratch_luck": result.scratchLuck += v; break;
+        case "mystery": result.mysteryBonus += v; break;
+        case "xp": result.xpBonus += v; break;
+        case "heist": result.heistBonus += v; break;
+        case "all":
+          result.flipLuck += v; result.slotsLuck += v; result.scratchLuck += v;
+          result.payout += v; result.specials += v; result.bossDmg += v;
+          result.xpBonus += v; result.heistBonus += v; result.mysteryBonus += v;
+          break;
+      }
+    }
+    return result;
+  }
+
+  // Normal pet from catalog
+  if (!def) return base;
+  const val = def.perLevel * lvl * mood;
 
   // Add pet-type-specific bonus on top
   switch (def.bonus) {

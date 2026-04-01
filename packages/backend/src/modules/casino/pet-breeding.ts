@@ -22,7 +22,8 @@ const NAME_PREFIXES: Record<string, string> = {
 };
 
 // Pet bonus definitions (merged from pets.ts and lootbox-pets.ts)
-const PET_BONUSES: Record<string, { bonus: string; perLevel: number }> = {
+// Bred pets can have multiple bonuses via the bonuses[] array
+const PET_BONUSES: Record<string, { bonus: string; perLevel: number; bonuses?: { bonus: string; perLevel: number }[] }> = {
   cat: { bonus: "flip_luck", perLevel: 0.01 },
   dog: { bonus: "shield", perLevel: 1 },
   bunny: { bonus: "free_plays", perLevel: 0.333 },
@@ -111,13 +112,27 @@ export async function breedPets(
     data: { points: { decrement: cost } },
   });
 
-  // Create hybrid pet
+  // Create hybrid pet — COMBINES both parent bonuses with 10% breed bonus
   const bonus1 = PET_BONUSES[pet1Id] ?? { bonus: "all", perLevel: 0.01 };
   const bonus2 = PET_BONUSES[pet2Id] ?? { bonus: "all", perLevel: 0.01 };
 
-  // Use parent1's bonus type (or "all" if mixed)
-  const bonus = bonus1.bonus === bonus2.bonus ? bonus1.bonus : "all";
-  const perLevel = +((bonus1.perLevel + bonus2.perLevel) / 2 * 1.1).toFixed(4); // avg * 1.1
+  // Collect all bonuses from both parents (including inherited multi-bonuses from previous breeds)
+  const parentBonuses1 = bonus1.bonuses ?? [{ bonus: bonus1.bonus, perLevel: bonus1.perLevel }];
+  const parentBonuses2 = bonus2.bonuses ?? [{ bonus: bonus2.bonus, perLevel: bonus2.perLevel }];
+
+  // Merge: if same bonus type, add perLevel values; if different, keep both
+  const mergedMap = new Map<string, number>();
+  for (const b of parentBonuses1) mergedMap.set(b.bonus, (mergedMap.get(b.bonus) ?? 0) + b.perLevel * 1.1);
+  for (const b of parentBonuses2) mergedMap.set(b.bonus, (mergedMap.get(b.bonus) ?? 0) + b.perLevel * 1.1);
+
+  const combinedBonuses = Array.from(mergedMap.entries()).map(([bonus, perLevel]) => ({
+    bonus, perLevel: +perLevel.toFixed(4),
+  }));
+
+  // Primary display bonus = strongest one
+  const strongest = combinedBonuses.sort((a, b) => b.perLevel - a.perLevel)[0]!;
+  const bonus = strongest.bonus;
+  const perLevel = strongest.perLevel;
 
   const prefix = NAME_PREFIXES[pet1Id] ?? pet1.petName.split("-")[0] ?? "Hybrid";
   const suffix = pet2.petName;
@@ -130,13 +145,14 @@ export async function breedPets(
 
   const newPetId = `bred_${pet1Id}_${pet2Id}_${Date.now().toString(36)}`;
 
-  // Add to collection
+  // Add to collection (store bonuses on pet for persistence across restarts)
   petData.pets.push({
     petId: newPetId,
     petName,
     level: 1,
     xp: 0,
-  });
+    bredBonuses: combinedBonuses, // stored on pet for getPetBonuses to read
+  } as any);
   await redis.set(petKey(channelId, userId), JSON.stringify(petData));
 
   // Update breed data
@@ -144,8 +160,8 @@ export async function breedPets(
   breedData.breedCount++;
   await redis.set(breedKey(channelId, userId), JSON.stringify(breedData));
 
-  // Also register the new pet's bonuses for future breeding
-  PET_BONUSES[newPetId] = { bonus, perLevel };
+  // Also register the new pet's bonuses for future breeding (carries all combined bonuses)
+  PET_BONUSES[newPetId] = { bonus, perLevel, bonuses: combinedBonuses };
   PET_EMOJIS[newPetId] = emoji;
 
   return {

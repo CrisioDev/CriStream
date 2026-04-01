@@ -495,13 +495,31 @@ export function CasinoPage() {
     } catch { /* */ }
   }, [user, channelName]);
 
-  // Fetch heist
+  // Fetch heist — transform backend data to HeistState
   const fetchHeist = useCallback(async () => {
     if (!user) return;
     try {
       const res = await api.get<any>(`/viewer/${channelName}/casino/heist`) as any;
-      if (res.data) setHeist(res.data);
-      else setHeist(null);
+      const h = res.data;
+      if (!h || !h.status) { setHeist(null); return; }
+
+      const myRounds = h.rounds?.filter((r: any) => r.userId === user.twitchId).length ?? 0;
+      const totalRoundsPerPlayer = 3;
+      const now = Date.now();
+      const lobbyTimeLeft = h.status === "lobby" ? Math.max(0, Math.ceil(((h.createdAt + 120000) - now) / 1000)) : 0;
+      const betrayalTimeLeft = h.status === "betrayal" && h.betrayalStartedAt ? Math.max(0, Math.ceil(((h.betrayalStartedAt + 30000) - now) / 1000)) : 0;
+
+      setHeist({
+        active: h.status !== "finished",
+        phase: h.status,
+        players: h.players ?? [],
+        pot: h.pot ?? 0,
+        round: myRounds,
+        totalRounds: totalRoundsPerPlayer,
+        countdown: h.status === "lobby" ? lobbyTimeLeft : h.status === "betrayal" ? betrayalTimeLeft : undefined,
+        createdBy: h.creatorName,
+        results: h.finishedResults ?? [],
+      });
     } catch { setHeist(null); }
   }, [user, channelName]);
 
@@ -2536,7 +2554,7 @@ export function CasinoPage() {
             )}
 
             {/* No active heist */}
-            {(!heist || !heist.active) && (
+            {(!heist || (!heist.active && heist.phase !== "finished")) && (
               <div className="text-center">
                 <p className="text-sm text-gray-400 mb-3">Starte einen Heist und überfalle das Casino mit anderen Spielern!</p>
                 <button onClick={createHeist} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
@@ -2568,7 +2586,7 @@ export function CasinoPage() {
             {/* Playing phase */}
             {heist?.active && heist.phase === "playing" && (
               <div className="text-center">
-                <p className="text-sm text-gray-400 mb-2">Runde {heist.round}/{heist.totalRounds} · Pot: {heist.pot} Pts</p>
+                <p className="text-sm text-gray-400 mb-2">Deine Runde: {heist.round}/{heist.totalRounds} · Pot: {heist.pot} Pts</p>
                 <div className="flex flex-wrap justify-center gap-2 mb-3">
                   {heist.players?.map((p, i) => (
                     <span key={i} className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-gray-300 border border-red-500/20">
@@ -2604,7 +2622,7 @@ export function CasinoPage() {
             )}
 
             {/* Finished phase */}
-            {heist?.active && heist.phase === "finished" && (
+            {heist && heist.phase === "finished" && (
               <div className="text-center">
                 <p className="text-lg text-yellow-400 font-black mb-3">HEIST ABGESCHLOSSEN!</p>
                 <div className="space-y-1 mb-3">

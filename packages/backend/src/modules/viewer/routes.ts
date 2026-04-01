@@ -527,10 +527,6 @@ export async function viewerRoutes(app: FastifyInstance) {
 
       // ── All-In ──
       if (game === "allin") {
-        const allInCdKey = `casino:allin:cd:${channel.id}:${user.twitchId}`;
-        const cdExists = await redis.get(allInCdKey);
-        if (cdExists) return reply.status(400).send({ success: false, error: "All-In Cooldown! Versuche es in einer Stunde wieder." });
-
         if (channelUser.points < 10) return reply.status(400).send({ success: false, error: "Brauchst mindestens 10 Punkte für All-In!" });
 
         const allInAmount = channelUser.points;
@@ -538,9 +534,6 @@ export async function viewerRoutes(app: FastifyInstance) {
           where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
           data: { points: 0 },
         });
-
-        // Set 1 hour cooldown
-        await redis.set(allInCdKey, "1", "EX", 3600);
 
         const win = Math.random() < 0.40;
         const payout = win ? Math.floor(allInAmount * 2.5) : 0;

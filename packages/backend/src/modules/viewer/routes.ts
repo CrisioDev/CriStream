@@ -466,9 +466,9 @@ export async function viewerRoutes(app: FastifyInstance) {
         } else {
           r1=pickSlot(); r2=pickSlot(); r3=pickSlot();
         }
-        let payout=8+shieldBonus,label="Trostpreis";
+        let payout=10+shieldBonus,label="Trostpreis";
         if(r1===r2&&r2===r3){const p:any={"7️⃣":[777,"JACKPOT 777!!!"],"💎":[350,"DIAMANT TRIPLE!"],"⭐":[175,"STERN TRIPLE!"],"🍇":[90,"TRIPLE!"],"🍊":[70,"TRIPLE!"],"🍋":[55,"TRIPLE!"],"🍒":[45,"TRIPLE!"]};[payout,label]=p[r1]??[55,"TRIPLE!"];}
-        else if(r1===r2||r2===r3||r1===r3){payout=22;label="Doppelt!";}
+        else if(r1===r2||r2===r3||r1===r3){payout=25;label="Doppelt!";}
         payout = Math.round(payout * profitMult * prestigeMultiplier);
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = r1===r2&&r2===r3;
@@ -499,9 +499,9 @@ export async function viewerRoutes(app: FastifyInstance) {
         } else {
           s1=pickScratch(); s2=pickScratch(); s3=pickScratch();
         }
-        let payout=15+shieldBonus,label="Trostpreis";
+        let payout=18+shieldBonus,label="Trostpreis";
         if(s1===s2&&s2===s3){const p:any={"🌟":[1000,"MEGA GEWINN!!!"],"💎":[500,"DIAMANT!"],"👑":[300,"KÖNIGLICH!"],"🎁":[175,"GESCHENK!"],"💰":[120,"GELDREGEN!"],"🍀":[85,"GLÜCKSKLEE!"]};[payout,label]=p[s1]??[85,"DREIER!"];}
-        else if(s1===s2||s2===s3||s1===s3){payout=30;label="Zweier!";}
+        else if(s1===s2||s2===s3||s1===s3){payout=33;label="Zweier!";}
         payout = Math.round(payout * profitMult * prestigeMultiplier);
         if(payout>0) await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } }, data: { points: { increment: payout } } });
         const isTriple = s1===s2&&s2===s3;
@@ -674,12 +674,12 @@ export async function viewerRoutes(app: FastifyInstance) {
           // Triples: full multiplier + bonuses
           payout = Math.round(payout * tierDef.multiplier * profitMult * prestigeMultiplier);
         } else if(r1===r2||r2===r3||r1===r3){
-          // Doppelt: get 40% of cost back (loss)
-          payout = Math.round(tierDef.cost * 0.4);
+          // Doppelt: get 70% of cost back (small loss, keeps players engaged)
+          payout = Math.round(tierDef.cost * 0.7);
           label = "Doppelt!";
         } else {
-          // Trostpreis: get 15% of cost back (big loss)
-          payout = Math.round(tierDef.cost * 0.15);
+          // Trostpreis: get 35% of cost back (moderate loss)
+          payout = Math.round(tierDef.cost * 0.35);
           label = "Trostpreis";
         }
         // Trostpreis also gets tier multiplier via shieldBonus already in base

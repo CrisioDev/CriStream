@@ -60,9 +60,9 @@ function getSlotPayout(a: string, b: string, c: string): { payout: number; label
     }
   }
   if (a === b || b === c || a === c) {
-    return { payout: 22, label: "Doppelt!" };
+    return { payout: 25, label: "Doppelt!" };
   }
-  return { payout: 8, label: "Trostpreis" };
+  return { payout: 10, label: "Trostpreis" };
 }
 
 // ── Scratch Card ──
@@ -103,10 +103,10 @@ function getScratchPayout(symbols: string[]): { payout: number; label: string } 
   }
 
   for (const [, count] of counts) {
-    if (count === 2) return { payout: 30, label: "Zweier!" };
+    if (count === 2) return { payout: 33, label: "Zweier!" };
   }
 
-  return { payout: 15, label: "Trostpreis" };
+  return { payout: 18, label: "Trostpreis" };
 }
 
 // ── Register Handler ──

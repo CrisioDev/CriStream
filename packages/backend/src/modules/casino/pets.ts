@@ -102,6 +102,18 @@ export interface OwnedPet {
   xp: number;
 }
 
+export interface PetCare {
+  happiness: number;   // 0-100, decays -5/hour without walk
+  hunger: number;      // 0-100, decays -8/hour without feed
+  cleanliness: number; // 0-100, drops to 30 when poop appears
+  lastFed: number;     // timestamp
+  lastWalked: number;  // timestamp
+  lastCleaned: number; // timestamp
+  needsPoop: boolean;  // poop on screen after walk
+  walkCount: number;   // total walks
+  feedCount: number;   // total feeds
+}
+
 export interface PetData {
   activePetId: string;
   pets: OwnedPet[];
@@ -115,6 +127,35 @@ export interface PetData {
   };
   ownedItems: string[];
   totalSpent: number;
+  care: PetCare;
+}
+
+function defaultCare(): PetCare {
+  return {
+    happiness: 100, hunger: 100, cleanliness: 100,
+    lastFed: Date.now(), lastWalked: Date.now(), lastCleaned: Date.now(),
+    needsPoop: false, walkCount: 0, feedCount: 0,
+  };
+}
+
+/** Decay stats based on time elapsed */
+function decayCare(care: PetCare): PetCare {
+  const now = Date.now();
+  const hoursSinceFed = (now - care.lastFed) / 3600000;
+  const hoursSinceWalked = (now - care.lastWalked) / 3600000;
+
+  care.hunger = Math.max(0, Math.round(100 - hoursSinceFed * 8));
+  care.happiness = Math.max(0, Math.round(100 - hoursSinceWalked * 5));
+  if (care.needsPoop) care.cleanliness = Math.min(care.cleanliness, 30);
+
+  return care;
+}
+
+/** Get mood percentage (average of all 3 stats) — determines bonus effectiveness */
+export function getMoodMultiplier(care: PetCare): number {
+  const decayed = decayCare({ ...care });
+  const avg = (decayed.happiness + decayed.hunger + decayed.cleanliness) / 300;
+  return Math.max(0.1, avg); // min 10% effectiveness
 }
 
 /** Get the active pet from the collection */
@@ -129,7 +170,25 @@ function petKey(channelId: string, userId: string): string {
 export async function getPet(channelId: string, userId: string): Promise<PetData | null> {
   const raw = await redis.get(petKey(channelId, userId));
   if (!raw) return null;
-  return JSON.parse(raw);
+  const data = JSON.parse(raw);
+
+  // Migrate old format (single pet) to new format (collection)
+  if (data.petId && !data.pets) {
+    const migrated: PetData = {
+      activePetId: data.petId,
+      pets: [{ petId: data.petId, petName: data.petName ?? "Pet", level: data.level ?? 1, xp: data.xp ?? 0 }],
+      equipped: data.equipped ?? {},
+      ownedItems: data.ownedItems ?? [],
+      totalSpent: data.totalSpent ?? 0,
+      care: data.care ?? defaultCare(),
+    };
+    await redis.set(petKey(channelId, userId), JSON.stringify(migrated));
+    return migrated;
+  }
+
+  // Ensure care exists
+  if (!data.care) data.care = defaultCare();
+  return data;
 }
 
 export async function buyPet(channelId: string, userId: string, petId: string, customName?: string): Promise<{ success: boolean; pet?: PetData; error?: string }> {
@@ -167,6 +226,7 @@ export async function buyPet(channelId: string, userId: string, petId: string, c
       equipped: {},
       ownedItems: [],
       totalSpent: petDef.price,
+      care: defaultCare(),
     };
   }
 
@@ -301,6 +361,76 @@ export async function setActivePet(channelId: string, userId: string, petId: str
   return { success: true };
 }
 
+/** Walk the pet — increases happiness, 60% chance poop spawns */
+export async function walkPet(channelId: string, userId: string): Promise<{
+  success: boolean; poop?: boolean; happiness?: number; error?: string;
+}> {
+  const data = await getPet(channelId, userId);
+  if (!data) return { success: false, error: "Kein Pet!" };
+  if (!data.care) data.care = defaultCare();
+
+  // Cooldown: 15 min
+  if (Date.now() - data.care.lastWalked < 900000) {
+    const mins = Math.ceil((900000 - (Date.now() - data.care.lastWalked)) / 60000);
+    return { success: false, error: `Gassi Cooldown! Noch ${mins} Min.` };
+  }
+
+  data.care.lastWalked = Date.now();
+  data.care.happiness = Math.min(100, data.care.happiness + 30);
+  data.care.walkCount++;
+
+  // 60% chance poop appears
+  const poop = Math.random() < 0.6;
+  if (poop) {
+    data.care.needsPoop = true;
+    data.care.cleanliness = Math.min(data.care.cleanliness, 30);
+  }
+
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+  return { success: true, poop, happiness: data.care.happiness };
+}
+
+/** Clean up poop */
+export async function cleanPoop(channelId: string, userId: string): Promise<{ success: boolean }> {
+  const data = await getPet(channelId, userId);
+  if (!data) return { success: false };
+  if (!data.care) data.care = defaultCare();
+  data.care.needsPoop = false;
+  data.care.cleanliness = 100;
+  data.care.lastCleaned = Date.now();
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+  return { success: true };
+}
+
+/** Feed the pet — uses equipped food item, restores hunger */
+export async function feedPet(channelId: string, userId: string): Promise<{
+  success: boolean; hunger?: number; error?: string;
+}> {
+  const data = await getPet(channelId, userId);
+  if (!data) return { success: false, error: "Kein Pet!" };
+  if (!data.care) data.care = defaultCare();
+
+  // Cooldown: 10 min
+  if (Date.now() - data.care.lastFed < 600000) {
+    const mins = Math.ceil((600000 - (Date.now() - data.care.lastFed)) / 60000);
+    return { success: false, error: `Fütter-Cooldown! Noch ${mins} Min.` };
+  }
+
+  data.care.lastFed = Date.now();
+  data.care.hunger = Math.min(100, data.care.hunger + 40);
+  data.care.feedCount++;
+
+  await redis.set(petKey(channelId, userId), JSON.stringify(data));
+  return { success: true, hunger: data.care.hunger };
+}
+
+/** Get current care state with decay applied */
+export async function getCareState(channelId: string, userId: string): Promise<PetCare | null> {
+  const data = await getPet(channelId, userId);
+  if (!data?.care) return null;
+  return decayCare({ ...data.care });
+}
+
 /** Get active pet's passive bonus values */
 export async function getPetBonuses(channelId: string, userId: string): Promise<{
   flipLuck: number; slotsLuck: number; scratchLuck: number;
@@ -317,8 +447,9 @@ export async function getPetBonuses(channelId: string, userId: string): Promise<
   const def = PET_CATALOG.find(p => p.id === active.petId);
   if (!def) return defaults;
 
+  const mood = data.care ? getMoodMultiplier(data.care) : 1;
   const lvl = active.level;
-  const val = def.perLevel * lvl;
+  const val = def.perLevel * lvl * mood; // mood reduces effectiveness
 
   switch (def.bonus) {
     case "flip_luck": return { ...defaults, flipLuck: val };

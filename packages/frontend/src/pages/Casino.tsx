@@ -1704,7 +1704,52 @@ export function CasinoPage() {
                         className="casino-btn px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "linear-gradient(135deg, rgba(244,114,182,0.2), rgba(236,72,153,0.1))", border: "1px solid rgba(244,114,182,0.4)", color: "#f472b6" }}>
                         {showShop ? "Shop schließen" : "🛒 Shop"}
                       </button>
+                      <button onClick={async () => {
+                        const res = await api.post<any>(`/viewer/${channelName}/casino/pet/walk`, {}) as any;
+                        if (res.success) { const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data); }
+                        else setMessage(res.error ?? "Fehler!");
+                      }} className="casino-btn px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#4ade80" }}>
+                        🐾 Gassi
+                      </button>
+                      <button onClick={async () => {
+                        const res = await api.post<any>(`/viewer/${channelName}/casino/pet/feed`, {}) as any;
+                        if (res.success) { const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data); }
+                        else setMessage(res.error ?? "Fehler!");
+                      }} className="casino-btn px-3 py-1 rounded-lg text-xs font-bold" style={{ background: "rgba(251,146,60,0.15)", border: "1px solid rgba(251,146,60,0.4)", color: "#fb923c" }}>
+                        🍖 Füttern
+                      </button>
+                      {pet.careState?.needsPoop && (
+                        <button onClick={async () => {
+                          await api.post<any>(`/viewer/${channelName}/casino/pet/clean`, {});
+                          const r = await api.get<any>(`/viewer/${channelName}/casino/pet`) as any; setPet(r.data);
+                        }} className="casino-btn px-3 py-1 rounded-lg text-xs font-bold animate-bounce" style={{ background: "rgba(139,92,46,0.3)", border: "1px solid rgba(139,92,46,0.6)", color: "#d4a574" }}>
+                          💩 Aufräumen!
+                        </button>
+                      )}
                     </div>
+                    {/* Mood & Care bars */}
+                    {pet.careState && (
+                      <div className="flex gap-3 mt-2 text-[10px]">
+                        <div className="flex-1">
+                          <div className="flex justify-between text-gray-500"><span>😊 Glück</span><span>{pet.careState.happiness}%</span></div>
+                          <div className="h-1.5 rounded-full bg-black/40 overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${pet.careState.happiness}%`, background: pet.careState.happiness > 50 ? "#4ade80" : pet.careState.happiness > 20 ? "#fbbf24" : "#ef4444" }} /></div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between text-gray-500"><span>🍖 Hunger</span><span>{pet.careState.hunger}%</span></div>
+                          <div className="h-1.5 rounded-full bg-black/40 overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${pet.careState.hunger}%`, background: pet.careState.hunger > 50 ? "#fb923c" : pet.careState.hunger > 20 ? "#fbbf24" : "#ef4444" }} /></div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between text-gray-500"><span>✨ Sauber</span><span>{pet.careState.cleanliness}%</span></div>
+                          <div className="h-1.5 rounded-full bg-black/40 overflow-hidden"><div className="h-full rounded-full transition-all" style={{ width: `${pet.careState.cleanliness}%`, background: pet.careState.cleanliness > 50 ? "#60a5fa" : pet.careState.cleanliness > 20 ? "#fbbf24" : "#ef4444" }} /></div>
+                        </div>
+                        <div className="shrink-0 text-center">
+                          <span className="text-gray-500">Stimmung</span>
+                          <div className={`font-bold ${(pet.mood ?? 100) > 70 ? "text-green-400" : (pet.mood ?? 100) > 40 ? "text-yellow-400" : "text-red-400"}`}>
+                            {pet.mood ?? 100}%
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

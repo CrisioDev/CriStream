@@ -503,8 +503,14 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!user) return reply.status(401).send({ success: false, error: "Login required" });
       const channel = await viewerService.resolveChannel(request.params.channelName);
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
-      const { getPet } = await import("../casino/pets.js");
-      return { success: true, data: await getPet(channel.id, user.twitchId) };
+      const { getPet, getCareState, getMoodMultiplier } = await import("../casino/pets.js");
+      const pet = await getPet(channel.id, user.twitchId);
+      if (pet) {
+        const care = await getCareState(channel.id, user.twitchId);
+        if (care) (pet as any).careState = care;
+        if (pet.care) (pet as any).mood = Math.round(getMoodMultiplier(pet.care) * 100);
+      }
+      return { success: true, data: pet };
     }
   );
 
@@ -571,6 +577,47 @@ export async function viewerRoutes(app: FastifyInstance) {
       if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
       const { unequipItem } = await import("../casino/pets.js");
       await unequipItem(channel.id, user.twitchId, request.body.category);
+      return { success: true };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/pet/walk",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { walkPet } = await import("../casino/pets.js");
+      const result = await walkPet(channel.id, user.twitchId);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/pet/feed",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { feedPet } = await import("../casino/pets.js");
+      const result = await feedPet(channel.id, user.twitchId);
+      if (!result.success) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/pet/clean",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { cleanPoop } = await import("../casino/pets.js");
+      await cleanPoop(channel.id, user.twitchId);
       return { success: true };
     }
   );

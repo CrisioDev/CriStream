@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#0a0a1a"/>
+  <rect x="8" y="8" width="176" height="176" rx="28" fill="none" stroke="#9146ff" stroke-width="4"/>
+  <text x="96" y="80" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="36" font-weight="900" fill="#ffd700">CRIS</text>
+  <text x="96" y="130" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="36" font-weight="900" fill="#c084fc">INO</text>
+  <text x="96" y="165" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" fill="#666">🎰</text>
+</svg>

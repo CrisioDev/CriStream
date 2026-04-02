@@ -276,12 +276,18 @@ export async function claimReward(
 
   if (levelRewards.length === 0) return { success: false, error: "Keine Belohnung auf diesem Level." };
 
-  // Apply rewards
+  // Apply rewards — multiply points by 10^prestige per pass cycle
+  const { redis } = await import("../../lib/redis.js");
+  const prestigeRaw = await redis.get(`casino:prestige:${channelId}:${userId}`);
+  const prestigeLevel = prestigeRaw ? parseInt(prestigeRaw) : 0;
+  const seasonMultiplier = Math.pow(10, prestigeLevel); // x1, x10, x100, x1000...
+
   for (const r of levelRewards) {
     if (r.type === "points" && typeof r.value === "number") {
+      const scaledReward = Math.round(r.value * seasonMultiplier);
       await prisma.channelUser.update({
         where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
-        data: { points: { increment: r.value } },
+        data: { points: { increment: scaledReward } },
       });
     } else if (r.type === "title" && typeof r.value === "string") {
       await prisma.activeTitle.upsert({
@@ -292,9 +298,10 @@ export async function claimReward(
     }
     // lootbox: would need lootbox service integration, for now give points equivalent
     else if (r.type === "lootbox" && typeof r.value === "number") {
+      const scaledLootbox = Math.round(r.value * 50 * seasonMultiplier);
       await prisma.channelUser.update({
         where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
-        data: { points: { increment: r.value * 50 } },
+        data: { points: { increment: scaledLootbox } },
       });
     }
   }

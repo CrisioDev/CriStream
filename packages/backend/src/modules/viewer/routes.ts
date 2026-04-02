@@ -1099,6 +1099,22 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Retroactive Achievement Check ──
+  app.post<{ Params: { channelName: string } }>(
+    "/:channelName/casino/achievements/sync",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { getStats } = await import("../casino/stats.js");
+      const { checkAchievements } = await import("../casino/achievements.js");
+      const stats = await getStats(channel.id, user.twitchId);
+      const unlocked = await checkAchievements(channel.id, user.twitchId, stats);
+      return { success: true, data: { newlyUnlocked: unlocked.length, achievements: unlocked } };
+    }
+  );
+
   // ── Bonus Summary ──
   app.get<{ Params: { channelName: string } }>(
     "/:channelName/casino/bonuses",

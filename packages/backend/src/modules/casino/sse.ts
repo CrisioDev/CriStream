@@ -178,6 +178,26 @@ export async function getInitialState(channelId: string, userId: string): Promis
     getUserPoints(channelId, userId).catch(() => 0),
   ]);
 
+  // Retroactive achievement check — silently unlock any achievements the user qualifies for
+  if (stats) {
+    const { checkAchievements } = await import("./achievements.js");
+    try {
+      const newAchs = await checkAchievements(channelId, userId, stats as any);
+      if (newAchs.length > 0 && achievementsData) {
+        // Refresh achievements data with newly unlocked
+        const { unlocked: ul2, total: t2 } = await getPlayerAchievements(channelId, userId);
+        const set2 = new Set(ul2);
+        (achievementsData as any).achievements = ACHIEVEMENTS.map((a) => ({
+          id: a.id, name: a.name, description: a.description,
+          category: a.category, rarity: a.rarity, reward: a.reward,
+          unlocked: set2.has(a.id),
+        }));
+        (achievementsData as any).unlocked = ul2.length;
+        (achievementsData as any).total = t2;
+      }
+    } catch { /* non-critical */ }
+  }
+
   return {
     feed, leaderboard, boss, heist, freePlays, tickets, autoflip,
     pet: petData, skills, stats, quests, achievements: achievementsData,

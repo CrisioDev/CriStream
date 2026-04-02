@@ -48,6 +48,11 @@ export interface PlayerStats {
   tierSlotsPlayed: number;
   prestigeLevel: number;
   breedsDone: number;
+  storyCompleted: number;
+  storyEndingKing: number;
+  storyEndingFree: number;
+  storyEndingSacrifice: number;
+  storyEndingEternal: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -98,6 +103,11 @@ const DEFAULT_STATS: PlayerStats = {
   tierSlotsPlayed: 0,
   prestigeLevel: 0,
   breedsDone: 0,
+  storyCompleted: 0,
+  storyEndingKing: 0,
+  storyEndingFree: 0,
+  storyEndingSacrifice: 0,
+  storyEndingEternal: 0,
 };
 
 function statsKey(channelId: string, userId: string): string {

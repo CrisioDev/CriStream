@@ -10,7 +10,7 @@ export interface AchievementDef {
   id: string;
   name: string;
   description: string;
-  category: "start" | "milestone" | "luck" | "pech" | "specials" | "double" | "social" | "grind" | "legendary" | "tier" | "dice" | "minigame" | "prestige" | "guild" | "economy";
+  category: "start" | "milestone" | "luck" | "pech" | "specials" | "double" | "social" | "grind" | "legendary" | "tier" | "dice" | "minigame" | "prestige" | "guild" | "economy" | "story";
   rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
   reward: AchievementReward;
   check: (stats: PlayerStats) => boolean;
@@ -232,6 +232,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "gifts_25", name: "Geschenke-König", description: "Löse 25 Geschenke an Chat aus", category: "social", rarity: "epic", reward: { points: 150, title: "Geschenke-König" }, check: (s) => s.giftsTriggered >= 25 },
   { id: "mitleid_10", name: "Mitleids-Magnet", description: "Erhalte 10x Mitleids-Punkte", category: "pech", rarity: "uncommon", reward: { points: 20, title: "Mitleids-Magnet" }, check: (s) => s.mitleidReceived >= 10 },
   { id: "mitleid_25", name: "Dauerbedauert", description: "Erhalte 25x Mitleids-Punkte", category: "pech", rarity: "rare", reward: { points: 50, title: "Dauerbedauert" }, check: (s) => s.mitleidReceived >= 25 },
+
+  // ── STORY (5) ──
+  { id: "story_king", name: "👑 Der König", description: "Beende die Story mit Ending: Der König", category: "story", rarity: "epic", reward: { points: 500, title: "Der König" }, check: (s) => s.storyEndingKing >= 1 },
+  { id: "story_free", name: "✨ Die Freie Seele", description: "Beende die Story mit Ending: Die Freie Seele", category: "story", rarity: "epic", reward: { points: 500, title: "Die Freie Seele" }, check: (s) => s.storyEndingFree >= 1 },
+  { id: "story_sacrifice", name: "🙏 Das Opfer", description: "Beende die Story mit Ending: Das Opfer", category: "story", rarity: "epic", reward: { points: 500, title: "Das Opfer" }, check: (s) => s.storyEndingSacrifice >= 1 },
+  { id: "story_eternal", name: "🤝 Der Ewige Spieler", description: "Beende die Story mit Ending: Der Ewige Spieler", category: "story", rarity: "epic", reward: { points: 500, title: "Der Ewige Spieler" }, check: (s) => s.storyEndingEternal >= 1 },
+  { id: "story_all", name: "📖 Legendensammler", description: "Erlebe alle 4 Story-Enden", category: "story", rarity: "legendary", reward: { points: 2000, title: "Legendensammler" }, check: (s) => s.storyEndingKing >= 1 && s.storyEndingFree >= 1 && s.storyEndingSacrifice >= 1 && s.storyEndingEternal >= 1 },
 ];
 
 export async function checkAchievements(

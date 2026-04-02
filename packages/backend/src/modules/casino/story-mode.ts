@@ -36,6 +36,8 @@ export interface StoryState {
   attempts: number;
   startedAt: number;
   lastPlayed: number;
+  completedEndings?: string[];
+  completions?: number;
 }
 
 /* ──────────────────────────────────────────────
@@ -2252,7 +2254,21 @@ function redisKey(channelId: string, userId: string): string {
   return `casino:story:${channelId}:${userId}`;
 }
 
-function defaultState(): StoryState {
+function endingsKey(channelId: string, userId: string): string {
+  return `casino:story:endings:${channelId}:${userId}`;
+}
+
+function determineEndingId(state: StoryState): string | null {
+  const toast = state.choices["c32"];
+  const chip = state.choices["c39"];
+  if (chip === "keep" && toast === "victory") return "king";
+  if (chip === "destroy" && toast === "friendship") return "free";
+  if (chip === "destroy" && toast === "victory") return "sacrifice";
+  if (chip === "keep" && toast === "friendship") return "eternal";
+  return "eternal"; // fallback
+}
+
+function defaultState(prev?: StoryState): StoryState {
   return {
     chapter: 1,
     scene: 0,
@@ -2263,6 +2279,8 @@ function defaultState(): StoryState {
     attempts: 0,
     startedAt: Date.now(),
     lastPlayed: Date.now(),
+    completedEndings: prev?.completedEndings ?? [],
+    completions: prev?.completions ?? 0,
   };
 }
 
@@ -2345,6 +2363,8 @@ function buildResponse(state: StoryState, scene: StoryScene | null) {
       totalChaptersAvailable: chapters.length,
       totalScenesInChapter: ch ? ch.scenes.length : 0,
     },
+    completedEndings: state.completedEndings ?? [],
+    completions: state.completions ?? 0,
   };
 }
 
@@ -2354,9 +2374,24 @@ function buildResponse(state: StoryState, scene: StoryScene | null) {
 
 export async function getStoryState(channelId: string, userId: string) {
   const raw = await redis.get(redisKey(channelId, userId));
-  if (!raw) return null;
+  if (!raw) {
+    // No active story — check if they have completed endings
+    const endingsRaw = await redis.get(endingsKey(channelId, userId));
+    if (endingsRaw) {
+      const endings: string[] = JSON.parse(endingsRaw);
+      return { state: null, scene: null, completedEndings: endings, completions: endings.length };
+    }
+    return null;
+  }
 
   const state: StoryState = JSON.parse(raw);
+  // Sync endings from Redis
+  const endingsRaw = await redis.get(endingsKey(channelId, userId));
+  if (endingsRaw) {
+    state.completedEndings = JSON.parse(endingsRaw);
+    state.completions = state.completedEndings!.length;
+  }
+
   const ch = getChapter(state.chapter);
   if (!ch) return buildResponse(state, null);
 
@@ -2463,9 +2498,23 @@ export async function advanceStory(channelId: string, userId: string) {
   if (nextScene >= effectiveMaxScene || isChapterEndBranch) {
     const nextCh = getChapter(nextChapter + 1);
     if (!nextCh) {
+      // Story completed — record ending
+      if (state.chapter === 40) {
+        const ending = determineEndingId(state);
+        if (ending) {
+          const endingsRaw = await redis.get(endingsKey(channelId, userId));
+          const endings: string[] = endingsRaw ? JSON.parse(endingsRaw) : [];
+          if (!endings.includes(ending)) endings.push(ending);
+          await redis.set(endingsKey(channelId, userId), JSON.stringify(endings));
+          state.completedEndings = endings;
+          state.completions = endings.length;
+          await saveState(channelId, userId, state);
+        }
+      }
       return {
-        state,
-        scene: null,
+        ...buildResponse(state, null),
+        completed: true,
+        ending: state.chapter === 40 ? determineEndingId(state) : null,
         message: state.chapter === 40
           ? "🎉 Du hast die Geschichte abgeschlossen! Die Legende des Goldenen Chips ist zu Ende. Dein Schicksal ist besiegelt."
           : "🎉 Du hast alle verfügbaren Kapitel abgeschlossen! Mehr kommt bald...",
@@ -2582,13 +2631,26 @@ export async function reportGameResult(channelId: string, userId: string, won: b
     if (nextScene >= effectiveMax || isEndBranch) {
       const nextCh = getChapter(state.chapter + 1);
       if (!nextCh) {
-        state.scene = effectiveMax - 1; // stay at last
+        // Story completed — record ending
+        if (state.chapter === 40) {
+          const ending = determineEndingId(state);
+          if (ending) {
+            const endingsRaw = await redis.get(endingsKey(channelId, userId));
+            const endings: string[] = endingsRaw ? JSON.parse(endingsRaw) : [];
+            if (!endings.includes(ending)) endings.push(ending);
+            await redis.set(endingsKey(channelId, userId), JSON.stringify(endings));
+            state.completedEndings = endings;
+            state.completions = endings.length;
+          }
+        }
+        state.scene = effectiveMax - 1;
         await saveState(channelId, userId, state);
         return {
-          state,
-          scene: null,
+          ...buildResponse(state, null),
           won: true,
           reward,
+          completed: true,
+          ending: state.chapter === 40 ? determineEndingId(state) : null,
           message: "🎉 Du hast die Geschichte abgeschlossen! Die Legende des Goldenen Chips ist zu Ende. Dein Schicksal ist besiegelt.",
         };
       }
@@ -2662,4 +2724,28 @@ export async function reportGameResult(channelId: string, userId: string, won: b
         : `Verloren! Noch ${maxAttempts - state.attempts} Versuch(e) übrig.`,
     };
   }
+}
+
+export async function restartStory(channelId: string, userId: string) {
+  // Load existing endings before resetting
+  const endingsRaw = await redis.get(endingsKey(channelId, userId));
+  const endings: string[] = endingsRaw ? JSON.parse(endingsRaw) : [];
+
+  const oldRaw = await redis.get(redisKey(channelId, userId));
+  const old: StoryState | null = oldRaw ? JSON.parse(oldRaw) : null;
+
+  const state = defaultState(old ?? undefined);
+  state.completedEndings = endings;
+  state.completions = endings.length;
+
+  await saveState(channelId, userId, state);
+
+  const ch = getChapter(1)!;
+  const scene = ch.scenes[0];
+  return buildResponse(state, scene);
+}
+
+export async function getStoryEndings(channelId: string, userId: string): Promise<string[]> {
+  const raw = await redis.get(endingsKey(channelId, userId));
+  return raw ? JSON.parse(raw) : [];
 }

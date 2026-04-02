@@ -1966,4 +1966,14 @@ export async function viewerRoutes(app: FastifyInstance) {
     if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
     return { success: true, data: result };
   });
+
+  app.post("/:channelName/casino/story/restart", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { restartStory } = await import("../casino/story-mode.js");
+    const state = await restartStory(channel.id, user.twitchId);
+    return { success: true, data: state };
+  });
 }

@@ -165,6 +165,7 @@ model ChannelUser {
   twitchUserId String
   displayName  String
   points       BigInt   @default(0)
+  pointsExp    BigInt   @default(0) // Scientific notation exponent: real_points = points * 10^pointsExp
   watchMinutes Int      @default(0)
   lastSeen     DateTime @default(now())
   channelId    String

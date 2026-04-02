@@ -36,8 +36,12 @@ import { stopwatchRoutes } from "./modules/stopwatch/routes.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function buildApp() {
-  // BigInt JSON serialization support (Prisma BigInt fields)
-  (BigInt.prototype as any).toJSON = function () { return Number(this); };
+  // BigInt JSON serialization — safe Number for small values, String for huge ones
+  (BigInt.prototype as any).toJSON = function () {
+    const n = this as bigint;
+    if (n >= -9007199254740991n && n <= 9007199254740991n) return Number(n);
+    return n.toString();
+  };
 
   const app = Fastify({ logger: false });
 

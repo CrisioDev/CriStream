@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/api/client";
 import { formatNumber } from "@/lib/format-number";
+import { StoryGameEmbed } from "./StoryGameEmbed";
 
 interface StoryTabProps {
   user: any;
@@ -135,24 +136,21 @@ export function StoryTab({ user, channelName }: StoryTabProps) {
             {scene.text}
           </div>
 
-          {/* Game required */}
+          {/* Game required — inline embedded game */}
           {scene.game && (
-            <div className="rounded-xl p-4 mb-3 text-center" style={{ background: "rgba(145,71,255,0.1)", border: "1px solid rgba(145,71,255,0.3)" }}>
-              <div className="text-3xl mb-2">{gameEmojis[scene.game.type] ?? "🎮"}</div>
-              <p className="text-sm text-purple-300 font-bold mb-1">{scene.game.description}</p>
-              {scene.game.mustWin && <p className="text-[10px] text-yellow-400">Du musst gewinnen um fortzufahren!</p>}
-              {scene.game.reward && <p className="text-[10px] text-green-400">Belohnung: +{scene.game.reward} Pts</p>}
-              <div className="flex justify-center gap-2 mt-3">
-                <button onClick={() => reportGame(true)} disabled={loading}
-                  className="casino-btn px-6 py-2 rounded-xl font-bold text-sm text-black" style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)" }}>
-                  ✅ Gewonnen!
-                </button>
-                <button onClick={() => reportGame(false)} disabled={loading}
-                  className="casino-btn px-6 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(239,68,68,0.3)", border: "1px solid rgba(239,68,68,0.4)" }}>
-                  ❌ Verloren
-                </button>
+            <div className="rounded-xl p-4 mb-3" style={{ background: "rgba(145,71,255,0.1)", border: "1px solid rgba(145,71,255,0.3)" }}>
+              <div className="text-center mb-3">
+                <div className="text-3xl mb-1">{gameEmojis[scene.game.type] ?? "🎮"}</div>
+                <p className="text-sm text-purple-300 font-bold">{scene.game.description}</p>
+                {scene.game.mustWin && <p className="text-[10px] text-yellow-400 mt-1">Du musst gewinnen um fortzufahren!</p>}
+                {scene.game.reward && <p className="text-[10px] text-green-400">Belohnung: +{scene.game.reward} Pts</p>}
               </div>
-              <p className="text-[10px] text-gray-600 mt-2">Spiele das Spiel auf dem Spielen-Tab und berichte das Ergebnis hier</p>
+              <StoryGameEmbed
+                gameType={scene.game.type}
+                channelName={channelName}
+                description={scene.game.description}
+                onComplete={(won) => reportGame(won)}
+              />
             </div>
           )}
 

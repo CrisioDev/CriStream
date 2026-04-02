@@ -271,4 +271,65 @@ export const casinoSounds = {
     osc(150, "sawtooth", 0.25, 0.12);
     osc(140, "square", 0.2, 0.06, 0.05);
   },
+
+  // ── Slot Reel Stop (mechanical thunk + click) ──
+  reelStop() {
+    if (muted) return;
+    osc(200, "square", 0.06, 0.15);
+    osc(400, "triangle", 0.04, 0.08, 0.02);
+    noise(0.04, 0.1, 0, 2000);
+  },
+
+  // ── Win Line (bright sparkle sweep for matching reels) ──
+  winLine() {
+    if (muted) return;
+    const notes = [784, 988, 1175, 1568]; // G5 B5 D6 G6
+    for (let i = 0; i < notes.length; i++) {
+      osc(notes[i]!, "sine", 0.25, 0.1, i * 0.06);
+      osc(notes[i]! * 2, "sine", 0.15, 0.03, i * 0.06);
+    }
+    noise(0.2, 0.04, 0.2, 8000);
+  },
+
+  // ── Typewriter tick (for visual novel) ──
+  typewriterTick() {
+    if (muted) return;
+    osc(1400 + Math.random() * 400, "square", 0.015, 0.03);
+  },
+
+  // ── Casino Run: stage clear ──
+  stageClear() {
+    if (muted) return;
+    osc(523, "sine", 0.12, 0.12);
+    osc(659, "sine", 0.12, 0.1, 0.08);
+    osc(784, "sine", 0.15, 0.12, 0.16);
+    osc(1047, "sine", 0.25, 0.15, 0.24);
+    noise(0.08, 0.03, 0.3, 6000);
+  },
+
+  // ── Casino Run: game over ──
+  runGameOver() {
+    if (muted) return;
+    osc(300, "sawtooth", 0.4, 0.1, 0, 100);
+    osc(250, "sine", 0.35, 0.08, 0.1, 80);
+    noise(0.2, 0.06, 0.2, 400);
+  },
+
+  // ── Guild Boss hit ──
+  bossHit() {
+    if (muted) return;
+    osc(100, "sawtooth", 0.12, 0.15);
+    noise(0.08, 0.12, 0, 1000);
+    osc(80, "sine", 0.15, 0.1, 0.05);
+  },
+
+  // ── Challenge complete ──
+  challengeComplete() {
+    if (muted) return;
+    chord([523, 659, 784], "sine", 0.3, 0.15);
+    chord([659, 784, 1047], "sine", 0.4, 0.15, 0.2);
+    for (let i = 0; i < 6; i++) {
+      osc(2000 + Math.random() * 3000, "sine", 0.06, 0.04, 0.3 + i * 0.05);
+    }
+  },
 };

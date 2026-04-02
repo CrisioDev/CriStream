@@ -1,4 +1,114 @@
+import { useState, useEffect, useRef } from "react";
 import { formatNumber } from "@/lib/format-number";
+import { casinoSounds } from "@/lib/casino-sounds";
+
+const SLOT_SYMBOLS = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣", "🔔"];
+
+/** Animated slot reel — vertical scroll with staggered stop */
+function SlotReel({ finalSymbol, spinning, stopDelay, onStopped }: {
+  finalSymbol: string; spinning: boolean; stopDelay: number;
+  onStopped?: () => void;
+}) {
+  const [phase, setPhase] = useState<"idle" | "spinning" | "stopping" | "done">("idle");
+  const [symbols, setSymbols] = useState<string[]>([finalSymbol]);
+  const [offset, setOffset] = useState(0);
+  const intervalRef = useRef<any>(null);
+  const frameRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (spinning) {
+      setPhase("spinning");
+      // Generate random symbols for the reel strip
+      const strip = Array.from({ length: 8 }, () => SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]!);
+      setSymbols(strip);
+      let pos = 0;
+      intervalRef.current = setInterval(() => {
+        pos = (pos + 1) % strip.length;
+        setOffset(pos);
+        setSymbols(prev => {
+          const next = [...prev];
+          next[pos % next.length] = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]!;
+          return next;
+        });
+      }, 60);
+
+      // Schedule stop
+      const stopTimer = setTimeout(() => {
+        clearInterval(intervalRef.current);
+        setPhase("stopping");
+        setSymbols([finalSymbol]);
+        setOffset(0);
+        casinoSounds.reelStop();
+        setTimeout(() => {
+          setPhase("done");
+          onStopped?.();
+        }, 300);
+      }, stopDelay);
+
+      return () => { clearInterval(intervalRef.current); clearTimeout(stopTimer); cancelAnimationFrame(frameRef.current); };
+    } else {
+      setPhase("idle");
+      setSymbols([finalSymbol]);
+      setOffset(0);
+    }
+  }, [spinning, stopDelay, finalSymbol]);
+
+  return (
+    <div className="w-20 h-20 rounded-xl overflow-hidden relative" style={{
+      background: "linear-gradient(180deg,#1a1a1a,#0a0a0a)",
+      border: "2px solid rgba(145,71,255,0.4)",
+      boxShadow: "inset 0 0 20px rgba(0,0,0,0.8)",
+    }}>
+      {phase === "spinning" ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{
+          animation: "reel-spin 0.18s linear infinite",
+        }}>
+          {symbols.map((s, i) => (
+            <div key={i} className="text-4xl leading-[80px] flex-shrink-0">{s}</div>
+          ))}
+        </div>
+      ) : (
+        <div className={`w-full h-full flex items-center justify-center text-4xl ${phase === "stopping" ? "reel-bounce" : ""}`}>
+          {symbols[0]}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Row of 3 animated slot reels with win-line detection */
+function SlotReelRow({ reels, spinning }: { reels: string[]; spinning: boolean }) {
+  const [stoppedCount, setStoppedCount] = useState(0);
+  const [allDone, setAllDone] = useState(false);
+  const isWinLine = allDone && reels[0] === reels[1] && reels[1] === reels[2] && reels[0] !== "❓";
+
+  useEffect(() => {
+    if (spinning) { setStoppedCount(0); setAllDone(false); }
+  }, [spinning]);
+
+  useEffect(() => {
+    if (stoppedCount >= 3) {
+      setAllDone(true);
+      if (reels[0] === reels[1] && reels[1] === reels[2] && reels[0] !== "❓") {
+        casinoSounds.winLine();
+      }
+    }
+  }, [stoppedCount, reels]);
+
+  return (
+    <div className={`flex justify-center gap-2 mb-4 ${isWinLine ? "win-line-pulse rounded-xl p-1" : ""}`}>
+      {reels.map((sym, i) => (
+        <SlotReel
+          key={i}
+          finalSymbol={sym}
+          spinning={spinning}
+          stopDelay={800 + i * 300}
+          onStopped={() => setStoppedCount(c => c + 1)}
+        />
+      ))}
+    </div>
+  );
+}
 
 interface PlayTabProps {
   user: any;
@@ -66,15 +176,7 @@ export function PlayTab(props: PlayTabProps) {
             <h2 className="text-center text-2xl font-black text-purple-300 mb-1">{"\uD83C\uDFB0"} SLOTS</h2>
             <p className="text-center text-xs text-gray-500 mb-1">20 Punkte + Specials</p>
             {freePlays && <p className="text-center text-xs mb-4">{freePlays.slots > 0 ? <span className="text-green-400 font-bold">{freePlays.slots} Gratis-Spins</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
-            <div className="flex justify-center gap-2 mb-4">
-              {slotReels.map((sym, i) => (
-                <div key={i} className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl" style={{
-                  background: "linear-gradient(180deg,#1a1a1a,#0a0a0a)", border: "2px solid rgba(145,71,255,0.4)",
-                  boxShadow: "inset 0 0 20px rgba(0,0,0,0.8)", transition: "transform 0.1s",
-                  transform: slotSpinning ? "scaleY(0.95)" : "scaleY(1)",
-                }}>{sym}</div>
-              ))}
-            </div>
+            <SlotReelRow reels={slotReels} spinning={slotSpinning} />
             {slotResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(slotResult)}`}>{slotResult.text}</div>}
             <button onClick={playSlots} disabled={slotSpinning || !user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: slotSpinning ? "#666" : "linear-gradient(135deg,#9146ff,#6441a5)" }}>
               {slotSpinning ? "SPINNING..." : "\uD83C\uDFB0 SPIN!"}
@@ -195,17 +297,7 @@ export function PlayTab(props: PlayTabProps) {
                       </div>
                     ) : (
                       <>
-                        <div className="flex justify-center gap-1 mb-3">
-                          {reels.map((sym, i) => (
-                            <div key={i} className="w-14 h-14 rounded-lg flex items-center justify-center text-2xl" style={{
-                              background: "linear-gradient(180deg,#1a1a1a,#0a0a0a)",
-                              border: "2px solid rgba(145,71,255,0.3)",
-                              boxShadow: "inset 0 0 15px rgba(0,0,0,0.8)",
-                              transition: "transform 0.1s",
-                              transform: spinning ? "scaleY(0.95)" : "scaleY(1)",
-                            }}>{sym}</div>
-                          ))}
-                        </div>
+                        <SlotReelRow reels={reels} spinning={spinning} />
                         {result && <div className={`text-center mb-2 text-xs font-bold rounded-lg py-1.5 px-2 ${resultClass(result)}`}>{result.text}</div>}
                         <button onClick={() => playTierSlots(tier.id)} disabled={spinning || !user}
                           className="casino-btn w-full py-2 rounded-xl font-black text-sm text-black"

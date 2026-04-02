@@ -60,15 +60,18 @@ export function StoryGameEmbed({ gameType, channelName, onComplete, description 
     }
   };
 
-  // ── SLOTS ──
+  // ── SLOTS (animated reels with staggered stop) ──
   const [slotReels, setSlotReels] = useState(["❓", "❓", "❓"]);
   const [slotSpinning, setSlotSpinning] = useState(false);
+  const [slotReelPhase, setSlotReelPhase] = useState<("idle"|"spinning"|"stopping"|"done")[]>(["idle","idle","idle"]);
   const slotIntervalRef = useRef<any>(null);
+  const slotTimersRef = useRef<any[]>([]);
 
   const playSlots = async () => {
     if (loading) return;
     setLoading(true);
     setSlotSpinning(true);
+    setSlotReelPhase(["spinning","spinning","spinning"]);
     setResult(null);
     const symbols = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"];
     slotIntervalRef.current = setInterval(() => {
@@ -77,29 +80,47 @@ export function StoryGameEmbed({ gameType, channelName, onComplete, description 
         symbols[Math.floor(Math.random() * symbols.length)]!,
         symbols[Math.floor(Math.random() * symbols.length)]!,
       ]);
-    }, 80);
+    }, 60);
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "slots" }) as any;
-      setTimeout(() => {
+      const finalReels = res.data?.reels ?? ["❓","❓","❓"];
+      // Staggered stop: reel 0 at 800ms, 1 at 1100ms, 2 at 1400ms
+      [800, 1100, 1400].forEach((delay, i) => {
+        slotTimersRef.current.push(setTimeout(() => {
+          casinoSounds.reelStop();
+          setSlotReels(prev => { const n = [...prev]; n[i] = finalReels[i]; return n; });
+          setSlotReelPhase(prev => { const n = [...prev]; n[i] = "stopping"; return n; });
+          setTimeout(() => {
+            setSlotReelPhase(prev => { const n = [...prev]; n[i] = "done"; return n; });
+          }, 300);
+        }, delay));
+      });
+      // Final resolution
+      slotTimersRef.current.push(setTimeout(() => {
         clearInterval(slotIntervalRef.current);
         setSlotSpinning(false);
+        setSlotReelPhase(["done","done","done"]);
         if (res.data) {
           setSlotReels(res.data.reels);
+          if (res.data.reels[0] === res.data.reels[1] && res.data.reels[1] === res.data.reels[2]) {
+            casinoSounds.winLine();
+          }
           reportResult(res.data.payout > 0, res.data.label);
         } else {
           reportResult(false, res.error ?? "Fehler!");
         }
         setLoading(false);
-      }, 1500);
+      }, 1700));
     } catch {
       clearInterval(slotIntervalRef.current);
       setSlotSpinning(false);
+      setSlotReelPhase(["idle","idle","idle"]);
       reportResult(false, "Fehler!");
       setLoading(false);
     }
   };
 
-  useEffect(() => { return () => { if (slotIntervalRef.current) clearInterval(slotIntervalRef.current); }; }, []);
+  useEffect(() => { return () => { if (slotIntervalRef.current) clearInterval(slotIntervalRef.current); slotTimersRef.current.forEach(clearTimeout); }; }, []);
 
   // ── SCRATCH ──
   const [scratchCards, setScratchCards] = useState(["❓", "❓", "❓"]);
@@ -565,10 +586,10 @@ export function StoryGameEmbed({ gameType, channelName, onComplete, description 
   if (gameType === "slots") {
     return (
       <div className="text-center space-y-3">
-        <div className="flex justify-center gap-2">
+        <div className={`flex justify-center gap-2 ${!slotSpinning && slotReels[0] === slotReels[1] && slotReels[1] === slotReels[2] && slotReels[0] !== "❓" ? "win-line-pulse rounded-xl p-1" : ""}`}>
           {slotReels.map((s, i) => (
-            <div key={i} className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-black"
-              style={{ background: "rgba(145,71,255,0.1)", border: "2px solid rgba(145,71,255,0.3)", animation: slotSpinning ? "slot-glow 0.5s ease-in-out infinite" : undefined }}>
+            <div key={i} className={`w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center text-3xl font-black ${slotReelPhase[i] === "stopping" ? "reel-bounce" : ""}`}
+              style={{ background: "rgba(145,71,255,0.1)", border: "2px solid rgba(145,71,255,0.3)", animation: slotReelPhase[i] === "spinning" ? "reel-spin 0.18s linear infinite" : undefined }}>
               {s}
             </div>
           ))}

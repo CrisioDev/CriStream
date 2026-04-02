@@ -18,6 +18,10 @@ interface SocialTabProps {
   heist: HeistState | null;
   heistMessage: string | null;
   setHeist: (v: HeistState | null) => void;
+  // Guild War
+  weeklyRanking?: any[];
+  guildQuests?: any[];
+  guildBoss?: any | null;
   // Handlers
   setMessage: (v: string | null) => void;
   fetchGuilds: () => void;
@@ -35,6 +39,7 @@ export function SocialTab(props: SocialTabProps) {
     user, channelName,
     guilds, myGuild, guildCreateName, setGuildCreateName, guildCreateEmoji, setGuildCreateEmoji, guildLoading, setGuildLoading,
     heist, heistMessage, setHeist,
+    weeklyRanking, guildQuests, guildBoss,
     setMessage, fetchGuilds, fetchPoints, fetchHeist,
     createHeist, joinHeist, playHeistRound, heistBetray, heistFinish,
   } = props;
@@ -131,6 +136,103 @@ export function SocialTab(props: SocialTabProps) {
           )}
         </div>
       </div>
+
+      {/* ── GUILD WAR ── */}
+      {myGuild && (
+        <div className="max-w-2xl mx-auto px-6 pb-6">
+          <div className="rounded-2xl p-5" style={{
+            background: "linear-gradient(180deg, rgba(249,115,22,0.06), rgba(0,0,0,0.2))",
+            border: "1px solid rgba(249,115,22,0.25)",
+          }}>
+            <h3 className="font-black text-lg text-orange-400 mb-3">⚔️ GILDEN-KRIEG</h3>
+
+            {/* Weekly Ranking */}
+            {weeklyRanking && weeklyRanking.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-xs font-bold text-orange-300 mb-2">🏆 Wochen-Ranking</h4>
+                <div className="space-y-1">
+                  {weeklyRanking.slice(0, 5).map((g: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 text-xs rounded-lg px-3 py-1.5" style={{
+                      background: g.guildId === myGuild?.guildId ? "rgba(249,115,22,0.1)" : "rgba(255,255,255,0.02)",
+                      border: g.guildId === myGuild?.guildId ? "1px solid rgba(249,115,22,0.3)" : "1px solid transparent",
+                    }}>
+                      <span className="w-6 text-center">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}.`}</span>
+                      <span className="text-lg">{g.emoji}</span>
+                      <span className={`flex-1 truncate ${i < 3 ? "font-bold text-yellow-300" : "text-white"}`}>{g.name}</span>
+                      <span className="text-orange-400 font-bold">{formatNumber(g.weeklyXp)} XP</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-600 mt-1">Top 3 am Sonntag: Titel + Bonus-Punkte!</p>
+              </div>
+            )}
+
+            {/* Daily Guild Quests */}
+            {guildQuests && guildQuests.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-xs font-bold text-orange-300 mb-2">📋 Tägliche Gilden-Quests</h4>
+                <div className="space-y-2">
+                  {guildQuests.map((q: any, i: number) => (
+                    <div key={i} className="rounded-xl p-3" style={{
+                      background: q.done ? "rgba(34,197,94,0.08)" : "rgba(249,115,22,0.05)",
+                      border: `1px solid ${q.done ? "rgba(34,197,94,0.3)" : "rgba(249,115,22,0.2)"}`,
+                    }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-bold text-white">{q.title}</span>
+                        {q.done && <span className="text-green-400 text-xs font-bold">✅ Erledigt</span>}
+                      </div>
+                      <p className="text-xs text-gray-400 mb-2">{q.description}</p>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.3)" }}>
+                        <div className="h-full rounded-full transition-all duration-500" style={{
+                          width: `${Math.min(100, (q.progress / q.target) * 100)}%`,
+                          background: q.done ? "linear-gradient(90deg, #22c55e, #4ade80)" : "linear-gradient(90deg, #f97316, #ea580c)",
+                        }} />
+                      </div>
+                      <div className="text-[10px] text-gray-500 mt-1">{q.progress}/{q.target}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-600 mt-1">Beide Quests erledigt = Boss spawnt!</p>
+              </div>
+            )}
+
+            {/* Guild Boss */}
+            {guildBoss?.active && (
+              <div className="rounded-xl p-4 text-center" style={{
+                background: "rgba(239,68,68,0.08)",
+                border: "2px solid rgba(239,68,68,0.4)",
+              }}>
+                <div className="text-4xl mb-2">{guildBoss.emoji}</div>
+                <h4 className="font-black text-red-400 text-lg mb-1">GILDEN-BOSS: {guildBoss.name}</h4>
+                <div className="relative h-6 rounded-full overflow-hidden mb-2" style={{ background: "rgba(0,0,0,0.5)" }}>
+                  <div className={`h-full rounded-full transition-all duration-500 ${guildBoss.hp < guildBoss.maxHp ? "boss-hp-drain" : ""}`} style={{
+                    width: `${Math.max(0, (guildBoss.hp / guildBoss.maxHp) * 100)}%`,
+                    background: guildBoss.hp / guildBoss.maxHp > 0.5
+                      ? "linear-gradient(90deg, #ef4444, #f97316)"
+                      : guildBoss.hp / guildBoss.maxHp > 0.25
+                      ? "linear-gradient(90deg, #f97316, #fbbf24)"
+                      : "linear-gradient(90deg, #dc2626, #ef4444)",
+                  }} />
+                  <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+                    {guildBoss.hp}/{guildBoss.maxHp} HP
+                  </div>
+                </div>
+                {guildBoss.defeated ? (
+                  <p className="text-green-400 font-bold text-sm">🎉 Boss besiegt! +{guildBoss.reward} Pts für alle Mitglieder!</p>
+                ) : (
+                  <p className="text-xs text-gray-400">Jeder Gewinn schadet dem Boss! · Belohnung: +{guildBoss.reward} Pts/Mitglied</p>
+                )}
+              </div>
+            )}
+
+            {guildBoss && guildBoss.defeated && (
+              <div className="rounded-xl p-3 mt-3 text-center" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                <p className="text-green-400 font-bold text-sm">🏆 Boss besiegt! Belohnungen wurden verteilt.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── HEIST ── */}
       <div className="max-w-2xl mx-auto px-6 pb-6">

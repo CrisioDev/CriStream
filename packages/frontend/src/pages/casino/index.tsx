@@ -90,6 +90,19 @@ const CSS_ANIMATIONS = `
 .bp-track::-webkit-scrollbar { height: 6px; }
 .bp-track::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); border-radius: 3px; }
 .bp-track::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.5); border-radius: 3px; }
+@keyframes reel-spin { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
+@keyframes reel-bounce { 0% { transform: translateY(10px); } 40% { transform: translateY(-6px); } 70% { transform: translateY(3px); } 100% { transform: translateY(0); } }
+@keyframes win-line-pulse { 0%,100% { box-shadow: 0 0 10px rgba(255,215,0,0.4), inset 0 0 10px rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.6); } 50% { box-shadow: 0 0 30px rgba(255,215,0,0.8), inset 0 0 20px rgba(255,215,0,0.2); border-color: rgba(255,215,0,1); } }
+.reel-bounce { animation: reel-bounce 0.3s ease-out; }
+.win-line-pulse { animation: win-line-pulse 0.6s ease-in-out infinite; border: 2px solid #ffd700 !important; }
+@keyframes vn-typewriter-cursor { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+.vn-cursor { animation: vn-typewriter-cursor 0.8s step-end infinite; }
+@keyframes run-stage-enter { 0% { transform: scale(0.8) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+.run-stage-enter { animation: run-stage-enter 0.4s ease-out; }
+@keyframes challenge-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.challenge-shimmer { background: linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.1) 50%, transparent 100%); background-size: 200% 100%; animation: challenge-shimmer 3s ease-in-out infinite; }
+@keyframes boss-hp-drain { 0% { filter: brightness(1.5); } 100% { filter: brightness(1); } }
+.boss-hp-drain { animation: boss-hp-drain 0.5s ease-out; }
 `;
 
 export function CasinoPage() {
@@ -238,6 +251,11 @@ export function CasinoPage() {
   const [guildCreateName, setGuildCreateName] = useState("");
   const [guildCreateEmoji, setGuildCreateEmoji] = useState("⚔️");
   const [guildLoading, setGuildLoading] = useState(false);
+  // Daily Challenge + Casino Run + Guild War
+  const [dailyChallenge, setDailyChallenge] = useState<any>(null);
+  const [weeklyRanking, setWeeklyRanking] = useState<any[]>([]);
+  const [guildQuests, setGuildQuests] = useState<any[]>([]);
+  const [guildBoss, setGuildBoss] = useState<any>(null);
 
   // ── Process specials queue ──
   const processSpecial = useCallback((special: CasinoSpecial) => {
@@ -474,6 +492,10 @@ export function CasinoPage() {
       if (data.battle) setPetBattle(data.battle);
       if (data.breed) setBreedData(data.breed);
       if (data.points !== undefined) setPoints(data.points);
+      if (data.dailyChallenge) setDailyChallenge(data.dailyChallenge);
+      if (data.weeklyRanking) setWeeklyRanking(data.weeklyRanking);
+      if (data.guildQuests) setGuildQuests(data.guildQuests);
+      if (data.guildBoss !== undefined) setGuildBoss(data.guildBoss);
       fetchTierSlots();
     });
     es.addEventListener("feed", (e) => setFeed(JSON.parse(e.data)));
@@ -862,6 +884,7 @@ export function CasinoPage() {
           fetchSeasonLeaderboard={fetchSeasonLeaderboard} fetchTournamentLeaderboard={fetchTournamentLeaderboard}
           claimLevel={claimLevel} buyPremium={buyPremium}
           confettiRef={confettiRef} spawnConfetti={spawnConfetti}
+          dailyChallenge={dailyChallenge}
         />
       )}
 
@@ -873,6 +896,7 @@ export function CasinoPage() {
           guildCreateEmoji={guildCreateEmoji} setGuildCreateEmoji={setGuildCreateEmoji}
           guildLoading={guildLoading} setGuildLoading={setGuildLoading}
           heist={heist} heistMessage={heistMessage} setHeist={setHeist}
+          weeklyRanking={weeklyRanking} guildQuests={guildQuests} guildBoss={guildBoss}
           setMessage={setMessage} fetchGuilds={fetchGuilds} fetchPoints={fetchPoints} fetchHeist={fetchHeist}
           createHeist={createHeist} joinHeist={joinHeist}
           playHeistRound={playHeistRound} heistBetray={heistBetray} heistFinish={heistFinish}

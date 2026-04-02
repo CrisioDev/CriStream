@@ -413,6 +413,30 @@ export async function viewerRoutes(app: FastifyInstance) {
           await addGuildXp(channel.id, user.twitchId, win ? 10 : 5);
         } catch {}
 
+        // ── Daily Challenge Contribution ──
+        try {
+          const { contributeToDailyChallenge } = await import("../casino/daily-challenge.js");
+          await contributeToDailyChallenge(channel.id, user.twitchId, "play", 1);
+          if (win) await contributeToDailyChallenge(channel.id, user.twitchId, "win", 1);
+          if (payout > 0) await contributeToDailyChallenge(channel.id, user.twitchId, "points_won", payout);
+          if (opts?.isTriple) await contributeToDailyChallenge(channel.id, user.twitchId, "triple", 1);
+        } catch {}
+
+        // ── Guild War: Quest + Boss ──
+        try {
+          const { contributeToGuildQuest, hitGuildBoss, addWeeklyXp } = await import("../casino/guilds.js");
+          await contributeToGuildQuest(channel.id, user.twitchId, "play", 1);
+          if (win) {
+            await contributeToGuildQuest(channel.id, user.twitchId, "win", 1);
+            await hitGuildBoss(channel.id, user.twitchId, 10);
+            // Weekly XP for wins
+            const guildId = await (await import("../../lib/redis.js")).redis.get(`casino:guild:member:${channel.id}:${user.twitchId}`);
+            if (guildId) await addWeeklyXp(channel.id, guildId, 5);
+          }
+          if (payout > 0) await contributeToGuildQuest(channel.id, user.twitchId, "points_won", payout);
+          if (opts?.isTriple) await contributeToGuildQuest(channel.id, user.twitchId, "triple", 1);
+        } catch {}
+
         return {
           stats,
           newAchievements: achievements,
@@ -1975,5 +1999,111 @@ export async function viewerRoutes(app: FastifyInstance) {
     const { restartStory } = await import("../casino/story-mode.js");
     const state = await restartStory(channel.id, user.twitchId);
     return { success: true, data: state };
+  });
+
+  // ── Casino Roguelike Run ──
+
+  app.get("/:channelName/casino/run", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getRunStatus } = await import("../casino/casino-run.js");
+    const run = await getRunStatus(channel.id, user.twitchId);
+    return { success: true, data: run };
+  });
+
+  app.post("/:channelName/casino/run/start", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const cu = await prisma.channelUser.findUnique({
+      where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+    });
+    const { startRun } = await import("../casino/casino-run.js");
+    try {
+      const run = await startRun(channel.id, user.twitchId, cu?.displayName ?? "Anon");
+      broadcastCasinoUpdate(channel.id, user.twitchId, { points: true });
+      return { success: true, data: run };
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  app.post("/:channelName/casino/run/report", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { won } = request.body as any;
+    const cu = await prisma.channelUser.findUnique({
+      where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+    });
+    const { reportRunStage } = await import("../casino/casino-run.js");
+    try {
+      const result = await reportRunStage(channel.id, user.twitchId, cu?.displayName ?? "Anon", !!won);
+      // On victory, award score as points
+      if (result.status === "victory" && result.score) {
+        await prisma.channelUser.update({
+          where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+          data: { points: { increment: result.score } },
+        });
+        broadcastCasinoUpdate(channel.id, user.twitchId, { points: true, leaderboard: true, feed: true });
+      }
+      return { success: true, data: result };
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  app.get("/:channelName/casino/run/leaderboard", async (request: any, reply) => {
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getRunLeaderboard } = await import("../casino/casino-run.js");
+    const lb = await getRunLeaderboard(channel.id);
+    return { success: true, data: lb };
+  });
+
+  // ── Daily Challenge ──
+
+  app.get("/:channelName/casino/challenge", async (request: any, reply) => {
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getDailyChallenge } = await import("../casino/daily-challenge.js");
+    const challenge = await getDailyChallenge(channel.id);
+    return { success: true, data: challenge };
+  });
+
+  // ── Guild War ──
+
+  app.get("/:channelName/casino/guild/weekly", async (request: any, reply) => {
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getWeeklyRanking } = await import("../casino/guilds.js");
+    const ranking = await getWeeklyRanking(channel.id);
+    return { success: true, data: ranking };
+  });
+
+  app.get("/:channelName/casino/guild/quests", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getPlayerGuild, getGuildQuests } = await import("../casino/guilds.js");
+    const guild = await getPlayerGuild(channel.id, user.twitchId);
+    if (!guild) return { success: true, data: [] };
+    const quests = await getGuildQuests(channel.id, guild.guildId);
+    return { success: true, data: quests };
+  });
+
+  app.get("/:channelName/casino/guild/boss", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getGuildBoss } = await import("../casino/guilds.js");
+    const boss = await getGuildBoss(channel.id, user.twitchId);
+    return { success: true, data: boss };
   });
 }

@@ -123,12 +123,16 @@ export async function getInitialState(channelId: string, userId: string): Promis
   const { getLoginData } = await import("./login-streak.js");
   const { getOpenBattle, getBattleHistory } = await import("./pet-battles.js");
   const { getBreedInfo } = await import("./pet-breeding.js");
+  const { getDailyChallenge } = await import("./daily-challenge.js");
+  const { getRunStatus, getRunLeaderboard } = await import("./casino-run.js");
+  const { getWeeklyRanking, getGuildQuests, getGuildBoss, getPlayerGuild: getGuildForWar } = await import("./guilds.js");
 
   const [
     feed, leaderboard, boss, heist, freePlays, tickets, autoflip,
     petData, skills, stats, quests, achievementsData, seasonData,
     seasonLb, tournament, tournamentLb, guilds, myGuild, bonuses,
     loginStreak, battleData, breed, points,
+    dailyChallenge, casinoRun, runLeaderboard, weeklyRanking, guildWarData,
   ] = await Promise.all([
     getFeed(channelId).catch(() => []),
     getLeaderboard(channelId).catch(() => []),
@@ -176,6 +180,19 @@ export async function getInitialState(channelId: string, userId: string): Promis
     })().catch(() => ({ battle: null, history: [] })),
     getBreedInfo(channelId, userId).catch(() => null),
     getUserPoints(channelId, userId).catch(() => 0),
+    getDailyChallenge(channelId).catch(() => null),
+    getRunStatus(channelId, userId).catch(() => null),
+    getRunLeaderboard(channelId).catch(() => []),
+    getWeeklyRanking(channelId).catch(() => []),
+    (async () => {
+      const g = await getGuildForWar(channelId, userId);
+      if (!g) return { quests: [], boss: null };
+      const [quests, boss] = await Promise.all([
+        getGuildQuests(channelId, g.guildId).catch(() => []),
+        getGuildBoss(channelId, userId).catch(() => null),
+      ]);
+      return { quests, boss };
+    })().catch(() => ({ quests: [], boss: null })),
   ]);
 
   // Retroactive achievement check — silently unlock any achievements the user qualifies for
@@ -203,6 +220,9 @@ export async function getInitialState(channelId: string, userId: string): Promis
     pet: petData, skills, stats, quests, achievements: achievementsData,
     season: seasonData, seasonLb, tournament, tournamentLb, guilds,
     myGuild, bonuses, loginStreak, battle: battleData, breed, points,
+    dailyChallenge, casinoRun, runLeaderboard, weeklyRanking,
+    guildQuests: (guildWarData as any)?.quests ?? [],
+    guildBoss: (guildWarData as any)?.boss ?? null,
   };
 }
 

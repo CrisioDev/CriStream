@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/api/client";
 import { casinoSounds } from "@/lib/casino-sounds";
 import { formatNumber } from "@/lib/format-number";
+import { StoryGameEmbed } from "./StoryGameEmbed";
 
 // ── Memory Timer sub-component ──
 function MemoryTimer({ start }: { start: number }) {
@@ -87,6 +88,71 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
   const [ouBet, setOuBet] = useState(10);
   const [ouResult, setOuResult] = useState<{ dice: number[]; total: number; win: boolean; payout: number; guess: string } | null>(null);
   const [ouMsg, setOuMsg] = useState<string | null>(null);
+
+  // ── Casino Run State ──
+  const [casinoRun, setCasinoRun] = useState<any>(null);
+  const [runLoading, setRunLoading] = useState(false);
+  const [runLeaderboard, setRunLeaderboard] = useState<any[]>([]);
+  const [runMsg, setRunMsg] = useState<string | null>(null);
+
+  const fetchRun = useCallback(async () => {
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/run`) as any;
+      setCasinoRun(res.data ?? null);
+    } catch {}
+  }, [channelName]);
+
+  const fetchRunLb = useCallback(async () => {
+    try {
+      const res = await api.get<any>(`/viewer/${channelName}/casino/run/leaderboard`) as any;
+      setRunLeaderboard(res.data ?? []);
+    } catch {}
+  }, [channelName]);
+
+  useEffect(() => { fetchRun(); fetchRunLb(); }, [fetchRun, fetchRunLb]);
+
+  const startCasinoRun = async () => {
+    setRunLoading(true);
+    setRunMsg(null);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/run/start`, {}) as any;
+      if (res.success) { setCasinoRun(res.data); fetchPoints(); }
+      else setRunMsg(res.error ?? "Fehler!");
+    } catch { setRunMsg("Fehler!"); }
+    setRunLoading(false);
+  };
+
+  const reportRunResult = async (won: boolean) => {
+    setRunLoading(true);
+    setRunMsg(null);
+    try {
+      const res = await api.post<any>(`/viewer/${channelName}/casino/run/report`, { won }) as any;
+      if (res.success) {
+        const d = res.data;
+        if (d.status === "victory") {
+          casinoSounds.stageClear();
+          setRunMsg(`🏆 VICTORY! Score: ${d.score} Pts (Rang #${d.leaderboardRank})`);
+          setCasinoRun(null);
+          fetchRunLb();
+          fetchPoints();
+        } else if (d.status === "gameover") {
+          casinoSounds.runGameOver();
+          setRunMsg("💀 GAME OVER! Besser nächstes Mal.");
+          setCasinoRun(null);
+        } else {
+          casinoSounds.stageClear();
+          setCasinoRun(d.run);
+        }
+      } else { setRunMsg(res.error ?? "Fehler!"); }
+    } catch { setRunMsg("Fehler!"); }
+    setRunLoading(false);
+  };
+
+  const STAGE_MULTIPLIERS = [1, 1.5, 2, 3, 5];
+  const GAME_EMOJIS: Record<string, string> = {
+    flip: "🪙", slots: "🎰", scratch: "🎟️", dice21: "🎲",
+    poker: "🃏", roulette: "🎰", memory: "🧠",
+  };
 
   // ── Snake functions ──
   const drawSnake = () => {
@@ -304,6 +370,85 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
 
   return (
     <>
+      {/* ── CASINO RUN ── */}
+      <div className="max-w-4xl mx-auto px-6 pb-6">
+        <div className="rounded-2xl p-5" style={{
+          background: "linear-gradient(180deg, rgba(255,100,0,0.08), rgba(0,0,0,0.3))",
+          border: "2px solid rgba(255,100,0,0.4)",
+        }}>
+          <h3 className="font-black text-lg text-orange-400 mb-2">🎲 CASINO RUN</h3>
+          <p className="text-xs text-gray-500 mb-3">5 zufällige Games · Gewinne alle für den Highscore! · 50 Pts Einsatz</p>
+
+          {runMsg && (
+            <div className={`text-sm font-bold rounded-lg px-3 py-2 mb-3 ${runMsg.includes("VICTORY") ? "text-green-400 bg-green-500/10 border border-green-500/20" : runMsg.includes("GAME OVER") ? "text-red-400 bg-red-500/10 border border-red-500/20" : "text-yellow-400 bg-yellow-500/10 border border-yellow-500/20"}`}>
+              {runMsg}
+            </div>
+          )}
+
+          {!casinoRun ? (
+            <div className="text-center">
+              <button onClick={startCasinoRun} disabled={runLoading}
+                className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black"
+                style={{ background: runLoading ? "#666" : "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                {runLoading ? "..." : "🎲 RUN STARTEN (50 Pts)"}
+              </button>
+            </div>
+          ) : (
+            <div className="run-stage-enter">
+              {/* Stage progress */}
+              <div className="flex justify-center gap-2 mb-4">
+                {casinoRun.games.map((game: string, i: number) => {
+                  const isDone = i < casinoRun.results.length;
+                  const isCurrent = i === casinoRun.stage;
+                  const won = casinoRun.results[i];
+                  return (
+                    <div key={i} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${isCurrent ? "scale-110" : ""}`}
+                      style={{
+                        background: isDone ? (won ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)") : isCurrent ? "rgba(255,100,0,0.15)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${isDone ? (won ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.4)") : isCurrent ? "rgba(255,100,0,0.5)" : "rgba(255,255,255,0.08)"}`,
+                      }}>
+                      <span className="text-2xl">{GAME_EMOJIS[game] ?? "🎮"}</span>
+                      <span className="text-[10px] text-gray-500">x{STAGE_MULTIPLIERS[i]}</span>
+                      {isDone && <span className="text-xs">{won ? "✅" : "❌"}</span>}
+                      {isCurrent && <span className="text-[10px] text-orange-400 font-bold">JETZT</span>}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Current stage game */}
+              <div className="rounded-xl p-4" style={{ background: "rgba(255,100,0,0.05)", border: "1px solid rgba(255,100,0,0.2)" }}>
+                <div className="text-center mb-2">
+                  <span className="text-xs text-gray-500">Stufe {casinoRun.stage + 1}/5 · Multiplikator x{STAGE_MULTIPLIERS[casinoRun.stage]}</span>
+                </div>
+                <StoryGameEmbed
+                  gameType={casinoRun.games[casinoRun.stage]}
+                  channelName={channelName}
+                  description={`Casino Run Stufe ${casinoRun.stage + 1}`}
+                  onComplete={(won) => reportRunResult(won)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Run Leaderboard */}
+          {runLeaderboard.length > 0 && (
+            <div className="mt-4 rounded-xl p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <h4 className="text-xs font-bold text-orange-400 mb-2">🏆 Run Bestenliste</h4>
+              <div className="space-y-1">
+                {runLeaderboard.slice(0, 10).map((entry: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-xs px-2 py-1 rounded-lg" style={{ background: i < 3 ? "rgba(255,215,0,0.05)" : "transparent" }}>
+                    <span className="w-6 text-center">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}.`}</span>
+                    <span className={`flex-1 truncate ${i < 3 ? "font-bold text-yellow-300" : "text-white"}`}>{entry.displayName}</span>
+                    <span className="text-orange-400 font-bold">{entry.score}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ── Minigame Cards ── */}
       <div className="max-w-4xl mx-auto px-6 pb-6">
         <h3 className="font-black text-lg text-purple-300 mb-3">{"\uD83C\uDFAE"} MINIGAMES</h3>

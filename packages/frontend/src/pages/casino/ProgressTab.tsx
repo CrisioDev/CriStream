@@ -98,6 +98,7 @@ interface ProgressTabProps {
   buyPremium: () => void;
   confettiRef: React.RefObject<HTMLDivElement | null>;
   spawnConfetti: (container: HTMLDivElement, count?: number, goldOnly?: boolean) => void;
+  dailyChallenge?: { type: string; title: string; description: string; target: number; progress: number; reward: { points: number; title: string }; completed: boolean; participants: number } | null;
 }
 
 export function ProgressTab(props: ProgressTabProps) {
@@ -108,7 +109,7 @@ export function ProgressTab(props: ProgressTabProps) {
     playerStats, statsOpen, setStatsOpen, tickets,
     tournament, tournamentLb, showTournamentLb, setShowTournamentLb,
     setSeason, setMessage, fetchPoints, fetchSeason, fetchSeasonLeaderboard, fetchTournamentLeaderboard,
-    claimLevel, buyPremium,
+    claimLevel, buyPremium, dailyChallenge,
   } = props;
 
   if (!user) return null;
@@ -125,6 +126,51 @@ export function ProgressTab(props: ProgressTabProps) {
 
   return (
     <>
+      {/* ── DAILY CHALLENGE (Community) ── */}
+      {dailyChallenge && (
+        <div className="max-w-4xl mx-auto px-6 pb-6">
+          <div className={`rounded-2xl p-5 relative overflow-hidden ${dailyChallenge.completed ? "" : "challenge-shimmer"}`} style={{
+            background: dailyChallenge.completed
+              ? "linear-gradient(180deg, rgba(34,197,94,0.1), rgba(0,0,0,0.3))"
+              : "linear-gradient(180deg, rgba(255,215,0,0.08), rgba(0,0,0,0.3))",
+            border: `2px solid ${dailyChallenge.completed ? "rgba(34,197,94,0.4)" : "rgba(255,215,0,0.4)"}`,
+          }}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-black text-lg" style={{ color: dailyChallenge.completed ? "#4ade80" : "#ffd700" }}>
+                ⭐ COMMUNITY CHALLENGE
+              </h3>
+              <span className="text-xs text-gray-500">{dailyChallenge.participants} Teilnehmer</span>
+            </div>
+            <h4 className="font-bold text-white text-sm mb-1">{dailyChallenge.title}</h4>
+            <p className="text-xs text-gray-400 mb-3">{dailyChallenge.description}</p>
+
+            {/* Progress bar */}
+            <div className="relative h-6 rounded-full overflow-hidden mb-2" style={{ background: "rgba(0,0,0,0.4)" }}>
+              <div className="h-full rounded-full transition-all duration-500" style={{
+                width: `${Math.min(100, (dailyChallenge.progress / dailyChallenge.target) * 100)}%`,
+                background: dailyChallenge.completed
+                  ? "linear-gradient(90deg, #22c55e, #4ade80)"
+                  : "linear-gradient(90deg, #ffd700, #f97316)",
+              }} />
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+                {formatNumber(dailyChallenge.progress)} / {formatNumber(dailyChallenge.target)}
+                {dailyChallenge.completed && " ✅ GESCHAFFT!"}
+              </div>
+            </div>
+
+            {/* Reward info */}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">
+                Belohnung: <span className="text-yellow-400 font-bold">+{dailyChallenge.reward.points} Pts</span> + Titel "{dailyChallenge.reward.title}"
+              </span>
+              {dailyChallenge.completed && (
+                <span className="text-green-400 font-bold">🎉 Alle Teilnehmer wurden belohnt!</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── DAILY QUESTS ── */}
       {quests.length > 0 && (
         <div className="max-w-4xl mx-auto px-6 pb-6">

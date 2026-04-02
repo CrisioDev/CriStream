@@ -12,6 +12,7 @@ import { MinigamesTab } from "./MinigamesTab";
 import { PetsTab } from "./PetsTab";
 import { ProgressTab } from "./ProgressTab";
 import { SocialTab } from "./SocialTab";
+import { StoryTab } from "./StoryTab";
 import { CasinoOverlays } from "./CasinoOverlays";
 import { BonusSidebar } from "./BonusSidebar";
 import { AutoFlipWidget } from "./AutoFlipWidget";
@@ -95,7 +96,7 @@ export function CasinoPage() {
   const { user } = useAuthStore();
   const [channelInput, setChannelInput] = useState("");
   const confettiRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<"play"|"minigames"|"pets"|"progress"|"social">("play");
+  const [activeTab, setActiveTab] = useState<"play"|"minigames"|"pets"|"progress"|"social"|"story">("play");
   const channelName = channelInput || "TheCrisio";
 
   // Handle token from OAuth callback redirect
@@ -900,6 +901,10 @@ export function CasinoPage() {
             <p className="text-xs text-gray-500 mt-2">48% Chance zu verdoppeln · 52% alles weg</p>
           </div>
         </div>
+      )}
+
+      {activeTab === "story" && (
+        <StoryTab user={user} channelName={channelName} />
       )}
 
       {/* ── Footer ── */}

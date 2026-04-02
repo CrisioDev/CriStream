@@ -65,26 +65,26 @@ Aber heute Nacht wird alles anders. Das spürst du. Oder das ist der Hunger. Sch
 Er poliert ein Glas mit der Gelassenheit eines buddhistischen Mönchs und mustert dich von oben bis unten. Sein Blick sagt: "Ich habe schon tausend wie dich gesehen." Sein Mund sagt etwas anderes.
 
 "Na, wieder einer der denkt er schlägt das Haus? Hier, nimm einen Drink aufs Haus. Du siehst aus als hättest du den nötiger als ich meine Trinkgeldkasse." Er schiebt dir ein schimmerndes Getränk rüber, das in mindestens drei Farben leuchtet, die es eigentlich nicht geben sollte.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c1s3",
-        text: `Rico lehnt sich über den Tresen und dreht eine einzelne, goldene Münze zwischen seinen Fingern. Sie glitzert im Neonlicht wie ein kleines, rundes Versprechen. Oder eine kleine, runde Falle — je nach Perspektive.
+        text: `Crisio lehnt sich über den Tresen und dreht eine einzelne, goldene Münze zwischen seinen Fingern. Sie glitzert im Neonlicht wie ein kleines, rundes Versprechen. Oder eine kleine, runde Falle — je nach Perspektive.
 
 "Weißt du was? Ich mag dein Gesicht. Es hat was... Verzweifeltes. Das ist gut hier. Verzweiflung ist die Mutter der Gewinne." Er grinst und wirft dir die Münze zu. "Fangen wir einfach an. Ein Münzwurf. Kopf oder Zahl. Wenn du nicht mal DAS gewinnst, geh lieber wieder nach Hause und überdenke deine Lebensentscheidungen."
 
 Die Münze landet in deiner Hand. Sie ist schwerer als erwartet. Und wärmer. Fast als hätte sie auf dich gewartet.`,
-        character: "🦊 Rico",
-        game: { type: "flip", description: "Ricos Münzwurf — dein allererster Test im CRISINO!", mustWin: true, reward: 50 },
+        character: "🦊 Crisio",
+        game: { type: "flip", description: "Crisios Münzwurf — dein allererster Test im CRISINO!", mustWin: true, reward: 50 },
       },
       {
         id: "c1s4",
-        text: `Die Münze landet. Du gewinnst. Rico hebt eine Augenbraue — und für einen Moment, nur einen kurzen Moment, sieht er fast... beeindruckt aus. Fast.
+        text: `Die Münze landet. Du gewinnst. Crisio hebt eine Augenbraue — und für einen Moment, nur einen kurzen Moment, sieht er fast... beeindruckt aus. Fast.
 
 "Huh. Nicht schlecht für jemanden, der aussieht als hätte er seine letzten Chips im Automaten am Bahnhof verloren." Er greift unter den Tresen und zieht einen zerknitterten Umschlag hervor. Er ist alt, das Papier vergilbt, und darauf steht in goldener Tinte nur ein einziges Wort: DEIN NAME. Okay, nicht dein echter Name, aber du verstehst was gemeint ist.
 
 "Jemand hat das hier vor drei Tagen abgegeben. Hat gesagt, du würdest kommen. Ich hab gelacht. Und jetzt..." Er schiebt dir den Umschlag rüber und wendet sich ab. "Jetzt lache ich nicht mehr."`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
         giveItem: "Mysteriöser Umschlag",
       },
     ],
@@ -109,31 +109,31 @@ Die Karte schimmert in deiner Hand. Sie fühlt sich an wie ein Versprechen. Oder
       },
       {
         id: "c2s2",
-        text: `Rico spuckt fast seinen eigenen Cocktail aus — und der Mann trinkt normalerweise Sachen, die Lack von Autos entfernen könnten. Seine Augen werden groß wie Roulette-Räder.
+        text: `Crisio spuckt fast seinen eigenen Cocktail aus — und der Mann trinkt normalerweise Sachen, die Lack von Autos entfernen könnten. Seine Augen werden groß wie Roulette-Räder.
 
-"Der Goldene Chip?! Das ist nur eine Legende... oder?" Er senkt die Stimme. Der Typ am Ende der Bar dreht sich um. Rico winkt ab. "Nein, NICHT für dich, Gerald." Gerald dreht sich beleidigt wieder weg.
+"Der Goldene Chip?! Das ist nur eine Legende... oder?" Er senkt die Stimme. Der Typ am Ende der Bar dreht sich um. Crisio winkt ab. "Nein, NICHT für dich, Gerald." Gerald dreht sich beleidigt wieder weg.
 
-"Hör zu," flüstert Rico, "sie sagen, der Goldene Chip macht seinen Besitzer unbesiegbar. Jedes Spiel. Jeder Einsatz. Immer gewinnen. Aber der Preis..." Er schluckt. "Keiner der danach gesucht hat, ist je wiedergekommen. Also entweder haben sie ihn gefunden und sich eine Villa auf den Bahamas gekauft, oder..." Er macht eine Geste, die nichts Gutes bedeutet. "Aber hey, du hast einen Münzwurf gewonnen! Das qualifiziert dich bestimmt."`,
-        character: "🦊 Rico",
+"Hör zu," flüstert Crisio, "sie sagen, der Goldene Chip macht seinen Besitzer unbesiegbar. Jedes Spiel. Jeder Einsatz. Immer gewinnen. Aber der Preis..." Er schluckt. "Keiner der danach gesucht hat, ist je wiedergekommen. Also entweder haben sie ihn gefunden und sich eine Villa auf den Bahamas gekauft, oder..." Er macht eine Geste, die nichts Gutes bedeutet. "Aber hey, du hast einen Münzwurf gewonnen! Das qualifiziert dich bestimmt."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c2s3",
-        text: `Rico schnappt sich ein Handtuch und wischt den Tresen mit mehr Energie als nötig. Das macht er wenn er nervös ist — du kennst ihn seit zehn Minuten und weißt das schon. Sagt viel über Rico aus.
+        text: `Crisio schnappt sich ein Handtuch und wischt den Tresen mit mehr Energie als nötig. Das macht er wenn er nervös ist — du kennst ihn seit zehn Minuten und weißt das schon. Sagt viel über Crisio aus.
 
 "Okay, hör zu Held. Bevor du den Chip suchst, brauchst du eins: Geld. Chips. Startkapital. Wie auch immer du es nennen willst." Er zeigt auf die Slot-Automaten an der Wand. Sie blinken und piepsen einladend, wie eine Angler-Falle für Erwachsene. "Ab an die Automaten! Drei Runden, mindestens einmal gewinnen. Das ist dein Training. Dein Aufwärmspiel. Dein Tutorial-Level, wenn du so willst."
 
 Er lehnt sich zurück. "Und wenn du dreimal verlierst? Naja... dann war die Geschichte hier leider sehr kurz. Quasi ein Kurzfilm statt einem Epos."`,
-        character: "🦊 Rico",
-        game: { type: "slots", description: "Ricos Slot-Training — gewinne mindestens einmal in 3 Versuchen!", reward: 100 },
+        character: "🦊 Crisio",
+        game: { type: "slots", description: "Crisios Slot-Training — gewinne mindestens einmal in 3 Versuchen!", reward: 100 },
       },
       {
         id: "c2s4",
         text: `Die Walzen drehen sich, die Lichter blinken, und — DING DING DING — der Automat spuckt Chips aus wie ein Goldfisch sein Futter. Na gut, es ist kein Jackpot, aber es ist ETWAS. Und "etwas" ist unendlich mehr als "nichts", das sagt dir jeder Mathematiker.
 
-Rico nickt anerkennend und zieht etwas unter dem Tresen hervor. Eine weitere Karte, diesmal golden schimmernd wie die erste, aber mit einem zusätzlichen Siegel. "Deine Goldene Einladung. Damit kommst du in den Keller. Ja, der Keller. Ich weiß, klingt wie der Anfang eines Horrorfilms, und ehrlich gesagt... bin ich mir nicht sicher ob es keiner ist."
+Crisio nickt anerkennend und zieht etwas unter dem Tresen hervor. Eine weitere Karte, diesmal golden schimmernd wie die erste, aber mit einem zusätzlichen Siegel. "Deine Goldene Einladung. Damit kommst du in den Keller. Ja, der Keller. Ich weiß, klingt wie der Anfang eines Horrorfilms, und ehrlich gesagt... bin ich mir nicht sicher ob es keiner ist."
 
 Er klopft dir auf die Schulter. "Aber sei vorsichtig da unten. Die Leute im Keller spielen nicht zum Spaß. Die spielen um..." Er überlegt. "Naja, auch zum Spaß. Aber um GEFÄHRLICHEN Spaß."`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
         giveItem: "Goldene Einladung",
       },
     ],
@@ -160,27 +160,27 @@ Die Luft ist dick vor Rauch. Es riecht nach altem Geld und schlechten Entscheidu
 
 "Ich habe dich erwartet..." sagt sie mit einer Stimme, die klingt wie Samt über Donner. "Die Karten haben mir dein Gesicht gezeigt. Oder war das jemand anders? Egal! Die Karten zeigen viele Gesichter. Die meisten davon schulden mir noch Geld."
 
-Sie breitet ihre Karten auf dem Tisch aus. Jede einzelne leuchtet schwach. "Ich bin Madame Fortuna. Seherin. Wahrsagerin. Inhaberin einer gültigen Gewerbeanmeldung. Und DU... du bist entweder der Auserwählte oder der größte Trottel den ich je gesehen habe. Die Statistik spricht für Letzteres, aber hey — Statistik hat auch gesagt die Titanic sei unsinkbar."`,
-        character: "🔮 Madame Fortuna",
+Sie breitet ihre Karten auf dem Tisch aus. Jede einzelne leuchtet schwach. "Ich bin Cheshire Kimchi. Seherin. Wahrsagerin. Inhaberin einer gültigen Gewerbeanmeldung. Und DU... du bist entweder der Auserwählte oder der größte Trottel den ich je gesehen habe. Die Statistik spricht für Letzteres, aber hey — Statistik hat auch gesagt die Titanic sei unsinkbar."`,
+        character: "🔮 Cheshire Kimchi",
       },
       {
         id: "c3s3",
-        text: `Madame Fortuna schiebt die Kristallkugel beiseite (sie war sowieso nur Deko, flüstert sie dir zu — die echte Magie steckt in den Karten) und breitet ein frisches Deck auf dem Samt aus. Die Karten sind alt, die Ränder abgegriffen von tausend Spielen und tausend Schicksalen.
+        text: `Cheshire Kimchi schiebt die Kristallkugel beiseite (sie war sowieso nur Deko, flüstert sie dir zu — die echte Magie steckt in den Karten) und breitet ein frisches Deck auf dem Samt aus. Die Karten sind alt, die Ränder abgegriffen von tausend Spielen und tausend Schicksalen.
 
 "Zeig mir dass du würdig bist! Die Karten lügen nie... meistens. Okay, manchmal lügen sie. Die Kreuz-Dame ist eine notorische Lügnerin. Aber im Großen und Ganzen kann man sich auf sie verlassen." Sie fixiert dich mit einem Blick, der durch deine Seele schneidet wie ein Laser durch Butter.
 
 "Poker. Du. Ich. Jetzt. Und wenn du verlierst, musst du meine Kristallkugel-Sammlung abstauben. Alle 47 Stück. Mit einem Wattestäbchen."`,
-        character: "🔮 Madame Fortuna",
-        game: { type: "poker", description: "Poker gegen Madame Fortuna — beweise deine Würdigkeit!", reward: 150 },
+        character: "🔮 Cheshire Kimchi",
+        game: { type: "poker", description: "Poker gegen Cheshire Kimchi — beweise deine Würdigkeit!", reward: 150 },
       },
       {
         id: "c3s4",
-        text: `Madame Fortuna starrt auf die Karten. Dann auf dich. Dann wieder auf die Karten. Ihr linkes Auge zuckt. Das passiert nur bei wichtigen Prophezeiungen, oder wenn sie zu viel Kaffee getrunken hat.
+        text: `Cheshire Kimchi starrt auf die Karten. Dann auf dich. Dann wieder auf die Karten. Ihr linkes Auge zuckt. Das passiert nur bei wichtigen Prophezeiungen, oder wenn sie zu viel Kaffee getrunken hat.
 
-"Interessant. SEHR interessant." Sie steht auf und ihr Kleid wirbelt dramatisch — auch wenn kein Wind weht. Professionelle Dramaqueen. "Der Goldene Chip ist real. Oh ja. Realer als die Miete und genau so schmerzhaft wenn man ihn nicht hat. ABER—" Sie hebt einen Finger, der mit mindestens fünf Ringen bestückt ist. "Der Dealer im Schatten wird ihn nicht freiwillig hergeben."
+"Interessant. SEHR interessant." Sie steht auf und ihr Kleid wirbelt dramatisch — auch wenn kein Wind weht. Professionelle Dramaqueen. "Der Goldene Chip ist real. Oh ja. Realer als die Miete und genau so schmerzhaft wenn man ihn nicht hat. ABER—" Sie hebt einen Finger, der mit mindestens fünf Ringen bestückt ist. "Kurainu der Schatten wird ihn nicht freiwillig hergeben."
 
 Sie beugt sich vor. "Er war einmal wie du. Ein Niemand mit einem Traum. Dann hat er den Chip gefunden und der Chip hat IHN gefunden und jetzt... jetzt ist er der Schatten selbst." Sie pustet eine Kerze aus, für den dramatischen Effekt. "Geh. Steig auf. Aber vergiss nicht: Im CRISINO ist nichts umsonst. Nicht mal der Aufzug. Vor allem nicht der Aufzug."`,
-        character: "🔮 Madame Fortuna",
+        character: "🔮 Cheshire Kimchi",
       },
     ],
   },
@@ -251,7 +251,7 @@ Champagnerfontänen — ja, FONTÄNEN, Plural — umrahmen seinen Platz. Eine da
 "Oh! Frisches Fleisch!" Seine Stimme ist so tief und laut wie der Bass in einem Techno-Club. "Sag mal Kleiner, wie viel hast du?" Er mustert dich von oben bis unten. Pause. Dann ein Lachen, das den Kronleuchter zum Klirren bringt. "EGAL! Es ist bestimmt weniger als mein Trinkgeld. Mein STÜNDLICHES Trinkgeld. An einem DIENSTAG."
 
 Er nimmt einen Schluck Champagner, der wahrscheinlich älter ist als deine Großmutter. "Aber weißt du was? Ich langweile mich. Und gelangweilte reiche Leute sind GEFÄHRLICHE reiche Leute. Also... unterhalt mich."`,
-        character: "🐋 The Whale",
+        character: "🐋 Topstar",
       },
       {
         id: "c5s3",
@@ -260,7 +260,7 @@ Er nimmt einen Schluck Champagner, der wahrscheinlich älter ist als deine Groß
 "Lass uns würfeln, Kleiner! Dice 21 — mein Lieblingsspiel. Weil ich IMMER gewinne." Er beugt sich vor und sein Monokel fällt fast herunter. "Wenn DU gewinnst — und das wäre wirklich, WIRKLICH überraschend — erzähl ich dir alles über diesen mysteriösen Goldenen Chip. Ich weiß Dinge. Ich weiß ALLE Dinge. Dafür bezahle ich Leute."
 
 Er lehnt sich zurück. "Und wenn du VERLIERST..." Ein diabolisches Grinsen. "...putzt du meine Schuhe. Alle 347 Paar. Mit einer Zahnbürste. Einer GEBRAUCHTEN Zahnbürste."`,
-        character: "🐋 The Whale",
+        character: "🐋 Topstar",
         game: { type: "dice21", description: "Dice 21 gegen den Whale — gewinne um Infos über den Chip zu erhalten!", reward: 300 },
       },
       {
@@ -269,8 +269,8 @@ Er lehnt sich zurück. "Und wenn du VERLIERST..." Ein diabolisches Grinsen. "...
 
 "Das... das ist..." Er ringt nach Worten. Das passiert ihm vermutlich nie. "NA GUT." Er steht auf. Der Tisch wackelt. Drei Schmeichler fallen um. "Der Goldene Chip. Er ist im Penthouse. Ganz oben. Floor 10. Der letzte Stock. Die Spitze des CRISINO."
 
-Er fischt sein Monokel aus dem Champagner und setzt es tropfend wieder auf. "ABER — und das ist ein großes Aber, fast so groß wie mein Kontostand — du brauchst den Fahrstuhlcode. Und den hat nur EINER: Der Dealer im Schatten. Niemand kennt seinen echten Namen. Niemand hat sein Gesicht gesehen. Und niemand — NIEMAND — hat ihn je im Poker geschlagen." Er schüttelt den Kopf. "Viel Glück, Kleiner. Du wirst es brauchen."`,
-        character: "🐋 The Whale",
+Er fischt sein Monokel aus dem Champagner und setzt es tropfend wieder auf. "ABER — und das ist ein großes Aber, fast so groß wie mein Kontostand — du brauchst den Fahrstuhlcode. Und den hat nur EINER: Kurainu der Schatten. Niemand kennt seinen echten Namen. Niemand hat sein Gesicht gesehen. Und niemand — NIEMAND — hat ihn je im Poker geschlagen." Er schüttelt den Kopf. "Viel Glück, Kleiner. Du wirst es brauchen."`,
+        character: "🐋 Topstar",
       },
     ],
   },
@@ -284,29 +284,29 @@ Er fischt sein Monokel aus dem Champagner und setzt es tropfend wieder auf. "ABE
     scenes: [
       {
         id: "c6s1",
-        text: `Zurück an Ricos Bar. Der VIP-Bereich war aufregend, aber manchmal braucht man einfach einen Ort, an dem die Champagnerfontänen NICHT aus flüssigem Gold bestehen und der Barkeeper ein Fuchs ist, der dich nicht verurteilt. Naja, der dich WENIGER verurteilt.
+        text: `Zurück an Crisios Bar. Der VIP-Bereich war aufregend, aber manchmal braucht man einfach einen Ort, an dem die Champagnerfontänen NICHT aus flüssigem Gold bestehen und der Barkeeper ein Fuchs ist, der dich nicht verurteilt. Naja, der dich WENIGER verurteilt.
 
-Rico steht hinter dem Tresen und poliert Gläser. Er poliert IMMER Gläser. Du bist dir nicht sicher ob er sie tatsächlich sauber macht oder ob es eine Art Meditation ist. Vielleicht beides. Das Glas in seiner Hand quietscht vor Sauberkeit. Oder vor Angst.
+Crisio steht hinter dem Tresen und poliert Gläser. Er poliert IMMER Gläser. Du bist dir nicht sicher ob er sie tatsächlich sauber macht oder ob es eine Art Meditation ist. Vielleicht beides. Das Glas in seiner Hand quietscht vor Sauberkeit. Oder vor Angst.
 
 Die Bar ist ruhiger jetzt. Spät in der Nacht, oder früh am Morgen — im CRISINO gibt es keine Uhren, das wäre schlecht fürs Geschäft. Ein paar einsame Gestalten hängen über ihren Drinks wie Fragezeichen über ungelösten Rätseln.`,
       },
       {
         id: "c6s2",
-        text: `"Der Dealer im Schatten..." Rico spricht den Namen aus wie andere Leute "Finanzamt" sagen — mit einer Mischung aus Furcht und tiefem, persönlichem Groll. Er stellt das Glas ab und lehnt sich vor. Seine Augen huschen durch den Raum, als könnte der Dealer überall lauern. Was, fair enough, vermutlich stimmt.
+        text: `"Kurainu der Schatten..." Crisio spricht den Namen aus wie andere Leute "Finanzamt" sagen — mit einer Mischung aus Furcht und tiefem, persönlichem Groll. Er stellt das Glas ab und lehnt sich vor. Seine Augen huschen durch den Raum, als könnte Kurainu überall lauern. Was, fair enough, vermutlich stimmt.
 
 "Sie sagen, er war mal ein normaler Spieler. Wie du. Wie ich. Okay, nicht wie ich, ich bin ein Fuchs hinter einer Bar, aber du weißt was ich meine." Er senkt die Stimme noch weiter. "Er hat den Goldenen Chip gefunden, vor Jahren. Und der Chip hat IHN verändert. Er ist... anders geworden. Kälter. Berechnender. Er sieht durch Karten hindurch, sagen sie. Buchstäblich. Wie Röntgenblick, nur für Poker."
 
 Er seufzt. "Um ihn zu finden, musst du tiefer graben. Und im CRISINO bedeutet 'tiefer graben' normalerweise: in Orte gehen, wo vernünftige Menschen NICHT hingehen."`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c6s3",
-        text: `Rico kramt eine zerknitterte Karte des CRISINO hervor und breitet sie auf dem Tresen aus. Sie sieht aus wie die Schatzkarte eines Piraten, nur mit mehr Kaffeflecken. Zwei Orte sind rot eingekreist.
+        text: `Crisio kramt eine zerknitterte Karte des CRISINO hervor und breitet sie auf dem Tresen aus. Sie sieht aus wie die Schatzkarte eines Piraten, nur mit mehr Kaffeflecken. Zwei Orte sind rot eingekreist.
 
-"Also, ich hab nachgedacht — und ja, das passiert öfter als du denkst." Er tippt auf die Karte. "Es gibt zwei Orte, wo wir Hinweise auf den Dealer finden könnten. Erstens: die Küche. Klingt langweilig, ist es auch, ABER der Küchenchef ist ein ehemaliger Spion und weiß ALLES was hier passiert. Zweitens: das Büro des Casino-Managers. Da liegen die wirklichen Geheimnisse. Aber es ist... naja, es ist das Büro des MANAGERS. Der Typ, der diesen ganzen Laden besitzt."
+"Also, ich hab nachgedacht — und ja, das passiert öfter als du denkst." Er tippt auf die Karte. "Es gibt zwei Orte, wo wir Hinweise auf Kurainu finden könnten. Erstens: die Küche. Klingt langweilig, ist es auch, ABER der Küchenchef ist ein ehemaliger Spion und weiß ALLES was hier passiert. Zweitens: das Büro des Casino-Managers. Da liegen die wirklichen Geheimnisse. Aber es ist... naja, es ist das Büro des MANAGERS. Der Typ, der diesen ganzen Laden besitzt."
 
 Er verschränkt die Arme. "Deine Wahl, Held. Praktisch oder riskant?"`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
         choice: {
           prompt: "Wo sollen wir nach Hinweisen suchen?",
           options: [
@@ -317,21 +317,21 @@ Er verschränkt die Arme. "Deine Wahl, Held. Praktisch oder riskant?"`,
       },
       {
         id: "c6s4_kitchen",
-        text: `Du entscheidest dich für die Küche. Rico nickt anerkennend. "Kluge Wahl. Langweilig, aber klug. So überleben die meisten Leute." Er gibt dir eine Schürze. "Hier, setz die auf. Dann fällst du weniger auf. Oder mehr auf, weil du definitiv nicht wie ein Koch aussiehst. Aber Zuversicht!"
+        text: `Du entscheidest dich für die Küche. Crisio nickt anerkennend. "Kluge Wahl. Langweilig, aber klug. So überleben die meisten Leute." Er gibt dir eine Schürze. "Hier, setz die auf. Dann fällst du weniger auf. Oder mehr auf, weil du definitiv nicht wie ein Koch aussiehst. Aber Zuversicht!"
 
-Die Küche des CRISINO ist ein Chaos aus Dampf, Geschrei und fliegenden Pfannen. Der Küchenchef — ein Mann, der aussieht wie eine Mischung aus Gordon Ramsay und einem pensionierten KGB-Agenten — bemerkt dich sofort. "DU! Ja, DU! Du bist kein Koch! Deine Hände sehen aus als hättest du noch nie eine Kartoffel geschält!" Aber dann senkt er die Stimme: "Aber du suchst den Dealer, oder? Ich seh das an deinen Augen. Komm, ich zeige dir etwas..."
+Die Küche des CRISINO ist ein Chaos aus Dampf, Geschrei und fliegenden Pfannen. Der Küchenchef — ein Mann, der aussieht wie eine Mischung aus Gordon Ramsay und einem pensionierten KGB-Agenten — bemerkt dich sofort. "DU! Ja, DU! Du bist kein Koch! Deine Hände sehen aus als hättest du noch nie eine Kartoffel geschält!" Aber dann senkt er die Stimme: "Aber du suchst Kurainu, oder? Ich seh das an deinen Augen. Komm, ich zeige dir etwas..."
 
 Er führt dich an den Regalen vorbei, hinter die Gewürze, hinter die Konserven, und schiebt ein Regal beiseite. Dahinter: eine Falltür. "KEINEM ein Wort," zischt er. "Oder ich koche dich. Das ist kein Scherz. Ich habe Rezepte."`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c6s4_office",
-        text: `Du entscheidest dich für das Büro. Rico reißt die Augen auf. "Ernst jetzt? Das Büro? Der Typ hat Kameras, Laser, und — Gerüchten zufolge — einen zahmen Alligator." Er schüttelt den Kopf, aber er grinst dabei. "Okay. Riskant. Ich mag riskant. Nein, eigentlich hasse ich riskant, aber bei DIR ist es irgendwie unterhaltsam."
+        text: `Du entscheidest dich für das Büro. Crisio reißt die Augen auf. "Ernst jetzt? Das Büro? Der Typ hat Kameras, Laser, und — Gerüchten zufolge — einen zahmen Alligator." Er schüttelt den Kopf, aber er grinst dabei. "Okay. Riskant. Ich mag riskant. Nein, eigentlich hasse ich riskant, aber bei DIR ist es irgendwie unterhaltsam."
 
-Ihr schleicht durch die Gänge des CRISINO. Zweiter Stock, linker Flügel, dritte Tür rechts. Rico hält Wache während du dich reinschleichst. Das Büro ist... überraschend normal. Ein Schreibtisch, Akten, eine Pflanze (künstlich). Aber hinter dem Bücherregal — klassisch, oder? — entdeckst du eine zweite Wand. Und in der zweiten Wand: eine Tür. Und hinter der Tür: eine Treppe, die NACH UNTEN führt.
+Ihr schleicht durch die Gänge des CRISINO. Zweiter Stock, linker Flügel, dritte Tür rechts. Crisio hält Wache während du dich reinschleichst. Das Büro ist... überraschend normal. Ein Schreibtisch, Akten, eine Pflanze (künstlich). Aber hinter dem Bücherregal — klassisch, oder? — entdeckst du eine zweite Wand. Und in der zweiten Wand: eine Tür. Und hinter der Tür: eine Treppe, die NACH UNTEN führt.
 
-"Na super," flüstert Rico durchs Walkie-Talkie (woher hat er ein Walkie-Talkie?!). "Noch ein geheimer Keller. Dieses Casino hat mehr geheime Keller als reguläre Stockwerke."`,
-        character: "🦊 Rico",
+"Na super," flüstert Crisio durchs Walkie-Talkie (woher hat er ein Walkie-Talkie?!). "Noch ein geheimer Keller. Dieses Casino hat mehr geheime Keller als reguläre Stockwerke."`,
+        character: "🦊 Crisio",
       },
     ],
   },
@@ -402,8 +402,8 @@ Die Luft riecht nach Popcorn, Aufregung und leichtem Wahnsinn. Der perfekte Cock
 
 Du drehst dich um. Dort, zwischen einem Stand für "leicht gebrauchte Glücksbringer" und einem Schild, das "Schicksale getauscht — faire Preise" verspricht, lehnt ein Typ an der Wand. Sonnenbrille (unterirdisch, wohlgemerkt), hochgeschlagener Kragen, und er spricht aus dem rechten Mundwinkel. Der linke Mundwinkel macht gerade Pause.
 
-"Ich bin Sam. Shady Sam. Ja, DAS ist mein echter Name, meine Eltern waren... vorausschauend." Er grinst schief. "Ich hab Infos. Gute Infos. Die BESTEN Infos. Über den Chip, den Dealer, den Code — alles. Und ich verkaufe sie billig. Also, relativ billig. Also, nicht BILLIG billig, aber..."`,
-        character: "🕶️ Shady Sam",
+"Ich bin Sam. Jumangy. Ja, DAS ist mein echter Name, meine Eltern waren... vorausschauend." Er grinst schief. "Ich hab Infos. Gute Infos. Die BESTEN Infos. Über den Chip, Kurainu, den Code — alles. Und ich verkaufe sie billig. Also, relativ billig. Also, nicht BILLIG billig, aber..."`,
+        character: "🕶️ Jumangy",
       },
       {
         id: "c8s3",
@@ -412,17 +412,17 @@ Du drehst dich um. Dort, zwischen einem Stand für "leicht gebrauchte Glücksbri
 "Merk dir ihre Gesichter. Ihre Masken. Jedes Detail. Du wirst sie wiedererkennen müssen wenn es soweit ist. Und glaub mir — wenn du den Falschen fragst, wird es... unangenehm." Er macht eine dramatische Pause. "Nicht GEFÄHRLICH unangenehm. Eher 'du-musst-den-ganzen-Abend-seine-Lebensgeschichte-anhören' unangenehm. Und Dealer Nummer 4 hat eine SEHR lange Lebensgeschichte."
 
 Er breitet die Fotos auf dem Tisch aus. "Bereit? Einmal anschauen, dann drehe ich sie um. Dein Gedächtnis gegen den Schattenmarkt."`,
-        character: "🕶️ Shady Sam",
-        game: { type: "memory", description: "Merke dir die Dealer-Gesichter — Shady Sams Gedächtnistest!", reward: 250 },
+        character: "🕶️ Jumangy",
+        game: { type: "memory", description: "Merke dir die Dealer-Gesichter — Jumangys Gedächtnistest!", reward: 250 },
       },
       {
         id: "c8s4",
         text: `Sam pfeift durch die Zähne — was bei jemandem, der nur aus einem Mundwinkel spricht, beeindruckend ist. "Nicht schlecht, nicht schlecht! Du hast ein gutes Gedächtnis. Oder ein fotografisches. Oder du hast geschummelt. Egal, Respekt."
 
-Er lehnt sich vor und senkt die Stimme auf ein Level, das selbst Fledermäuse Mühe hätten zu hören. "Der Fahrstuhlcode ändert sich jede Nacht. Jeden. Verdammten. Abend. Der Dealer im Schatten ist paranoid — berechtigterweise, wenn man einen Chip besitzt der einen unbesiegbar macht."
+Er lehnt sich vor und senkt die Stimme auf ein Level, das selbst Fledermäuse Mühe hätten zu hören. "Der Fahrstuhlcode ändert sich jede Nacht. Jeden. Verdammten. Abend. Kurainu der Schatten ist paranoid — berechtigterweise, wenn man einen Chip besitzt der einen unbesiegbar macht."
 
 Sam steht auf und klopft sich den Staub von der Jacke. "ABER ich kenne jemanden, der jemanden kennt, der jemanden kennt, der VIELLEICHT den Code für heute Nacht hat. Komm mit. Und bevor du fragst: Ja, das ist eine gute Idee. Und nein, das ist keine Falle." Er grinst. Sein Grinsen sagt das Gegenteil. "Vertrau mir."`,
-        character: "🕶️ Shady Sam",
+        character: "🕶️ Jumangy",
       },
     ],
   },
@@ -446,10 +446,10 @@ Du zögerst. Dein Instinkt sagt dir, dass das zu einfach ist. Dein Instinkt hat 
         id: "c9s2",
         text: `Du betrittst den Raum. Er ist klein, kahl, nur ein Tisch in der Mitte und eine Lampe, die wie in einem Verhörfilm von der Decke baumelt. Hinter dir schließt sich die Tür. KLACK. Das Schloss rastet ein. Das war kein freundliches Klack. Das war ein "du-kommst-hier-nicht-mehr-raus"-Klack.
 
-Ein Lautsprecher knistert. Dann Sams Stimme, verzerrt durch billiges Audio-Equipment: "Sorry Kumpel! Nichts Persönliches! Also... ein BISSCHEN persönlich vielleicht. Aber hauptsächlich geschäftlich. Der Dealer zahlt gut für Möchtegern-Helden, die dem Goldenen Chip nachjagen."
+Ein Lautsprecher knistert. Dann Sams Stimme, verzerrt durch billiges Audio-Equipment: "Sorry Kumpel! Nichts Persönliches! Also... ein BISSCHEN persönlich vielleicht. Aber hauptsächlich geschäftlich. Kurainu zahlt gut für Möchtegern-Helden, die dem Goldenen Chip nachjagen."
 
 Du hörst ihn kichern. Es ist das widerlichste Kichern, das du je gehört hast, und du hast mal einen Clown auf einer Kindergeburtstagsfeier erlebt. "Die Jungs kommen gleich und — naja, du wirst sehen. Tschüssi! War nett dich kennenzulernen! Nicht wirklich! Okay doch ein bisschen! TSCHÜSS!"`,
-        character: "🕶️ Shady Sam",
+        character: "🕶️ Jumangy",
       },
       {
         id: "c9s3",
@@ -483,7 +483,7 @@ Du ziehst dich hoch, kriechst durch den Schacht, und — BUMM — fällst auf de
         id: "c10s1",
         text: `Floor 2. Der Eingang ist... imposant. Zwei massive Türen aus dunklem Holz, verziert mit goldenen Schnitzereien von Spielkarten, Würfeln und — aus irgendeinem Grund — einem Einhorn. Davor steht ein Mann. Nein, "steht" ist das falsche Wort. Er THRONT. Er EXISTIERT. Er nimmt den gesamten Türrahmen ein wie ein menschlicher Staudamm.
 
-Brutus. Zwei Meter. Mindestens. Arme wie Baumstämme, Schultern wie ein Kleiderschrank, Hände so groß, dass sie eigene Postleitzahlen haben müssten. Sein Gesicht sieht aus als wäre es aus Granit gemeißelt, mit einer Nase, die mindestens drei Mal gebrochen und jedes Mal schlechter zusammengewachsen ist.
+Wolfkampf. Zwei Meter. Mindestens. Arme wie Baumstämme, Schultern wie ein Kleiderschrank, Hände so groß, dass sie eigene Postleitzahlen haben müssten. Sein Gesicht sieht aus als wäre es aus Granit gemeißelt, mit einer Nase, die mindestens drei Mal gebrochen und jedes Mal schlechter zusammengewachsen ist.
 
 Aber — und das ist der Punkt, an dem dein Gehirn einen kurzen Bluescreen macht — er liest. Er LIEST. In seinen gewaltigen Pranken hält er, vorsichtig wie ein Juwelier einen Diamanten, ein zerlesenes Taschenbuch. "Die Verwandlung" von Franz Kafka. Er blättert gerade eine Seite um. Behutsam.`,
       },
@@ -496,18 +496,18 @@ Aber — und das ist der Punkt, an dem dein Gehirn einen kurzen Bluescreen macht
 Pause. Er schaut dich an, als erwarte er eine Antwort. Du sagst nichts. Er nickt, als hätte dein Schweigen ihm etwas Tiefgründiges bestätigt.
 
 "Aber das ist nicht relevant für DICH. Was für dich relevant ist: Du kommst hier nicht rein." Er verschränkt die Arme. Es klingt wie zwei Felsbrocken, die aneinander reiben.`,
-        character: "💪 Brutus",
+        character: "💪 Wolfkampf",
       },
       {
         id: "c10s3",
-        text: `Du zeigst Brutus deinen VIP-Ausweis, Sams Notizblock, die Goldene Einladung — dein ganzes Arsenal an Requisiten, das du auf dieser Reise gesammelt hast. Brutus betrachtet alles mit der Sorgfalt eines Kunstkritikers in einem Museum. Dann schüttelt er den Kopf.
+        text: `Du zeigst Wolfkampf deinen VIP-Ausweis, Sams Notizblock, die Goldene Einladung — dein ganzes Arsenal an Requisiten, das du auf dieser Reise gesammelt hast. Wolfkampf betrachtet alles mit der Sorgfalt eines Kunstkritikers in einem Museum. Dann schüttelt er den Kopf.
 
 "Papiere sind Papier. Ausweise sind Plastik. Was zählt ist der CHARAKTER eines Menschen." Er lehnt sich an die Tür. "Es sei denn..." Ein winziges, fast unsichtbares Lächeln huscht über sein Granitgesicht. "...du schlägst mich im Poker. Ich bin überraschend gut."
 
 Er zieht ein Kartendeck aus seiner Brusttasche. In seinen Händen sehen die Karten aus wie Briefmarken. "Gewinnst du, öffne ich die Tür und Floor 2 gehört dir. Verlierst du..." Er überlegt. "...musst du mir 'Die Verwandlung' vorlesen. Alle 55 Seiten. Mit BETONUNG. Ich akzeptiere keine monotone Vorlesung. Kafka verdient Leidenschaft."`,
-        character: "💪 Brutus",
+        character: "💪 Wolfkampf",
         boss: {
-          name: "Brutus",
+          name: "Wolfkampf",
           emoji: "💪",
           game: "poker",
           reward: 500,
@@ -516,15 +516,15 @@ Er zieht ein Kartendeck aus seiner Brusttasche. In seinen Händen sehen die Kart
       },
       {
         id: "c10s4",
-        text: `Die letzte Karte fällt. Brutus starrt auf den Tisch. Seine Augen — die normalerweise die emotionale Bandbreite einer Betonwand haben — werden weit. Er atmet tief ein. Dann aus. Dann nickt er, langsam und respektvoll, wie ein Sensei, der seinen Meisterschüler anerkennt.
+        text: `Die letzte Karte fällt. Wolfkampf starrt auf den Tisch. Seine Augen — die normalerweise die emotionale Bandbreite einer Betonwand haben — werden weit. Er atmet tief ein. Dann aus. Dann nickt er, langsam und respektvoll, wie ein Sensei, der seinen Meisterschüler anerkennt.
 
-"Gut gespielt." Zwei Worte. Von Brutus sind zwei Worte wie eine zweistündige Lobrede von jedem anderen. Er steht auf und die Tür hinter ihm schwingt auf wie von Geisterhand. "Floor 2 gehört dir."
+"Gut gespielt." Zwei Worte. Von Wolfkampf sind zwei Worte wie eine zweistündige Lobrede von jedem anderen. Er steht auf und die Tür hinter ihm schwingt auf wie von Geisterhand. "Floor 2 gehört dir."
 
 Er greift in seine Jackentasche und zieht sein Lesezeichen heraus. Geprägtes Leder, alt, mit einem kleinen goldenen Kleeblatt in der Ecke. "Hier. Mein Glücksbringer. Hat mich durch 'Krieg und Frieden' gebracht UND durch drei Kneipenschlägereien. Möge er dir ebenso dienen." Er drückt es dir in die Hand.
 
-Dann, leise, fast zärtlich: "Aber der Dealer wird nicht so höflich sein wie ich. Er liest keine Bücher. Er liest MENSCHEN. Pass auf dich auf." Er nimmt sein Buch wieder auf und blättert zur nächsten Seite. Audienz beendet.`,
-        character: "💪 Brutus",
-        giveItem: "Brutus' Lesezeichen",
+Dann, leise, fast zärtlich: "Aber Kurainu wird nicht so höflich sein wie ich. Er liest keine Bücher. Er liest MENSCHEN. Pass auf dich auf." Er nimmt sein Buch wieder auf und blättert zur nächsten Seite. Audienz beendet.`,
+        character: "💪 Wolfkampf",
+        giveItem: "Wolfkampf' Lesezeichen",
       },
     ],
   },
@@ -559,9 +559,9 @@ Er breitet die Arme aus wie ein Immobilienmakler, der dir die Hölle als "charma
       },
       {
         id: "c11s3",
-        text: `Der Dealer führt dich zu einem Tisch, auf dem kristallene Rubbellose liegen. Nicht die Sorte, die du an der Tankstelle kaufst und danach traurig in den Mülleimer wirfst — diese hier sind aus echtem Kristall, mit Diamant-Symbolen eingraviert, die im Licht funkeln wie die Augen eines sehr gierigen Drachen.
+        text: `Kurainu führt dich zu einem Tisch, auf dem kristallene Rubbellose liegen. Nicht die Sorte, die du an der Tankstelle kaufst und danach traurig in den Mülleimer wirfst — diese hier sind aus echtem Kristall, mit Diamant-Symbolen eingraviert, die im Licht funkeln wie die Augen eines sehr gierigen Drachen.
 
-"Dein Einstand auf Floor 2," sagt der Dealer und schiebt dir ein Los zu. "Beweis dass du hierher gehörst. Jeder der Floor 2 betritt, muss sich seinen Platz ERKRATZEN." Er kichert über seinen eigenen Wortwitz. Du kicherst nicht. Er hört auf zu kichern. "Okay, der war nicht gut. ABER DAS SPIEL IST GUT. Also los — zeig uns was du drauf hast."
+"Dein Einstand auf Floor 2," sagt Kurainu und schiebt dir ein Los zu. "Beweis dass du hierher gehörst. Jeder der Floor 2 betritt, muss sich seinen Platz ERKRATZEN." Er kichert über seinen eigenen Wortwitz. Du kicherst nicht. Er hört auf zu kichern. "Okay, der war nicht gut. ABER DAS SPIEL IST GUT. Also los — zeig uns was du drauf hast."
 
 Das Kristall-Rubbellos schimmert in deiner Hand. Es fühlt sich warm an, fast lebendig, als würde es vor Vorfreude vibrieren. Oder du zitterst. Eines von beiden.`,
         character: "🎰 Floor-2-Dealer",
@@ -569,7 +569,7 @@ Das Kristall-Rubbellos schimmert in deiner Hand. Es fühlt sich warm an, fast le
       },
       {
         id: "c11s4",
-        text: `Das Los enthüllt seinen Inhalt und — DREI DIAMANTEN. Der Tisch vibriert. Die Lichter flackern. Irgendwo im Hintergrund ertönt ein Jingle, der klingt wie eine Engelsharfe, die von einem DJ geremixt wurde. Der Dealer reißt die Augen auf und presst dir einen schweren, funkelnden Chip in die Hand.
+        text: `Das Los enthüllt seinen Inhalt und — DREI DIAMANTEN. Der Tisch vibriert. Die Lichter flackern. Irgendwo im Hintergrund ertönt ein Jingle, der klingt wie eine Engelsharfe, die von einem DJ geremixt wurde. Kurainu reißt die Augen auf und presst dir einen schweren, funkelnden Chip in die Hand.
 
 "Der Diamant-Chip," flüstert er ehrfürchtig. "Den bekommt nicht jeder. Den bekommt fast NIEMAND. Letzter Gewinner war... uff, das war vor drei Monaten. Der Typ hat danach geweint. Vor Freude. Und dann vor Angst, weil alle anderen ihn neidisch angestarrt haben."
 
@@ -604,19 +604,19 @@ Sie nimmt einen Schluck von ihrem Drink — Kirschrot, natürlich — und sprich
 
 Stille. Du verarbeitest das. Sie dreht sich endlich zu dir und streckt eine Hand aus. Ihr Händedruck ist fest genug, um dir zu sagen: "Ich könnte dir den Arm brechen." Aber sanft genug, um hinzuzufügen: "Werde ich aber nicht. Wahrscheinlich."
 
-"Agent Kirsche. Undercover. Und bevor du fragst: Ja, das ist ein Codename. Nein, mein echter Name geht dich nichts an. Und JA, ich genieße das Ganze hier mehr als ich zugeben sollte. Die Cocktails sind FANTASTISCH."`,
-        character: "🍒 Agent Kirsche",
+"Arindy. Undercover. Und bevor du fragst: Ja, das ist ein Codename. Nein, mein echter Name geht dich nichts an. Und JA, ich genieße das Ganze hier mehr als ich zugeben sollte. Die Cocktails sind FANTASTISCH."`,
+        character: "🍒 Arindy",
       },
       {
         id: "c12s3",
-        text: `Kirsche lehnt sich vor. In der Nähe riecht sie nach Kirschen — natürlich — und nach etwas, das entweder sehr teures Parfüm oder Schießpulver ist. Wahrscheinlich beides. "Hör zu. Der Dealer im Schatten ist nicht nur ein Casino-Boss. Er ist das Zentrum eines NETZWERKS. Geldwäsche, manipulierte Spiele, gestohlene Identitäten — der Goldene Chip ist nur die Spitze des Eisbergs."
+        text: `Arindy lehnt sich vor. In der Nähe riecht sie nach Arindyn — natürlich — und nach etwas, das entweder sehr teures Parfüm oder Schießpulver ist. Wahrscheinlich beides. "Hör zu. Kurainu der Schatten ist nicht nur ein Casino-Boss. Er ist das Zentrum eines NETZWERKS. Geldwäsche, manipulierte Spiele, gestohlene Identitäten — der Goldene Chip ist nur die Spitze des Eisbergs."
 
 Sie zieht ein Foto aus ihrem Clutch und schiebt es über den Tresen. Es zeigt eine verschwommene Gestalt in einem dunklen Raum. "Das ist das einzige Foto, das wir von ihm haben. Mein letzter Partner hat es gemacht, bevor er..." Sie stockt. "...bevor er befördert wurde. Ja. Befördert. Zu einem Schreibtischjob. Auf den Bahamas. Ohne Telefon. Für immer." Ihr Blick sagt, dass das nicht die ganze Wahrheit ist.
 
 "Also, die Frage ist: Vertrauen wir einander?"`,
-        character: "🍒 Agent Kirsche",
+        character: "🍒 Arindy",
         choice: {
-          prompt: "Vertrauen? Agent Kirsche bietet Zusammenarbeit an.",
+          prompt: "Vertrauen? Arindy bietet Zusammenarbeit an.",
           options: [
             { id: "cooperate", text: "🤝 Zusammenarbeiten — Gemeinsam sind wir stärker" },
             { id: "solo", text: "🐺 Alleine weitermachen — Ich vertraue niemandem" },
@@ -625,14 +625,14 @@ Sie zieht ein Foto aus ihrem Clutch und schiebt es über den Tresen. Es zeigt ei
       },
       {
         id: "c12s4",
-        text: `Kirsche mustert dich einen langen Moment. Ihre Augen verraten nichts — sie wäre eine verdammt gute Pokerspielerin. Ist sie wahrscheinlich auch.
+        text: `Arindy mustert dich einen langen Moment. Ihre Augen verraten nichts — sie wäre eine verdammt gute Pokerspielerin. Ist sie wahrscheinlich auch.
 
 "Egal," sagt sie schließlich und zieht einen USB-Stick aus ihrer Clutch. Er ist kirschrot. Natürlich ist er kirschrot. "Hier. Daten über die Sicherheitssysteme von Floor 3 bis 5. Kamerapositionen, Wachschichten, der Code für die Personaltoilette — man weiß nie wann man den braucht."
 
 Sie steht auf, glättet ihr Kleid mit einer Bewegung, die aussieht wie in Zeitlupe, und wirft dir einen letzten Blick zu. "Wir sehen uns wieder. Ob du willst oder nicht." Ein Hauch eines Lächelns. "Und nur fürs Protokoll: Ich genieße das hier NICHT." Sie greift nach ihrem Cocktail, trinkt ihn in einem Zug aus, und bestellt wortlos einen neuen. "Okay. Vielleicht ein BISSCHEN."
 
 Du steckst den USB-Stick ein. Auf der Rückseite steht in winziger Schrift: "Dieses Gerät zerstört sich in 48h selbst. Oder auch nicht. Budget-Kürzungen."`,
-        character: "🍒 Agent Kirsche",
+        character: "🍒 Arindy",
         giveItem: "Kirsch-USB-Stick",
       },
     ],
@@ -676,10 +676,10 @@ Der Schnurrbart-Mann steht auf. Langsam, wie ein Urteil, das sich Zeit lässt. E
 
 Dahinter: ein Gang. Beleuchtet von bläulichem Licht, das an den Wänden pulsiert wie der Herzschlag eines sehr stylischen Aliens. Der Schnurrbart-Mann deutet darauf. "Der Weg nach vorne. Für die, die bereit sind." Er zwinkert. Es ist das erste Zwinkern in der Geschichte der Menschheit, das gleichzeitig einladend und bedrohlich ist.
 
-Rico — der irgendwie plötzlich neben dir steht, weil Rico IMMER irgendwie plötzlich neben dir steht — pfeift leise durch die Zähne. "Eine geheime Tür hinter den Slots. Ich arbeite seit DREI JAHREN hier und wusste das nicht. Was gibt es noch, wovon ich nichts weiß?" Er zögert. "Bitte antworte nicht darauf."
+Crisio — der irgendwie plötzlich neben dir steht, weil Crisio IMMER irgendwie plötzlich neben dir steht — pfeift leise durch die Zähne. "Eine geheime Tür hinter den Slots. Ich arbeite seit DREI JAHREN hier und wusste das nicht. Was gibt es noch, wovon ich nichts weiß?" Er zögert. "Bitte antworte nicht darauf."
 
 Ihr tretet durch die Tür. Sie schließt sich hinter euch. Es klingt endgültig.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
     ],
   },
@@ -697,26 +697,26 @@ Ihr tretet durch die Tür. Sie schließt sich hinter euch. Es klingt endgültig.
 
 Auf den Screens flimmern Zahlenkolonnen, Codes, verschlüsselte Nachrichten. Es sieht aus wie die Matrix, wenn die Matrix weniger Budget gehabt hätte und mehr Casino-Ästhetik. Grüne Zeichen rasen über schwarze Hintergründe, unterbrochen von gelegentlichen Poker-Symbolen, die absolut keinen technischen Zweck erfüllen, aber COOL aussehen.
 
-Jemand kommuniziert hier mit dem Dealer im Schatten. Jemand sendet und empfängt Nachrichten, codiert in einem System, das kein normaler Mensch entschlüsseln könnte. Die Frage ist: Bist du ein normaler Mensch? (Nein. Normale Menschen spielen nicht um drei Uhr morgens in einem geheimen Raum unter einem Casino.)`,
+Jemand kommuniziert hier mit dem Kurainu. Jemand sendet und empfängt Nachrichten, codiert in einem System, das kein normaler Mensch entschlüsseln könnte. Die Frage ist: Bist du ein normaler Mensch? (Nein. Normale Menschen spielen nicht um drei Uhr morgens in einem geheimen Raum unter einem Casino.)`,
       },
       {
         id: "c14s2",
-        text: `Rico starrt auf die Bildschirme wie ein Hund, der zum ersten Mal Fernsehen sieht — fasziniert, verwirrt und leicht überfordert. "Das sind... Nachrichten? An den Dealer? Von WEM?" Er tippt auf einen Screen. Ein Fehler-Geräusch. Er zieht die Hand zurück. "Okay, nicht anfassen."
+        text: `Crisio starrt auf die Bildschirme wie ein Hund, der zum ersten Mal Fernsehen sieht — fasziniert, verwirrt und leicht überfordert. "Das sind... Nachrichten? An Kurainu? Von WEM?" Er tippt auf einen Screen. Ein Fehler-Geräusch. Er zieht die Hand zurück. "Okay, nicht anfassen."
 
-Dann tritt eine weitere Gestalt aus dem Schatten. Es ist entweder Kirsche — wenn du ihr vertraut hast — oder sie taucht auch ohne Vertrauen auf, weil Agent Kirsche IMMER auftaucht, wenn es technisch wird. Sie hat einen Laptop unter dem Arm, auf dessen Deckel ein Aufkleber klebt: "I ❤️ Verschlüsselung (beruflich)".
+Dann tritt eine weitere Gestalt aus dem Schatten. Es ist entweder Arindy — wenn du ihr vertraut hast — oder sie taucht auch ohne Vertrauen auf, weil Arindy IMMER auftaucht, wenn es technisch wird. Sie hat einen Laptop unter dem Arm, auf dessen Deckel ein Aufkleber klebt: "I ❤️ Verschlüsselung (beruflich)".
 
 "Die Nachrichten sind verschlüsselt," sagt sie und ihre Finger fliegen bereits über die Tastatur. "Aber das Muster..." Sie stockt. Ihre Augen werden groß. Dann klein. Dann wieder groß. "Es ist ein Sudoku." Sie dreht den Laptop zu euch. "Der Verschlüsselungscode basiert auf einem 9x9-Sudoku-Gitter. Jede gelöste Zahl entschlüsselt einen Buchstaben der Nachricht. Das ist entweder GENIAL oder absolut VERRÜCKT." Pause. "Wahrscheinlich beides."`,
-        character: "🍒 Agent Kirsche",
+        character: "🍒 Arindy",
       },
       {
         id: "c14s3",
         text: `Das Sudoku erscheint auf dem größten Bildschirm im Raum — einem Monster von einem Screen, so groß wie eine Kinoleinwand. Die Zahlen leuchten grün auf schwarzem Grund, und mit jeder Zahl, die du einsetzt, entschlüsselt sich ein weiterer Buchstabe der geheimen Nachricht. Es ist wie ein Puzzle im Puzzle. Inception, aber mit Zahlen und mehr Stress.
 
-Rico steht daneben und tut so, als würde er helfen. "Ich bin moralische Unterstützung," erklärt er, während er eine Tüte Chips isst (die Snack-Art, nicht die Casino-Art — obwohl er wahrscheinlich auch die Casino-Art essen würde, wenn man ihn ließe). "Jemand muss das Team-Morale hochhalten. Das bin ich. Der Morale-Typ."
+Crisio steht daneben und tut so, als würde er helfen. "Ich bin moralische Unterstützung," erklärt er, während er eine Tüte Chips isst (die Snack-Art, nicht die Casino-Art — obwohl er wahrscheinlich auch die Casino-Art essen würde, wenn man ihn ließe). "Jemand muss das Team-Morale hochhalten. Das bin ich. Der Morale-Typ."
 
-"Knacke den Code!" ruft Kirsche, ohne den Blick vom Screen zu nehmen. "Die Nachricht verrät den nächsten Schritt des Dealers. Jede Sekunde zählt!" Sie hält inne. "Also, nicht JEDE Sekunde. Nimm dir Zeit. Aber nicht ZU viel Zeit. Du weißt was ich meine."`,
-        character: "🍒 Agent Kirsche",
-        game: { type: "sudoku9", description: "Knacke den Sudoku-Code und entschlüssle die geheime Nachricht des Dealers!", mustWin: true, reward: 350 },
+"Knacke den Code!" ruft Arindy, ohne den Blick vom Screen zu nehmen. "Die Nachricht verrät den nächsten Schritt Kurainus. Jede Sekunde zählt!" Sie hält inne. "Also, nicht JEDE Sekunde. Nimm dir Zeit. Aber nicht ZU viel Zeit. Du weißt was ich meine."`,
+        character: "🍒 Arindy",
+        game: { type: "sudoku9", description: "Knacke den Sudoku-Code und entschlüssle die geheime Nachricht Kurainus!", mustWin: true, reward: 350 },
       },
       {
         id: "c14s4",
@@ -724,12 +724,12 @@ Rico steht daneben und tut so, als würde er helfen. "Ich bin moralische Unterst
 
 "M-I-T-T-E-R-N-A-C-H-T. P-E-N-T-H-O-U-S-E. D-E-R C-H-I-P W-E-C-H-S-E-L-T D-E-N B-E-S-I-T-Z-E-R."
 
-Stille. Rico lässt seine Chips-Tüte fallen. (Die Snack-Art.) Kirsche lehnt sich zurück und pfeift durch die Zähne. "Mitternacht. Penthouse. Der Chip wechselt den Besitzer." Sie wiederholt es, als müsste sie es laut hören um es zu glauben. "Das heißt, der Goldene Chip ist NICHT sicher verwahrt. Er wird ÜBERGEBEN. An jemanden. HEUTE NACHT."
+Stille. Crisio lässt seine Chips-Tüte fallen. (Die Snack-Art.) Arindy lehnt sich zurück und pfeift durch die Zähne. "Mitternacht. Penthouse. Der Chip wechselt den Besitzer." Sie wiederholt es, als müsste sie es laut hören um es zu glauben. "Das heißt, der Goldene Chip ist NICHT sicher verwahrt. Er wird ÜBERGEBEN. An jemanden. HEUTE NACHT."
 
-Rico rechnet nach. "Das gibt uns..." Er schaut auf eine Uhr, die er nicht hat. "...keine Ahnung wie viele Stunden, weil es in diesem Casino keine Uhren gibt. Aber wahrscheinlich NICHT GENUG."
+Crisio rechnet nach. "Das gibt uns..." Er schaut auf eine Uhr, die er nicht hat. "...keine Ahnung wie viele Stunden, weil es in diesem Casino keine Uhren gibt. Aber wahrscheinlich NICHT GENUG."
 
-Kirsche druckt die entschlüsselte Nachricht aus. Auf dem Drucker im Raum. Der anscheinend funktioniert, was in einem geheimen Untergrund-Raum das EIGENTLICHE Wunder ist.`,
-        character: "🍒 Agent Kirsche",
+Arindy druckt die entschlüsselte Nachricht aus. Auf dem Drucker im Raum. Der anscheinend funktioniert, was in einem geheimen Untergrund-Raum das EIGENTLICHE Wunder ist.`,
+        character: "🍒 Arindy",
         giveItem: "Entschlüsselte Nachricht",
       },
     ],
@@ -744,7 +744,7 @@ Kirsche druckt die entschlüsselte Nachricht aus. Auf dem Drucker im Raum. Der a
     scenes: [
       {
         id: "c15s1",
-        text: `Der Sicherheitsraum des CRISINO ist das Nervenzentrum dieses architektonischen Wahnsinns. Zwölf Monitore, angeordnet in einem Halbkreis, zeigen jeden Winkel des Casinos. Floor 1: Slots, Bar, Ricos Reich. Floor 2: Marmor, Champagner, Dekadenz. Floor 3: Dunkelheit, Andeutungen, verschlossene Türen. Und darüber? Statisches Rauschen. Die oberen Floors sind abgeschirmt. Natürlich sind sie das.
+        text: `Der Sicherheitsraum des CRISINO ist das Nervenzentrum dieses architektonischen Wahnsinns. Zwölf Monitore, angeordnet in einem Halbkreis, zeigen jeden Winkel des Casinos. Floor 1: Slots, Bar, Crisios Reich. Floor 2: Marmor, Champagner, Dekadenz. Floor 3: Dunkelheit, Andeutungen, verschlossene Türen. Und darüber? Statisches Rauschen. Die oberen Floors sind abgeschirmt. Natürlich sind sie das.
 
 Die Kameras erfassen alles. ALLES. Der Typ, der heimlich eine Olive aus seinem Martini klaut, weil er zu stolz ist zuzugeben, dass er Oliven mag. Die Frau, die ihren Ehering in der Handtasche versteckt, bevor sie an den Pokertisch geht. Gerald, der SCHON WIEDER versucht, in den VIP-Bereich zu schleichen. Gerald. Mein Gott, Gerald. Gib auf.
 
@@ -752,31 +752,31 @@ Aber zwischen all dem Überwachungs-Wahnsinn gibt es ein MUSTER. Die Wachen patr
       },
       {
         id: "c15s2",
-        text: `Rico drückt sich an die Wand neben der Tür und späht hinein wie ein Kind, das bei den Erwachsenen mithören will. "Zwölf Kameras. Zwölf! Wer BRAUCHT zwölf Kameras?! Ich hab nicht mal EIN Kamera in meiner Wohnung. Okay, das ist gelogen, ich hab eine Doorbell-Kamera, aber die funktioniert seit drei Monaten nicht. Der Punkt ist: Das ist VIEL Überwachung."
+        text: `Crisio drückt sich an die Wand neben der Tür und späht hinein wie ein Kind, das bei den Erwachsenen mithören will. "Zwölf Kameras. Zwölf! Wer BRAUCHT zwölf Kameras?! Ich hab nicht mal EIN Kamera in meiner Wohnung. Okay, das ist gelogen, ich hab eine Doorbell-Kamera, aber die funktioniert seit drei Monaten nicht. Der Punkt ist: Das ist VIEL Überwachung."
 
-Kirsche — falls anwesend, und sie ist IMMER anwesend wenn man sie nicht erwartet — studiert die Monitore mit der Intensität einer Falkin, die ihre Beute erspäht hat. "Die Wachen wechseln alle 47 Minuten. Ungerade Zahl. Clever — das macht es schwerer, ein Muster zu erkennen." Sie tippt auf Monitor 7. "Aber HIER. Gang B, Kamera 7. Zwischen Minute 23 und Minute 26 gibt es einen toten Winkel, wenn Wache 3 zur Toilette geht." Sie hält inne. "Er trinkt zu viel Kaffee. Das ist seine Schwäche. Und unsere Chance."
+Arindy — falls anwesend, und sie ist IMMER anwesend wenn man sie nicht erwartet — studiert die Monitore mit der Intensität einer Falkin, die ihre Beute erspäht hat. "Die Wachen wechseln alle 47 Minuten. Ungerade Zahl. Clever — das macht es schwerer, ein Muster zu erkennen." Sie tippt auf Monitor 7. "Aber HIER. Gang B, Kamera 7. Zwischen Minute 23 und Minute 26 gibt es einen toten Winkel, wenn Wache 3 zur Toilette geht." Sie hält inne. "Er trinkt zu viel Kaffee. Das ist seine Schwäche. Und unsere Chance."
 
 "Du musst dir die Feeds merken," sagt sie und dreht sich zu dir. "Welche Gänge sind wann frei? Ein Fehler und wir lösen den Alarm aus. Und der Alarm hier ist nicht eine Sirene — es ist ein Orchester. Ein GANZES Orchester, das Wagner spielt. In voller Lautstärke. Keiner will das."`,
-        character: "🍒 Agent Kirsche",
+        character: "🍒 Arindy",
       },
       {
         id: "c15s3",
         text: `Die zwölf Monitore flackern vor dir wie ein Mosaik aus Geheimnissen. Jeder zeigt einen anderen Gang, einen anderen Raum, ein anderes Stück des Puzzles. Die Wachen bewegen sich in Mustern — links, rechts, Pause, weiter — und du musst diese Muster AUSWENDIG lernen. Jede Kamera, jede Route, jede Lücke.
 
-"Merk dir die Kamera-Feeds!" zischt Rico, der mittlerweile einen Notizblock gezückt hat und eifrig mitkritzelt. Seine Zeichnungen sehen aus wie die eines besonders ambitionierten Kindergartenkindes, aber der Enthusiasmus zählt. "Welche Gänge sind wann frei? Das ist wie Memory, nur dass du nicht zwei gleiche Bilder findest sondern die Lücken im Sicherheitsnetz!"
+"Merk dir die Kamera-Feeds!" zischt Crisio, der mittlerweile einen Notizblock gezückt hat und eifrig mitkritzelt. Seine Zeichnungen sehen aus wie die eines besonders ambitionierten Kindergartenkindes, aber der Enthusiasmus zählt. "Welche Gänge sind wann frei? Das ist wie Memory, nur dass du nicht zwei gleiche Bilder findest sondern die Lücken im Sicherheitsnetz!"
 
-Kirsche nickt anerkennend. "Gute Metapher, Rico." Rico strahlt wie ein Grundschüler, der ein Sternchen bekommen hat. Es ist der stolzeste Moment seines Lebens. Und er hat mal einen Cocktail-Wettbewerb gewonnen.`,
-        character: "🦊 Rico",
+Arindy nickt anerkennend. "Gute Metapher, Crisio." Crisio strahlt wie ein Grundschüler, der ein Sternchen bekommen hat. Es ist der stolzeste Moment seines Lebens. Und er hat mal einen Cocktail-Wettbewerb gewonnen.`,
+        character: "🦊 Crisio",
         game: { type: "memory", description: "Merk dir die Kamera-Feeds! Finde die Sicherheitslücken!", mustWin: true, reward: 300 },
       },
       {
         id: "c15s4",
         text: `Du hast es. Das Muster, die Lücke, das Zeitfenster. Drei Minuten. Exakt DREI MINUTEN, in denen der Gang zum Manager-Büro unbeobachtet ist. Drei Minuten, in denen Wache 3 auf der Toilette ist, Kamera 7 einen Schwenk nach links macht, und Wache 5 ihren Kaffee nachfüllt.
 
-"Drei Minuten," wiederholt Rico und schaut auf seinen Notizblock, der mittlerweile mehr Kaffeeflecken als Notizen hat. "Das ist... nicht viel. Das ist weniger als die Werbepause bei 'Wer wird Millionär'. Das ist weniger als mein Frühstück dauert. Das ist—" "Genug, Rico," unterbricht Kirsche trocken.
+"Drei Minuten," wiederholt Crisio und schaut auf seinen Notizblock, der mittlerweile mehr Kaffeeflecken als Notizen hat. "Das ist... nicht viel. Das ist weniger als die Werbepause bei 'Wer wird Millionär'. Das ist weniger als mein Frühstück dauert. Das ist—" "Genug, Crisio," unterbricht Arindy trocken.
 
-Sie reißt eine Seite aus Ricos Block und zeichnet — in Sekundenschnelle, mit der Präzision eines militärischen Strategen — den perfekten Weg ein. Jede Abbiegung, jeder Zeitpunkt, jeder Schritt. "Der Sicherheitsplan," sagt sie und reicht dir das Blatt. "Auswendig lernen. Dann essen." Du starrst sie an. "Das war ein Witz. Oder nicht. Im Geheimdienst lernt man, flexible Definitionen von 'Witz' zu haben."`,
-        character: "🍒 Agent Kirsche",
+Sie reißt eine Seite aus Crisios Block und zeichnet — in Sekundenschnelle, mit der Präzision eines militärischen Strategen — den perfekten Weg ein. Jede Abbiegung, jeder Zeitpunkt, jeder Schritt. "Der Sicherheitsplan," sagt sie und reicht dir das Blatt. "Auswendig lernen. Dann essen." Du starrst sie an. "Das war ein Witz. Oder nicht. Im Geheimdienst lernt man, flexible Definitionen von 'Witz' zu haben."`,
+        character: "🍒 Arindy",
         giveItem: "Sicherheitsplan",
       },
     ],
@@ -803,8 +803,8 @@ Aber dein Blick wird magnetisch angezogen von dem DING an der Wand. Der Safe. Ne
 
 Die Kugel rollt. Sie rollt und rollt und rollt, und auf dem Rahmen um das Rad stehen nicht die üblichen Zahlen, sondern Symbole: Diamanten, Schlüssel, Kronen, und — aus irgendeinem Grund — eine kleine Zeichnung von Gerald. Armer Gerald. Er ist überall.
 
-"Der Safe öffnet sich nur wenn du die richtige Nummer triffst!" Rico presst sein Ohr an das Stahl-Monstrum, als könnte er den Code HÖREN. "Ich glaube... ich höre... " Pause. "...nichts. Stahl ist nicht gesprächig." Er tritt zurück. "Okay, Plan B: Du spielst Roulette gegen einen Safe. Das ist eine Situation, auf die mich weder meine Ausbildung noch mein Leben vorbereitet haben."`,
-        character: "🦊 Rico",
+"Der Safe öffnet sich nur wenn du die richtige Nummer triffst!" Crisio presst sein Ohr an das Stahl-Monstrum, als könnte er den Code HÖREN. "Ich glaube... ich höre... " Pause. "...nichts. Stahl ist nicht gesprächig." Er tritt zurück. "Okay, Plan B: Du spielst Roulette gegen einen Safe. Das ist eine Situation, auf die mich weder meine Ausbildung noch mein Leben vorbereitet haben."`,
+        character: "🦊 Crisio",
         game: { type: "roulette", description: "Roulette gegen den Safe — triff die richtige Kombination!", mustWin: true, reward: 350 },
       },
       {
@@ -813,16 +813,16 @@ Die Kugel rollt. Sie rollt und rollt und rollt, und auf dem Rahmen um das Rad st
 
 Kein Gold. Keine Diamanten. (Naja, ein PAAR Diamanten, aber die sind nebensächlich.) Stattdessen: eine Karte. Eine LANDKARTE. Handgezeichnet, auf altem Pergament, mit Tinte, die in verschiedenen Farben schimmert. Sie zeigt den Grundriss des Penthouses — Floor 10, ganz oben, die Spitze des CRISINO. Jeder Raum, jeder Gang, jede Falle ist eingezeichnet. Und davon gibt es VIELE.
 
-Und daneben: ein Foto. Schwarzweiß, leicht vergilbt. Es zeigt eine Gestalt an einem Pokertisch. Der Dealer im Schatten. Aber sein Gesicht... sein Gesicht ist AUSGESTRICHEN. Nicht verwischt, nicht verdeckt — jemand hat mit schwarzem Marker aggressiv über das Gesicht gemalt. Als hätte das Foto selbst beschlossen, das Geheimnis zu bewahren. Oder jemand hatte sehr starke Gefühle und einen Edding.`,
+Und daneben: ein Foto. Schwarzweiß, leicht vergilbt. Es zeigt eine Gestalt an einem Pokertisch. Kurainu der Schatten. Aber sein Gesicht... sein Gesicht ist AUSGESTRICHEN. Nicht verwischt, nicht verdeckt — jemand hat mit schwarzem Marker aggressiv über das Gesicht gemalt. Als hätte das Foto selbst beschlossen, das Geheimnis zu bewahren. Oder jemand hatte sehr starke Gefühle und einen Edding.`,
       },
       {
         id: "c16s4",
-        text: `Rico nimmt das Foto und dreht es in seinen Händen. Vorne: die mysteriöse Gestalt ohne Gesicht. Hinten: eine Notiz, gekritzelt in hastiger Handschrift. "Er war einmal einer von uns." Mehr nicht. Kein Name, kein Datum, keine hilfreichen Hinweise wie "P.S.: Der Code ist 1234."
+        text: `Crisio nimmt das Foto und dreht es in seinen Händen. Vorne: die mysteriöse Gestalt ohne Gesicht. Hinten: eine Notiz, gekritzelt in hastiger Handschrift. "Er war einmal einer von uns." Mehr nicht. Kein Name, kein Datum, keine hilfreichen Hinweise wie "P.S.: Der Code ist 1234."
 
-"Jetzt wird es ernst," sagt Rico, und zum ersten Mal seit du ihn kennst, grinst er nicht. Kein Witz, kein Sarkasmus, keine Cocktail-Metapher. Er faltet die Karte zusammen und steckt sie in deine Jacke. "Der Penthouse-Plan. Damit weißt du, wo du hinmusst. Und wo du NICHT hinmusst, was ehrlich gesagt der wichtigere Teil ist."
+"Jetzt wird es ernst," sagt Crisio, und zum ersten Mal seit du ihn kennst, grinst er nicht. Kein Witz, kein Sarkasmus, keine Cocktail-Metapher. Er faltet die Karte zusammen und steckt sie in deine Jacke. "Der Penthouse-Plan. Damit weißt du, wo du hinmusst. Und wo du NICHT hinmusst, was ehrlich gesagt der wichtigere Teil ist."
 
-Er atmet tief ein. "Der Dealer weiß, dass wir kommen. Er weiß IMMER, dass die Leute kommen. Aber er weiß nicht, dass WIR es wissen, dass er es weiß, dass wir kommen. Und DAS..." Er runzelt die Stirn. "Okay, ich hab mich in meinem eigenen Satz verloren. ABER DER PUNKT IST: Wir haben einen Vorteil. Zum ersten Mal."`,
-        character: "🦊 Rico",
+Er atmet tief ein. "Kurainu weiß, dass wir kommen. Er weiß IMMER, dass die Leute kommen. Aber er weiß nicht, dass WIR es wissen, dass er es weiß, dass wir kommen. Und DAS..." Er runzelt die Stirn. "Okay, ich hab mich in meinem eigenen Satz verloren. ABER DER PUNKT IST: Wir haben einen Vorteil. Zum ersten Mal."`,
+        character: "🦊 Crisio",
         giveItem: "Penthouse-Plan",
       },
     ],
@@ -839,19 +839,19 @@ Er atmet tief ein. "Der Dealer weiß, dass wir kommen. Er weiß IMMER, dass die 
         id: "c17s1",
         text: `Floor 3. Der Aufzug dorthin hat einen Iris-Scanner, eine Stimmanalyse UND einen Fragebogen ("Was ist Ihr Lieblings-Kaviar? Hinweis: 'Aldi' ist die falsche Antwort."). Du brauchst eine Verkleidung. Nicht irgendeine Verkleidung — die PERFEKTE Verkleidung. Und es gibt nur eine Person im CRISINO, die dich in jemand anderen verwandeln kann.
 
-Madame Fortuna wartet bereits in ihrem Kellerzimmer, als wüsste sie, dass du kommst. Was sie behauptet. Was wahrscheinlich stimmt. Was dich trotzdem jedes Mal nervös macht. Ihr Kristallkugel-Sortiment hat sich seit eurem letzten Treffen vermehrt — es sind jetzt 52 Stück, eine für jede Karte im Deck, wie sie stolz erklärt.
+Cheshire Kimchi wartet bereits in ihrem Kellerzimmer, als wüsste sie, dass du kommst. Was sie behauptet. Was wahrscheinlich stimmt. Was dich trotzdem jedes Mal nervös macht. Ihr Kristallkugel-Sortiment hat sich seit eurem letzten Treffen vermehrt — es sind jetzt 52 Stück, eine für jede Karte im Deck, wie sie stolz erklärt.
 
 "Du brauchst ein neues Ich," sagt sie und wirbelt dramatisch ihren Umhang. Der Umhang verfängt sich in einer Kristallkugel. Sie tut so, als wäre nichts passiert. "Glücklicherweise habe ich GENAU das Richtige. Warte hier." Sie verschwindet hinter einem Vorhang und man hört Krachen, Fluchen (auf mindestens drei Sprachen) und das Geräusch von etwas Schwerem, das umfällt.`,
-        character: "🔮 Madame Fortuna",
+        character: "🔮 Cheshire Kimchi",
       },
       {
         id: "c17s2",
-        text: `Fortuna taucht wieder auf. In ihren Armen: ein Smoking. Aber nicht irgendein Smoking — DIESER Smoking sieht aus, als hätte James Bond ihn getragen und dann an einen noch eleganteren James Bond weitergegeben. Mitternachtsblau, perfekt geschnitten, mit Manschettenknöpfen aus — du überprüfst zweimal — ECHTEN Saphiren. Dazu: eine Fliege (selbstbindend, Fortuna besteht darauf), Schuhe (handgefertigt, italienisch, bequemer als dein Bett), und eine Brieftasche voller gefälschter Visitenkarten.
+        text: `Kimchi taucht wieder auf. In ihren Armen: ein Smoking. Aber nicht irgendein Smoking — DIESER Smoking sieht aus, als hätte James Bond ihn getragen und dann an einen noch eleganteren James Bond weitergegeben. Mitternachtsblau, perfekt geschnitten, mit Manschettenknöpfen aus — du überprüfst zweimal — ECHTEN Saphiren. Dazu: eine Fliege (selbstbindend, Kimchi besteht darauf), Schuhe (handgefertigt, italienisch, bequemer als dein Bett), und eine Brieftasche voller gefälschter Visitenkarten.
 
-"Du bist jetzt Graf von Glücksburg," verkündet Fortuna mit der Feierlichkeit einer Königskrönung. "Adelig. Reich. Mysteriös. Leicht arrogant, aber auf die CHARMANTE Art." Sie drückt dir ein Monokel in die Hand. "Das brauchst du. Jeder auf Floor 3 hat eins. Es ist wie eine Brille, nur nutzloser und zehnmal teurer."
+"Du bist jetzt Graf von Glücksburg," verkündet Kimchi mit der Feierlichkeit einer Königskrönung. "Adelig. Reich. Mysteriös. Leicht arrogant, aber auf die CHARMANTE Art." Sie drückt dir ein Monokel in die Hand. "Das brauchst du. Jeder auf Floor 3 hat eins. Es ist wie eine Brille, nur nutzloser und zehnmal teurer."
 
 Sie richtet deine Fliege mit mütterlicher Strenge. "Rede wenig, lächle viel, und GEWINNE. Wenn jemand fragt woher du kommst: Monaco. Wenn jemand fragt was du beruflich machst: 'Investitionen'. Das kann ALLES bedeuten und niemand fragt nach."`,
-        character: "🔮 Madame Fortuna",
+        character: "🔮 Cheshire Kimchi",
       },
       {
         id: "c17s3",
@@ -859,8 +859,8 @@ Sie richtet deine Fliege mit mütterlicher Strenge. "Rede wenig, lächle viel, u
 
 "Graf von Glücksburg!" ruft ein rundlicher Mann mit einem Bart, der wie eine tote Katze aussieht. "Ich habe SO viel über Sie gehört!" (Er hat nichts über dich gehört. Du existierst seit fünf Minuten. Aber auf Floor 3 tut jeder so, als würde er jeden kennen, weil Ehrlichkeit LANGWEILIG ist.)
 
-Drei Poker-Tische. Du musst an jedem einen spielen, um deine Cover-Story aufrechtzuerhalten. "Ein echter Graf spielt nicht nur an EINEM Tisch," hat Fortuna gesagt. "Er VERTEILT seine Exzellenz." Du bist dir nicht sicher, was das bedeutet, aber du setzt dich und lächelst. Das Monokel bleibt sitzen. Alles läuft nach Plan. Noch.`,
-        character: "🔮 Madame Fortuna",
+Drei Poker-Tische. Du musst an jedem einen spielen, um deine Cover-Story aufrechtzuerhalten. "Ein echter Graf spielt nicht nur an EINEM Tisch," hat Kimchi gesagt. "Er VERTEILT seine Exzellenz." Du bist dir nicht sicher, was das bedeutet, aber du setzt dich und lächelst. Das Monokel bleibt sitzen. Alles läuft nach Plan. Noch.`,
+        character: "🔮 Cheshire Kimchi",
         game: { type: "poker", description: "Spiele als Graf von Glücksburg — halte deine Tarnung aufrecht! (3 Hände)", reward: 400 },
       },
       {
@@ -869,8 +869,8 @@ Drei Poker-Tische. Du musst an jedem einen spielen, um deine Cover-Story aufrech
 
 Du lächelst und nickst. Lächeln und Nicken. Die zwei mächtigsten Waffen der Oberschicht. Und dann — der Moment der Wahrheit — öffnen sich die Aufzugtüren zu Floor 3. Der Iris-Scanner piept. Grün. Die Stimmanalyse bestätigt. Der Fragebogen... okay, du hast "Beluga" geraten und es war richtig. Glück oder Schicksal? Im CRISINO: dasselbe.
 
-Fortuna wartet an der Bar (sie hat sich hochgeschlichen, weil Madame Fortuna IMMER einen Weg findet). Sie hebt ihr Glas. "Du warst MAGNIFIQUE. Fast hätte ich dir selbst geglaubt." Sie zwinkert. "Und jetzt bist du ein Graf, ein VIP, ein Insider UND du hast eine falsche Identität. Das ist entweder der amerikanische Traum oder der Anfang eines sehr komplizierten Steuerproblems."`,
-        character: "🔮 Madame Fortuna",
+Kimchi wartet an der Bar (sie hat sich hochgeschlichen, weil Cheshire Kimchi IMMER einen Weg findet). Sie hebt ihr Glas. "Du warst MAGNIFIQUE. Fast hätte ich dir selbst geglaubt." Sie zwinkert. "Und jetzt bist du ein Graf, ein VIP, ein Insider UND du hast eine falsche Identität. Das ist entweder der amerikanische Traum oder der Anfang eines sehr komplizierten Steuerproblems."`,
+        character: "🔮 Cheshire Kimchi",
         giveItem: "Falsche Identität",
       },
     ],
@@ -885,7 +885,7 @@ Fortuna wartet an der Bar (sie hat sich hochgeschlichen, weil Madame Fortuna IMM
     scenes: [
       {
         id: "c18s1",
-        text: `Tief unter Floor 3, hinter einer Tür, die man nur findet wenn man DREIMAL gegen die dritte Fliese von links klopft (Rico hat 45 Minuten gebraucht um das herauszufinden — er hat JEDE Fliese abgeklopft und dabei ausgesehen wie ein sehr verwirrter Specht), liegt der Auktionsraum.
+        text: `Tief unter Floor 3, hinter einer Tür, die man nur findet wenn man DREIMAL gegen die dritte Fliese von links klopft (Crisio hat 45 Minuten gebraucht um das herauszufinden — er hat JEDE Fliese abgeklopft und dabei ausgesehen wie ein sehr verwirrter Specht), liegt der Auktionsraum.
 
 Es ist... atemberaubend. Ein unterirdisches Amphitheater, gebaut aus schwarzem Marmor, mit Sitzreihen, die steil nach unten führen wie in einem römischen Kolosseum. In der Mitte: ein Podium, beleuchtet von einem einzelnen Spot. Und auf dem Podium, in Glasvitrinen, die wertvollsten Artefakte der Casino-Geschichte.
 
@@ -934,28 +934,28 @@ Der Auktionator springt vom Podium — erstaunlich agil für jemanden in einem Z
         id: "c19s1",
         text: `Es passiert in Sekundenbruchteilen. Das eine Moment: du stehst im Auktionsraum und bewunderst deinen neuen Schlüssel wie Gollum seinen Ring. Das nächste Moment: ROTE LICHTER. Überall. Die Decke, die Wände, sogar der BODEN blinkt rot wie die Hölle bei einem Schlussverkauf.
 
-"ALARM! UNBEFUGTER ZUGRIFF AUF ARTEFAKTE! ALARM!" Eine Stimme, die klingt wie ein wütender Roboter mit Halsschmerzen, dröhnt aus unsichtbaren Lautsprechern. Türen schlagen zu. Schlösser rasten ein. Und dann hörst du sie: Schritte. VIELE Schritte. Schwere Stiefel auf Marmorboden. Die Wachen des Dealers.
+"ALARM! UNBEFUGTER ZUGRIFF AUF ARTEFAKTE! ALARM!" Eine Stimme, die klingt wie ein wütender Roboter mit Halsschmerzen, dröhnt aus unsichtbaren Lautsprechern. Türen schlagen zu. Schlösser rasten ein. Und dann hörst du sie: Schritte. VIELE Schritte. Schwere Stiefel auf Marmorboden. Die Wachen Kurainus.
 
-Rico packt dich am Arm. Seine Augen sind so groß wie die Champagnergläser auf Floor 2. "DIE WISSEN BESCHEID! DIE WISSEN, DASS WIR DEN SCHLÜSSEL HABEN! RENN!" Er zieht dich Richtung Ausgang, aber der Ausgang ist — natürlich — versperrt. Acht Wachen, jede davon breiter als ein Kühlschrank und ungefähr genauso freundlich.`,
-        character: "🦊 Rico",
+Crisio packt dich am Arm. Seine Augen sind so groß wie die Champagnergläser auf Floor 2. "DIE WISSEN BESCHEID! DIE WISSEN, DASS WIR DEN SCHLÜSSEL HABEN! RENN!" Er zieht dich Richtung Ausgang, aber der Ausgang ist — natürlich — versperrt. Acht Wachen, jede davon breiter als ein Kühlschrank und ungefähr genauso freundlich.`,
+        character: "🦊 Crisio",
       },
       {
         id: "c19s2",
-        text: `"DIE KÜCHE!" brüllt Rico und zerrt dich durch eine Seitentür. "Durch die Küche gibt es einen Personalausgang! Ich weiß das, weil ich dort einmal versucht habe, Reste zu klauen! Hat nicht funktioniert, aber ich KENNE DEN WEG!"
+        text: `"DIE KÜCHE!" brüllt Crisio und zerrt dich durch eine Seitentür. "Durch die Küche gibt es einen Personalausgang! Ich weiß das, weil ich dort einmal versucht habe, Reste zu klauen! Hat nicht funktioniert, aber ich KENNE DEN WEG!"
 
 Die Küche des CRISINO ist an einem normalen Tag schon chaotisch. Während eines ALARMS ist sie das kulinarische Äquivalent der Apokalypse. Köche rennen durcheinander wie aufgescheuchte Hühner (einer IST tatsächlich als Huhn verkleidet — Mottoabend, nicht fragen). Töpfe fliegen. Pfannen krachen. Eine Welle von Spaghetti — ja, eine WELLE — ergießt sich von einem Regal und schwappt über den Boden wie eine italienische Tsunami.
 
-"AUSWEICHEN!" brüllt Rico als ein Koch eine Bratpfanne nach einem anderen wirft, weil selbst während eines Sicherheitsalarms der ewige Krieg zwischen Soßen- und Grillstation weitergeht. Du duckst dich. Die Pfanne segelt Millimeter über deinem Kopf hinweg. Rico rutscht auf einem Butterfleck aus und schlittert drei Meter über den Küchenboden. "ICH BIN OKAY!" ruft er, bedeckt mit Mehl und dem, was entweder Tomatensauce oder sein letzter Funken Würde ist.`,
-        character: "🦊 Rico",
+"AUSWEICHEN!" brüllt Crisio als ein Koch eine Bratpfanne nach einem anderen wirft, weil selbst während eines Sicherheitsalarms der ewige Krieg zwischen Soßen- und Grillstation weitergeht. Du duckst dich. Die Pfanne segelt Millimeter über deinem Kopf hinweg. Crisio rutscht auf einem Butterfleck aus und schlittert drei Meter über den Küchenboden. "ICH BIN OKAY!" ruft er, bedeckt mit Mehl und dem, was entweder Tomatensauce oder sein letzter Funken Würde ist.`,
+        character: "🦊 Crisio",
       },
       {
         id: "c19s3",
         text: `Die Wachen sind HINTER euch. Du kannst sie hören — schwere Stiefel, die über nassen Küchenboden stampfen, begleitet vom gelegentlichen "AUTSCH!" wenn einer auf einem Stück Butter ausrutscht. Die Küche ist ein Labyrinth aus Arbeitsflächen, Regalen und dampfenden Töpfen, und du musst dich durchschlängeln wie eine Schlange in einem sehr stressigen Kochkurs.
 
-"Navigiere durch das Küchenchaos!" keucht Rico, der neben dir herrennt und dabei aussieht wie ein panischer Geist, weil er von Kopf bis Fuß mit Mehl bedeckt ist. "AUSWEICHEN! AUSWEICHEN! DA KOMMT EIN TIRAMISU!" Ein ganzes Blech Tiramisu fliegt an euch vorbei. Du weichst aus. Rico weicht nicht aus. Rico bekommt Tiramisu ins Gesicht. "MASCARPONE IN MEINEN AUGEN!" schreit er, aber er rennt weiter. Respekt.
+"Navigiere durch das Küchenchaos!" keucht Crisio, der neben dir herrennt und dabei aussieht wie ein panischer Geist, weil er von Kopf bis Fuß mit Mehl bedeckt ist. "AUSWEICHEN! AUSWEICHEN! DA KOMMT EIN TIRAMISU!" Ein ganzes Blech Tiramisu fliegt an euch vorbei. Du weichst aus. Crisio weicht nicht aus. Crisio bekommt Tiramisu ins Gesicht. "MASCARPONE IN MEINEN AUGEN!" schreit er, aber er rennt weiter. Respekt.
 
 Links: ein Koch mit einem Messer, das größer ist als dein Lebenswille. Rechts: ein Stapel Teller, der bedrohlich schwankt. Geradeaus: der Ausgang. Zwischen dir und dem Ausgang: ungefähr siebzehn Hindernisse, drei Wachen, und eine unbekannte Menge an Desserts.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
         game: { type: "snake", description: "Navigiere durch das Küchenchaos! Ausweichen! AUSWEICHEN!", reward: 350 },
       },
       {
@@ -964,38 +964,38 @@ Links: ein Koch mit einem Messer, das größer ist als dein Lebenswille. Rechts:
 
 BUMM. Die Tür schlägt hinter euch zu. Ihr seid im Serviceaufzug. Klein, eng, riecht nach altem Essen und frischer Verzweiflung. Aber er fährt. NACH OBEN.
 
-Rico lehnt an der Wand. Er ist bedeckt mit Mehl, Tomatensauce, Mascarpone, etwas das nach Pesto aussieht, und — aus irgendeinem Grund — Glitzer. "Das war knapp," keucht er. Pause. Er wischt sich übers Gesicht, was es nur schlimmer macht. "Ich hab Soße im Ohr." Er dreht den Kopf. Tatsächlich: Tomatensauce, die langsam aus seinem linken Ohr tropft. "Und Basilikum hinter dem anderen Ohr. Ich bin ein wandelndes Bruschetta." Trotz allem — oder vielleicht WEGEN allem — grinst er. "Aber wir leben. Und wir haben den Schlüssel. Das ist alles was zählt."`,
-        character: "🦊 Rico",
+Crisio lehnt an der Wand. Er ist bedeckt mit Mehl, Tomatensauce, Mascarpone, etwas das nach Pesto aussieht, und — aus irgendeinem Grund — Glitzer. "Das war knapp," keucht er. Pause. Er wischt sich übers Gesicht, was es nur schlimmer macht. "Ich hab Soße im Ohr." Er dreht den Kopf. Tatsächlich: Tomatensauce, die langsam aus seinem linken Ohr tropft. "Und Basilikum hinter dem anderen Ohr. Ich bin ein wandelndes Bruschetta." Trotz allem — oder vielleicht WEGEN allem — grinst er. "Aber wir leben. Und wir haben den Schlüssel. Das ist alles was zählt."`,
+        character: "🦊 Crisio",
       },
     ],
   },
 
   // ═══════════════════════════════════════════
-  // CHAPTER 20: BOSS — Madame Fortuna
+  // CHAPTER 20: BOSS — Cheshire Kimchi
   // ═══════════════════════════════════════════
   {
     number: 20,
-    title: "BOSS: Madame Fortuna",
+    title: "BOSS: Cheshire Kimchi",
     scenes: [
       {
         id: "c20s1",
-        text: `Der Serviceaufzug hält. Die Türen öffnen sich. Und dort steht sie. Direkt vor dem Aufzug, als hätte sie gewusst — natürlich hat sie gewusst — genau WANN und WO ihr ankommen würdet. Madame Fortuna. Aber nicht die Fortuna, die du kennst.
+        text: `Der Serviceaufzug hält. Die Türen öffnen sich. Und dort steht sie. Direkt vor dem Aufzug, als hätte sie gewusst — natürlich hat sie gewusst — genau WANN und WO ihr ankommen würdet. Cheshire Kimchi. Aber nicht die Kimchi, die du kennst.
 
 Die Kristallkugeln sind weg. Der wallende Umhang ist weg. Der mystische Blick ist weg. Stattdessen: ein schwarzer Business-Anzug, maßgeschneidert, elegant, TÖDLICH. Ihr Haar ist streng zurückgekämmt. Keine Ringe, kein Turban, kein Glitzer. Sie sieht aus wie eine CEO, die gerade eine feindliche Übernahme plant. Ihres Gesichts ist eine Maske aus Stein.
 
-"Es tut mir leid, Liebling." Ihre Stimme ist anders. Keine Wärme, keine Mystik, kein "die-Karten-haben-mir-gesagt". Nur Kälte. Kalte, berechnende, geschäftliche Kälte. "Der Dealer hat mir ein Angebot gemacht das ich nicht ablehnen konnte."
+"Es tut mir leid, Liebling." Ihre Stimme ist anders. Keine Wärme, keine Mystik, kein "die-Karten-haben-mir-gesagt". Nur Kälte. Kalte, berechnende, geschäftliche Kälte. "Kurainu hat mir ein Angebot gemacht das ich nicht ablehnen konnte."
 
 Hinter ihr: vier Wachen. Vor ihr: der einzige Weg nach oben. Neben ihr: eine einzelne Kristallkugel, die letzte, die sie noch hat. Und in der Kristallkugel... blinkt ein rotes Licht. Ein KAMERA-Licht.`,
-        character: "🔮 Madame Fortuna",
+        character: "🔮 Cheshire Kimchi",
       },
       {
         id: "c20s2",
         text: `"Überrascht?" Sie hebt die Kristallkugel und dreht sie in ihren Händen. Das rote Licht blinkt gleichmäßig, wie ein mechanischer Herzschlag. "Meine Kristallkugeln. Meine wunderschönen, mystischen Kristallkugeln." Ein bitteres Lachen. "52 Stück. Eine für jede Karte im Deck. Verteilt über das gesamte CRISINO. Und JEDE EINZELNE..." Sie drückt einen versteckten Knopf. Die Kugel öffnet sich und enthüllt ein Linsen-Array, so klein und präzise wie das Auge einer Spinne. "...ist eine versteckte Kamera."
 
-Rico klappt der Mund auf. "Du... du hast uns die ganze Zeit BEOBACHTET?! Alles?! Auch als ich— " Er wird rot. "...auch als ich hinter der Bar 'Dancing Queen' gesungen habe?!" Fortuna nickt langsam. "Besonders DAS, Rico. Es war... unvergesslich. Aus den falschen Gründen."
+Crisio klappt der Mund auf. "Du... du hast uns die ganze Zeit BEOBACHTET?! Alles?! Auch als ich— " Er wird rot. "...auch als ich hinter der Bar 'Dancing Queen' gesungen habe?!" Kimchi nickt langsam. "Besonders DAS, Crisio. Es war... unvergesslich. Aus den falschen Gründen."
 
-Sie richtet sich auf. Die volle Höhe. Die volle Autorität. "Ich habe ALLES gesehen. Jeden Schritt, jede Entscheidung, jede heimliche Nascherei am Buffet. Und ich habe alles an den Dealer gemeldet. Seit dem ERSTEN TAG." Sie hält inne. Für einen Moment — nur einen — flackert etwas in ihren Augen. Bedauern? Schuld? Oder nur das Kameralicht? "Er bot mir etwas an, das kein Wahrsager ablehnen kann: die Zukunft. Die ECHTE Zukunft. Nicht die aus Karten und Kugeln — die aus Daten und Algorithmen. Er hat mir gezeigt, wie man die Zukunft nicht VORHERSAGT, sondern KONTROLLIERT."`,
-        character: "🔮 Madame Fortuna",
+Sie richtet sich auf. Die volle Höhe. Die volle Autorität. "Ich habe ALLES gesehen. Jeden Schritt, jede Entscheidung, jede heimliche Nascherei am Buffet. Und ich habe alles an Kurainu gemeldet. Seit dem ERSTEN TAG." Sie hält inne. Für einen Moment — nur einen — flackert etwas in ihren Augen. Bedauern? Schuld? Oder nur das Kameralicht? "Er bot mir etwas an, das kein Wahrsager ablehnen kann: die Zukunft. Die ECHTE Zukunft. Nicht die aus Karten und Kugeln — die aus Daten und Algorithmen. Er hat mir gezeigt, wie man die Zukunft nicht VORHERSAGT, sondern KONTROLLIERT."`,
+        character: "🔮 Cheshire Kimchi",
       },
       {
         id: "c20s3",
@@ -1003,36 +1003,36 @@ Sie richtet sich auf. Die volle Höhe. Die volle Autorität. "Ich habe ALLES ges
 
 "Die Karten haben mir gesagt dass du verlieren wirst," sagt sie und mischt das Deck mit der Geschwindigkeit und Präzision einer Maschine. Ihre Finger fliegen über die Karten wie Kolibris über Blumen. "Aber die Karten irren sich manchmal..." Ein Lächeln, so fein wie eine Rasierklinge. "...und manchmal irre ICH mich. Selten. Sehr selten. Aber es kommt vor."
 
-Das Deck liegt zwischen euch. 52 Karten. 52 Schicksale. 52 Kristallkugeln, die jetzt alle auf DIESEN Moment gerichtet sind — denn wenn Fortuna spielt, dann schaut das gesamte Netzwerk zu. Der Dealer im Schatten schaut zu. Das CRISINO selbst schaut zu. Und irgendwo, in einer Ecke, schaut auch Gerald zu. Gerald schaut IMMER zu.`,
-        character: "🔮 Madame Fortuna",
+Das Deck liegt zwischen euch. 52 Karten. 52 Schicksale. 52 Kristallkugeln, die jetzt alle auf DIESEN Moment gerichtet sind — denn wenn Kimchi spielt, dann schaut das gesamte Netzwerk zu. Kurainu der Schatten schaut zu. Das CRISINO selbst schaut zu. Und irgendwo, in einer Ecke, schaut auch Gerald zu. Gerald schaut IMMER zu.`,
+        character: "🔮 Cheshire Kimchi",
         boss: {
-          name: "Madame Fortuna",
+          name: "Cheshire Kimchi",
           emoji: "🔮",
           game: "poker",
           reward: 750,
-          dialog: "Poker gegen die Verräterin — Madame Fortuna, die Seherin mit den Kamera-Kristallkugeln!",
+          dialog: "Poker gegen die Verräterin — Cheshire Kimchi, die Seherin mit den Kamera-Kristallkugeln!",
         },
       },
       {
         id: "c20s4",
-        text: `Die letzte Karte fällt. Stille. Die Art von Stille, die so laut ist, dass sie in den Ohren klingelt. Fortuna starrt auf den Tisch. Ihre Hände — die nie zittern, die NIEMALS zittern — zittern.
+        text: `Die letzte Karte fällt. Stille. Die Art von Stille, die so laut ist, dass sie in den Ohren klingelt. Kimchi starrt auf den Tisch. Ihre Hände — die nie zittern, die NIEMALS zittern — zittern.
 
-"Vielleicht haben die Karten doch die Wahrheit gesagt..." Ihre Stimme bricht. Nicht dramatisch, nicht theatralisch wie früher — echt. Zum ersten Mal seit du sie kennst, ist Madame Fortuna ECHT. "...nur nicht über das Ergebnis das ich erwartet habe."
+"Vielleicht haben die Karten doch die Wahrheit gesagt..." Ihre Stimme bricht. Nicht dramatisch, nicht theatralisch wie früher — echt. Zum ersten Mal seit du sie kennst, ist Cheshire Kimchi ECHT. "...nur nicht über das Ergebnis das ich erwartet habe."
 
-Sie steht langsam auf. Die Wachen hinter ihr treten zurück — sie scheinen zu spüren, dass dieser Moment IHNEN nicht gehört. Fortuna greift nach der letzten Kristallkugel. Der Kamera-Kugel. Sie betrachtet sie einen langen Moment, als würde sie sich von einem alten Freund verabschieden. Dann reicht sie sie dir.
+Sie steht langsam auf. Die Wachen hinter ihr treten zurück — sie scheinen zu spüren, dass dieser Moment IHNEN nicht gehört. Kimchi greift nach der letzten Kristallkugel. Der Kamera-Kugel. Sie betrachtet sie einen langen Moment, als würde sie sich von einem alten Freund verabschieden. Dann reicht sie sie dir.
 
-"Hier. Fortunas Kristallkugel. Die letzte echte... naja, die letzte ÜBERHAUPT." Ein schiefes Lächeln, das mehr Traurigkeit enthält als tausend Tränen. "Der Dealer wird wütend sein. Aber weißt du was? Die Karten haben mir AUCH gesagt, dass mir das egal sein wird." Sie dreht sich um. "Und diesmal... diesmal hatten die Karten Recht."
+"Hier. Kimchis Kristallkugel. Die letzte echte... naja, die letzte ÜBERHAUPT." Ein schiefes Lächeln, das mehr Traurigkeit enthält als tausend Tränen. "Kurainu wird wütend sein. Aber weißt du was? Die Karten haben mir AUCH gesagt, dass mir das egal sein wird." Sie dreht sich um. "Und diesmal... diesmal hatten die Karten Recht."
 
 Sie geht. Ihr Absatz klickt auf dem Marmor. Klick. Klick. Klick. Leiser werdend. Wie ein Metronom, das sich entscheidet aufzuhören. Die Tür zum Aufzug steht offen. Floor 4 wartet. Und in deiner Hand liegt eine Kristallkugel, die noch warm ist von den Händen einer Frau, die zwischen den Karten und den Kameras den Weg verloren hat.`,
-        character: "🔮 Madame Fortuna",
-        giveItem: "Fortunas Kristallkugel",
+        character: "🔮 Cheshire Kimchi",
+        giveItem: "Kimchis Kristallkugel",
       },
     ],
   },
 
   // ═══════════════════════════════════════════════════════════════
   //  ACT 3: "Der Aufstieg" — Chapters 21-30
-  //  New Character: 🎓 Professor Glück — elderly inventor of the
+  //  New Character: 🎓 Schrifterz — elderly inventor of the
   //  Golden Chip, eccentric genius, talks in gambling metaphors
   // ═══════════════════════════════════════════════════════════════
 
@@ -1049,12 +1049,12 @@ Sie geht. Ihr Absatz klickt auf dem Marmor. Klick. Klick. Klick. Leiser werdend.
 
 Die Luft ist dünner hier oben, oder vielleicht ist es auch nur die Atmosphäre, die dir den Atem raubt. Überall schweben Kronleuchter aus Kristall, die das Sternenlicht einfangen und in tausend Regenbogen zerstreuen. Die Bar serviert Champagner, der älter ist als manche Zivilisationen, und die Gläser klingen beim Anstoßen wie Engelsgesang — wenn Engel eine Vorliebe für französische Jahrgänge hätten.
 
-Rico pfeift beeindruckt. "Also DAS ist Floor 3. Ich hab Gerüchte gehört, aber..." Er schaut nach unten durch den Glasboden und wird leicht grün. "...die Gerüchte haben NICHT erwähnt, dass man schwindelfrei sein muss. Kann ich bitte ein Glas Champagner und eine Papiertüte zum Reinatmen haben?"`,
-        character: "🦊 Rico",
+Crisio pfeift beeindruckt. "Also DAS ist Floor 3. Ich hab Gerüchte gehört, aber..." Er schaut nach unten durch den Glasboden und wird leicht grün. "...die Gerüchte haben NICHT erwähnt, dass man schwindelfrei sein muss. Kann ich bitte ein Glas Champagner und eine Papiertüte zum Reinatmen haben?"`,
+        character: "🦊 Crisio",
       },
       {
         id: "c21s2",
-        text: `Die Slot-Automaten auf Floor 3 sind nicht von dieser Welt — und das meine ich wörtlich. Statt Kirschen, Siebenen und Glocken zeigen die Walzen kosmische Symbole: Planeten, die sich drehen, Sterne, die explodieren, Schwarze Löcher, die alles verschlingen, und gelegentlich eine kleine Supernova, die den ganzen Automaten zum Glühen bringt.
+        text: `Die Slot-Automaten auf Floor 3 sind nicht von dieser Welt — und das meine ich wörtlich. Statt Arindyn, Siebenen und Glocken zeigen die Walzen kosmische Symbole: Planeten, die sich drehen, Sterne, die explodieren, Schwarze Löcher, die alles verschlingen, und gelegentlich eine kleine Supernova, die den ganzen Automaten zum Glühen bringt.
 
 Die Einsätze hier oben sind... anders. Die Chips sind aus einem Material, das aussieht wie komprimiertes Sternenlicht, und jeder einzelne ist mehr wert als dein bisheriges Gesamtvermögen, dein Auto, und deine Organe zusammen. Ein Schild über den Automaten verkündet in goldener Schrift: "MINIMUM: 500. MAXIMUM: ∞. EMPFOHLENE BLUTDRUCKMEDIKATION: JA."
 
@@ -1066,8 +1066,8 @@ Ein Cocktail-Roboter schwebt vorbei und bietet dir ein Getränk an, das buchstä
 
 "Die Himmels-Slots! Hier gewinnt man groß... oder fällt tief," verkündet eine Stimme aus dem Automaten, so dramatisch, als würde Morgan Freeman einen Spielautomaten moderieren. "Aber keine Sorge — der Fall durch den Glasboden ist rein metaphorisch. MEISTENS."
 
-Rico steht hinter dir und klammert sich an die Rückenlehne deines Stuhls. "Ich schaue nur. Moralische Unterstützung. Und falls du durch den Boden fällst, erzähle ich allen dass du heroisch gestorben bist. Bei einem tragischen... Slot-Unfall." Er überlegt. "Okay, das klingt weniger heroisch als gedacht."`,
-        character: "🦊 Rico",
+Crisio steht hinter dir und klammert sich an die Rückenlehne deines Stuhls. "Ich schaue nur. Moralische Unterstützung. Und falls du durch den Boden fällst, erzähle ich allen dass du heroisch gestorben bist. Bei einem tragischen... Slot-Unfall." Er überlegt. "Okay, das klingt weniger heroisch als gedacht."`,
+        character: "🦊 Crisio",
         game: { type: "slots", description: "Die Himmels-Slots! Hier gewinnt man groß... oder fällt tief.", reward: 350 },
       },
       {
@@ -1092,10 +1092,10 @@ Er bemerkt deinen Blick. Und GRINST. Ein Grinsen so breit und verrückt, dass es
         id: "c22s1",
         text: `Der alte Mann stürmt auf dich zu — und mit "stürmen" meine ich eine Art kontrollierten Fall nach vorne, der irgendwie in Vorwärtsbewegung resultiert. Sein Laborkittel flattert hinter ihm wie ein Cape, und er verschüttet mindestens ein Drittel seines Champagners auf dem Weg.
 
-"DU! JA, DU! Ich hab dich beobachtet! Nicht auf die gruselige Art — auf die WISSENSCHAFTLICHE Art!" Er packt deine Hand und schüttelt sie mit der Energie eines Mannes, der dreimal so jung ist wie er aussieht. "Professor Glück! Ja, DER Professor Glück! Der Name ist Programm — oder Ironie, je nach Tagesform!"
+"DU! JA, DU! Ich hab dich beobachtet! Nicht auf die gruselige Art — auf die WISSENSCHAFTLICHE Art!" Er packt deine Hand und schüttelt sie mit der Energie eines Mannes, der dreimal so jung ist wie er aussieht. "Schrifterz! Ja, DER Schrifterz! Der Name ist Programm — oder Ironie, je nach Tagesform!"
 
 Er lehnt sich so nah zu dir, dass du seinen Atem riechen kannst — eine Mischung aus Champagner, Lötzinn und dem Hauch von Wahnsinn. "Ich hab den Chip gebaut! Den GOLDENEN CHIP! Vor 50 Jahren! In meiner GARAGE! Mit einem Lötkolben und einer Flasche Schnaps!" Er kichert. "Die Flasche war das wichtigere Werkzeug, wenn ich ehrlich bin."`,
-        character: "🎓 Professor Glück",
+        character: "🎓 Schrifterz",
       },
       {
         id: "c22s2",
@@ -1103,8 +1103,8 @@ Er lehnt sich so nah zu dir, dass du seinen Atem riechen kannst — eine Mischun
 
 "Pass auf, Kind. Der Goldene Chip — alle denken, das ist Magie. FALSCH!" Er haut auf den Tisch. Die Champagnergläser springen. "Es ist Quantenphysik! Der Chip manipuliert WAHRSCHEINLICHKEITEN. Er nutzt Quantenverschränkung, Superposition, und einen Hauch von... naja..." Er senkt die Stimme. "...Magie." Beat. "Aber nur ein HAUCH! Höchstens 3 Prozent Magie! Der Rest ist pure Wissenschaft!" Er hebt einen Finger. "Oder Magie. Ist das gleiche, wenn man lange genug drüber nachdenkt."
 
-Rico starrt den Professor an. "Sie haben... den mächtigsten Gegenstand im CRISINO... in einer Garage gebaut. Mit Schnaps." Der Professor nickt enthusiastisch. "Es war GUTER Schnaps! Doppelkorn! Die Grundlage jeder großen Erfindung! Einstein hatte Relativität, ich hatte Doppelkorn und eine Vision!" Er wischt sich eine Träne der Nostalgie weg. Oder des Champagners.`,
-        character: "🎓 Professor Glück",
+Crisio starrt den Professor an. "Sie haben... den mächtigsten Gegenstand im CRISINO... in einer Garage gebaut. Mit Schnaps." Der Professor nickt enthusiastisch. "Es war GUTER Schnaps! Doppelkorn! Die Grundlage jeder großen Erfindung! Einstein hatte Relativität, ich hatte Doppelkorn und eine Vision!" Er wischt sich eine Träne der Nostalgie weg. Oder des Champagners.`,
+        character: "🎓 Schrifterz",
       },
       {
         id: "c22s3",
@@ -1113,8 +1113,8 @@ Rico starrt den Professor an. "Sie haben... den mächtigsten Gegenstand im CRISI
 Du öffnest den Mund, aber er unterbricht dich sofort. "FALSCH! Die richtige Antwort ist: Es ist egal! Es ist ein MÜNZWURF! Es gibt KEINE Strategie!" Er lacht so laut, dass drei Tische rüberschauen. "ABER — und das ist der Trick — wenn du GLAUBST, dass es eine Strategie gibt, dann spielst du mit mehr Selbstvertrauen. Und Selbstvertrauen verändert die Quantenfluktuation des lokalen Wahrscheinlichkeitsfeldes!" Er zeigt auf seine Servietten-Gleichungen. "Steht alles HIER! Mehr oder weniger! Hauptsächlich weniger!"
 
 Er drückt dir die Münze in die Hand. "Los, Kind! Wirf! Mehrmals! Fühle die STRATEGIE! Die Strategie, die es nicht gibt, aber die trotzdem funktioniert! Das ist der schönste Widerspruch der Physik!"`,
-        character: "🎓 Professor Glück",
-        game: { type: "flip", description: "Professor Glücks 'Strategie'-Training — wirf die Quantenmünze!", reward: 200 },
+        character: "🎓 Schrifterz",
+        game: { type: "flip", description: "Schrifterzs 'Strategie'-Training — wirf die Quantenmünze!", reward: 200 },
       },
       {
         id: "c22s4",
@@ -1122,8 +1122,8 @@ Er drückt dir die Münze in die Hand. "Los, Kind! Wirf! Mehrmals! Fühle die ST
 
 "Hier! NIMM! Professors Formel! Mein Lebenswerk auf einer Serviette! Naja, EINES meiner Lebenswerke. Ich hab mindestens sieben. Drei davon sind legal." Er drückt dir die Serviette in die Hand wie einen heiligen Schatz. Die Gleichungen darauf scheinen zu... schimmern? Oder ist das ein Champagnerfleck? Beides möglich.
 
-"Du hast Talent, Kind! Oder Glück. Beides reicht!" Er zwinkert dir zu — oder sein Auge zuckt, man kann es bei ihm nie genau sagen. "Der Chip ist da oben. Floor 4. Wo ICH ihn vor 50 Jahren versteckt habe. Bevor der Dealer alles übernommen hat. Bevor..." Sein Blick wird kurz ernst. Richtig ernst. "Bevor alles schiefging." Dann grinst er wieder. "ABER ERST — musst du beweisen, dass du WÜRDIG bist! Und das geht nur auf EINE Art: SPIELEN!"`,
-        character: "🎓 Professor Glück",
+"Du hast Talent, Kind! Oder Glück. Beides reicht!" Er zwinkert dir zu — oder sein Auge zuckt, man kann es bei ihm nie genau sagen. "Der Chip ist da oben. Floor 4. Wo ICH ihn vor 50 Jahren versteckt habe. Bevor Kurainu alles übernommen hat. Bevor..." Sein Blick wird kurz ernst. Richtig ernst. "Bevor alles schiefging." Dann grinst er wieder. "ABER ERST — musst du beweisen, dass du WÜRDIG bist! Und das geht nur auf EINE Art: SPIELEN!"`,
+        character: "🎓 Schrifterz",
         giveItem: "Professors Formel",
       },
     ],
@@ -1142,8 +1142,8 @@ Er drückt dir die Münze in die Hand. "Los, Kind! Wirf! Mehrmals! Fühle die ST
 
 "MEINE DAMEN UND HERREN! SPIELER UND SPIELERINNEN! VERZWEIFELTE UND HOFFNUNGSVOLLE!" Seine Stimme dröhnt durch den Saal, verstärkt durch unsichtbare Lautsprecher. "DAS HIMMELS-TURNIER BEGINNT! DREI DISZIPLINEN! EIN CHAMPION! KEIN RÜCKGABERECHT!"
 
-Die Menge jubelt. Und mit "Menge" meine ich die Crème de la Crème des CRISINO — Spieler in Kleidung, die mehr kostet als Häuser, mit Chips, die so groß sind wie Untertassen. Rico schaut sich nervös um. "Das sind die Profis. Die ECHTEN Profis. Die Leute, die 'Poker-Abend' sagen und damit eine Yacht meinen."`,
-        character: "🦊 Rico",
+Die Menge jubelt. Und mit "Menge" meine ich die Crème de la Crème des CRISINO — Spieler in Kleidung, die mehr kostet als Häuser, mit Chips, die so groß sind wie Untertassen. Crisio schaut sich nervös um. "Das sind die Profis. Die ECHTEN Profis. Die Leute, die 'Poker-Abend' sagen und damit eine Yacht meinen."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c23s2",
@@ -1151,8 +1151,8 @@ Die Menge jubelt. Und mit "Menge" meine ich die Crème de la Crème des CRISINO 
 
 "Der MÜNZWURF DES SCHICKSALS! Ein Wurf! Eine Chance! Ein Moment, der ALLES entscheidet! Oder zumindest ein Drittel von allem, weil es drei Runden gibt, aber TROTZDEM!" Die Münze beginnt sich schneller zu drehen, hebt ab, und schwebt über dem Tisch wie ein goldener Stern.
 
-Professor Glück sitzt in der ersten Reihe und winkt dir enthusiastisch mit beiden Händen. "DENK AN DIE STRATEGIE!" ruft er. Rico flüstert: "Welche Strategie? Es ist ein MÜNZWURF!" Der Professor: "GENAU! DAS ist die Strategie!" Rico gibt auf.`,
-        character: "🎓 Professor Glück",
+Schrifterz sitzt in der ersten Reihe und winkt dir enthusiastisch mit beiden Händen. "DENK AN DIE STRATEGIE!" ruft er. Crisio flüstert: "Welche Strategie? Es ist ein MÜNZWURF!" Der Professor: "GENAU! DAS ist die Strategie!" Crisio gibt auf.`,
+        character: "🎓 Schrifterz",
         game: { type: "flip", description: "Runde 1: Münzwurf des Schicksals!", reward: 200 },
       },
       {
@@ -1161,7 +1161,7 @@ Professor Glück sitzt in der ersten Reihe und winkt dir enthusiastisch mit beid
 
 Dein Gegner ist ein Typ mit einem Monokel, einem Schnurrbart der seinen eigenen Postcode hat, und einem Anzug, der so steif ist, dass er vermutlich von alleine stehen könnte. Er stellt sich vor als "Baron von Würfelstein der Dritte" und ja, er meint das ernst.
 
-"Möge der Bessere gewinnen," sagt der Baron und verbeugt sich mit einer Steifheit, die darauf hindeutet, dass sein Rückgrat aus demselben Material besteht wie sein Monokel. Professor Glück ruft von der Tribüne: "Denk dran, Kind! Würfel haben kein Gedächtnis! Aber DU AUCH NICHT, wenn du zu viel Champagner trinkst! WENIGER TRINKEN, MEHR WÜRFELN!"`,
+"Möge der Bessere gewinnen," sagt der Baron und verbeugt sich mit einer Steifheit, die darauf hindeutet, dass sein Rückgrat aus demselben Material besteht wie sein Monokel. Schrifterz ruft von der Tribüne: "Denk dran, Kind! Würfel haben kein Gedächtnis! Aber DU AUCH NICHT, wenn du zu viel Champagner trinkst! WENIGER TRINKEN, MEHR WÜRFELN!"`,
         game: { type: "dice21", description: "Runde 2: Würfel gegen die Elite!", reward: 250 },
       },
       {
@@ -1170,7 +1170,7 @@ Dein Gegner ist ein Typ mit einem Monokel, einem Schnurrbart der seinen eigenen 
 
 "ROULETTE ROYALE! Das Spiel, bei dem das Schicksal BUCHSTÄBLICH im Kreis dreht! Setzen Sie, wagen Sie, LEBEN Sie!" Der Moderator hat offensichtlich an einem Motivations-Seminar teilgenommen. Oder er hat zu viel Kaffee getrunken. Beides plausibel.
 
-Du setzt. Das Rad dreht sich. Die Kugel tanzt über die Zahlen wie ein hyperaktives Kind auf einer Hüpfburg. Die Menge hält den Atem an. Rico hält den Atem an. Der Professor hält den Atem NICHT an, weil er gerade ein Stück Kuchen isst, das er irgendwo aufgetrieben hat. "Multitasking!" nuschelt er kauend.`,
+Du setzt. Das Rad dreht sich. Die Kugel tanzt über die Zahlen wie ein hyperaktives Kind auf einer Hüpfburg. Die Menge hält den Atem an. Crisio hält den Atem an. Der Professor hält den Atem NICHT an, weil er gerade ein Stück Kuchen isst, das er irgendwo aufgetrieben hat. "Multitasking!" nuschelt er kauend.`,
         game: { type: "roulette", description: "Runde 3: Roulette Royale!", reward: 300 },
         giveItem: "Turnier-Trophäe",
       },
@@ -1190,8 +1190,8 @@ Du setzt. Das Rad dreht sich. Die Kugel tanzt über die Zahlen wie ein hyperakti
 
 Am anderen Ende des Raums steht jemand, der EXAKT so aussieht wie du. Dasselbe Gesicht. Dieselben Klamotten. Dieselbe leicht verwirrte Miene, die du vermutlich gerade auch aufhast. Für einen Moment denkst du, es ist ein Spiegel — aber da ist kein Spiegel. Da ist eine PERSON. Die genauso aussieht wie du. Und die gerade — oh Gott — dir zuWINKT. Mit DEINER Hand. An DEINEM Arm. An DEINEM Körper. Den SIE hat.
 
-Das Blut in deinen Adern friert ein. Dann wird es heiß. Dann friert es wieder ein. Dein Kreislauf kann sich nicht entscheiden, und ehrlich gesagt — wer könnte ihm das verübeln? Rico bemerkt deinen Blick. "Was guckst du so? Du siehst aus als hättest du einen Geist gesehen." Er schaut rüber. Und wird WEISS wie die Wolken unter dem Glasboden.`,
-        character: "🦊 Rico",
+Das Blut in deinen Adern friert ein. Dann wird es heiß. Dann friert es wieder ein. Dein Kreislauf kann sich nicht entscheiden, und ehrlich gesagt — wer könnte ihm das verübeln? Crisio bemerkt deinen Blick. "Was guckst du so? Du siehst aus als hättest du einen Geist gesehen." Er schaut rüber. Und wird WEISS wie die Wolken unter dem Glasboden.`,
+        character: "🦊 Crisio",
       },
       {
         id: "c24s2",
@@ -1199,8 +1199,8 @@ Das Blut in deinen Adern friert ein. Dann wird es heiß. Dann friert es wieder e
 
 "Oh!" sagt er, und seine Stimme klingt wie DEINE Stimme, nur mit dem Hauch eines Echos, als würde jemand dein Audio durch einen sehr leichten Halleffekt jagen. "Du bist der Echte? Oder bin ICH der Echte?" Er legt den Kopf schief, genau so, wie du es tust wenn du nachdenkst. "Philosophische Frage! Wirklich! Ich hab drüber nachgedacht, und ehrlich gesagt hab ich keine Antwort." Er zuckt die Schultern — DEINE Schultern. "Aber hey, solange einer von uns existiert, ist das Universum zufrieden, oder?"
 
-Professor Glück taucht neben dir auf, sein Oszilloskop piepst wie verrückt. "FASZINIEREND! Eine Quantenduplikation! Oder eine Halluzination! Oder ein sehr guter Kostümwechsel! Alle drei Optionen sind wissenschaftlich gleich spannend!"`,
-        character: "🎓 Professor Glück",
+Schrifterz taucht neben dir auf, sein Oszilloskop piepst wie verrückt. "FASZINIEREND! Eine Quantenduplikation! Oder eine Halluzination! Oder ein sehr guter Kostümwechsel! Alle drei Optionen sind wissenschaftlich gleich spannend!"`,
+        character: "🎓 Schrifterz",
       },
       {
         id: "c24s3",
@@ -1208,8 +1208,8 @@ Professor Glück taucht neben dir auf, sein Oszilloskop piepst wie verrückt. "F
 
 "Also," sagt er — sagst DU? — und verschränkt die Arme. "Was machen wir jetzt? Ich sehe zwei Optionen." Er hebt einen Finger. "Option A: Wir konfrontieren das Ganze direkt. Prügeln uns philosophisch. Stellen fest wer real ist." Zweiter Finger. "Option B: Wir tauschen einfach die Identitäten. Ich geh in dein Leben, du gehst in meins. Kann nicht schlimmer sein als das was ich gerade mache." Er grinst. "Wobei — ich weiß nicht was ICH gerade mache. Ich bin erst seit fünf Minuten hier. Glaub ich."
 
-Rico sieht aus als würde er gleich in Ohnmacht fallen. "Kann mir BITTE jemand erklären was hier passiert? Seit wann gibt es ZWEI von dir? War EINER nicht schon genug Chaos?!"`,
-        character: "🦊 Rico",
+Crisio sieht aus als würde er gleich in Ohnmacht fallen. "Kann mir BITTE jemand erklären was hier passiert? Seit wann gibt es ZWEI von dir? War EINER nicht schon genug Chaos?!"`,
+        character: "🦊 Crisio",
         choice: {
           prompt: "Was tust du?",
           options: [
@@ -1224,8 +1224,8 @@ Rico sieht aus als würde er gleich in Ohnmacht fallen. "Kann mir BITTE jemand e
 
 Wo er stand, liegt jetzt nur noch ein einzelner Chip auf dem Glasboden. Golden. Warm. Und er pulsiert leise, wie ein winziger Herzschlag. War es die Macht des Goldenen Chips? Eine Halluzination? Eine Warnung? Ein Glitch in der Matrix des CRISINO? Keiner weiß es. Die Champagner-Gläser in der Nähe vibrieren noch leise.
 
-Rico wischt sich den Schweiß von der Stirn. "Ich hab nichts gesehen. NICHTS. Verstanden? Ich sehe manchmal doppelt, das ist bekannt, ich trinke viel, und heute war ein langer Tag." Der Professor kritzelt begeistert auf einer neuen Serviette. "Quantenduplikation bestätigt! Oder Champagner-Halluzination! Ich dokumentiere BEIDES! Für die Wissenschaft!" Er hält inne. "Und für mein Tagebuch. Mein Tagebuch ist wissenschaftlicher als die meisten Fachzeitschriften."`,
-        character: "🦊 Rico",
+Crisio wischt sich den Schweiß von der Stirn. "Ich hab nichts gesehen. NICHTS. Verstanden? Ich sehe manchmal doppelt, das ist bekannt, ich trinke viel, und heute war ein langer Tag." Der Professor kritzelt begeistert auf einer neuen Serviette. "Quantenduplikation bestätigt! Oder Champagner-Halluzination! Ich dokumentiere BEIDES! Für die Wissenschaft!" Er hält inne. "Und für mein Tagebuch. Mein Tagebuch ist wissenschaftlicher als die meisten Fachzeitschriften."`,
+        character: "🦊 Crisio",
       },
     ],
   },
@@ -1247,12 +1247,12 @@ Spieler sitzen an schwebenden Tischen, die sich langsam um die eigene Achse dreh
       },
       {
         id: "c25s2",
-        text: `Professor Glück schwebt herein — und er schwebt mit der Eleganz eines Mannes, der das schon TAUSEND Mal gemacht hat. Er dreht eine Pirouette in der Luft, fängt seinen eigenen Champagner aus der Schwerelosigkeit auf, und landet sanft auf einem unsichtbaren Luftkissen.
+        text: `Schrifterz schwebt herein — und er schwebt mit der Eleganz eines Mannes, der das schon TAUSEND Mal gemacht hat. Er dreht eine Pirouette in der Luft, fängt seinen eigenen Champagner aus der Schwerelosigkeit auf, und landet sanft auf einem unsichtbaren Luftkissen.
 
 "ICH HAB DIESEN RAUM GEBAUT!" verkündet er stolz, und seine Stimme hallt durch die Schwerelosigkeit auf eine Art, die irgendwie... majestätisch klingt. "Vor 35 Jahren! Die Schwerkraft war mir zu MAINSTREAM! Jeder kann auf dem BODEN spielen — wo ist da die HERAUSFORDERUNG?!" Er schnappt sich einen schwebenden Würfel aus der Luft und jongliert ihn zwischen seinen Fingern. "In der Schwerelosigkeit fallen die Würfel NICHT — sie SCHWEBEN. Und wenn sie schweben, sind sie in einem Zustand der Quantenunsicherheit! JEDE Seite ist gleichzeitig oben! Bis du hinschaust!" Er kichert. "Schrödingers Würfel! Mein zweitbestes Patent!"
 
-Rico klammert sich an einem Stuhl fest, der langsam zur Decke driftet. "Ich hasse diesen Raum. Ich hasse ALLES an diesem Raum. Wer braucht schon Schwerkraft? ICH! ICH brauche Schwerkraft! Sie hält mich am BODEN! WO ICH HINGEHÖRE!"`,
-        character: "🎓 Professor Glück",
+Crisio klammert sich an einem Stuhl fest, der langsam zur Decke driftet. "Ich hasse diesen Raum. Ich hasse ALLES an diesem Raum. Wer braucht schon Schwerkraft? ICH! ICH brauche Schwerkraft! Sie hält mich am BODEN! WO ICH HINGEHÖRE!"`,
+        character: "🎓 Schrifterz",
       },
       {
         id: "c25s3",
@@ -1260,8 +1260,8 @@ Rico klammert sich an einem Stuhl fest, der langsam zur Decke driftet. "Ich hass
 
 "Würfel in Schwerelosigkeit!" ruft der Croupier, der kopfüber an der Decke sitzt und dabei vollkommen seriös aussieht. Sein Haar hängt nach oben — oder nach unten, je nach Perspektive — und sein Fliege schwebt leicht von seinem Hals weg. "Sie fallen langsamer, aber die Spannung steigt! Das Ergebnis zeigt sich erst, wenn der Würfel sich entscheidet aufzuhören — und in DIESEM Raum... dauert das manchmal eine WEILE."
 
-Professor Glück hat sich einen schwebenden Lehrstuhl organisiert und sitzt wie ein König in der Luft. "Die Quantenfluktuation in diesem Raum ist PERFEKT für Dice Twenty-One! Die Würfel berücksichtigen die lokale Raumkrümmung und die Heisenbergsche Unschärferelation!" Rico: "Heißt das, sie sind FAIRER?" Professor: "Nein! Es heißt NIEMAND weiß was passiert! IST DAS NICHT WUNDERBAR?!"`,
-        character: "🎓 Professor Glück",
+Schrifterz hat sich einen schwebenden Lehrstuhl organisiert und sitzt wie ein König in der Luft. "Die Quantenfluktuation in diesem Raum ist PERFEKT für Dice Twenty-One! Die Würfel berücksichtigen die lokale Raumkrümmung und die Heisenbergsche Unschärferelation!" Crisio: "Heißt das, sie sind FAIRER?" Professor: "Nein! Es heißt NIEMAND weiß was passiert! IST DAS NICHT WUNDERBAR?!"`,
+        character: "🎓 Schrifterz",
         game: { type: "dice21", description: "Würfel in Schwerelosigkeit! Sie fallen langsamer, aber die Spannung steigt!", reward: 350 },
       },
       {
@@ -1270,8 +1270,8 @@ Professor Glück hat sich einen schwebenden Lehrstuhl organisiert und sitzt wie 
 
 Du hast es gemeistert. Zero-Gravity Gambling. Eine Disziplin, von der du nicht mal wusstest, dass sie existiert, und die du jetzt BEHERRSCHST. Oder zumindest hast du nicht gegen den Tisch gekotzt, was in der Schwerelosigkeit eine echte Leistung ist und mehr als die Hälfte der anderen Teilnehmer von sich behaupten können.
 
-Professor Glück schwebt neben dir und klatscht so enthusiastisch, dass er sich im Kreis dreht. "BRILLIANT! Die Würfel haben dich AKZEPTIERT! In der Schwerelosigkeit zeigen sie ihr WAHRES Gesicht!" Rico, der mittlerweile grünlich aussieht und sich an einer Stange festhält: "Können wir BITTE zurück in die Schwerkraft? Mein Magen hat eine Petition eingereicht." Der Professor, sich immer noch drehend: "Schwerkraft ist ÜBERBEWERTET! Aber ja, gehen wir. Ich muss sowieso mein Oszilloskop kalibrieren. Es zeigt gerade 'Mittwoch' an, und das ist definitiv nicht richtig."`,
-        character: "🎓 Professor Glück",
+Schrifterz schwebt neben dir und klatscht so enthusiastisch, dass er sich im Kreis dreht. "BRILLIANT! Die Würfel haben dich AKZEPTIERT! In der Schwerelosigkeit zeigen sie ihr WAHRES Gesicht!" Crisio, der mittlerweile grünlich aussieht und sich an einer Stange festhält: "Können wir BITTE zurück in die Schwerkraft? Mein Magen hat eine Petition eingereicht." Der Professor, sich immer noch drehend: "Schwerkraft ist ÜBERBEWERTET! Aber ja, gehen wir. Ich muss sowieso mein Oszilloskop kalibrieren. Es zeigt gerade 'Mittwoch' an, und das ist definitiv nicht richtig."`,
+        character: "🎓 Schrifterz",
       },
     ],
   },
@@ -1295,7 +1295,7 @@ Ein Bibliothekar schwebt vorbei — ja, SCHWEBT, auf einer Leiter, die keinen Bo
         id: "c26s2",
         text: `Du durchstreifst die endlosen Gänge und suchst — oder eigentlich sucht das Buch DICH. Es springt dir buchstäblich in die Hände, als du um eine Ecke biegst. Ein mitteldickes Buch, Einband in einem Blau das die Farbe deiner Augen hat (oder deiner Seele, je nachdem welche blauer ist). Auf dem Rücken steht dein Name, und es ist WARM. Wie lebendig.
 
-Du schlägst es auf. Die ersten Seiten: "Kapitel 1: Die letzte Münze." Da ist alles. ALLES. Ricos erster Drink. Der Münzwurf. Der mysteriöse Umschlag. Jedes Wort, jedes Gefühl, jede Entscheidung, dokumentiert in einer Handschrift, die sich mit jeder Seite verändert — mal elegant, mal hektisch, mal zitternd, je nach dem was passiert ist. Du blätterst weiter, immer schneller, und das Buch wird DICKER während du liest, weil es in ECHTZEIT weiter schreibt.
+Du schlägst es auf. Die ersten Seiten: "Kapitel 1: Die letzte Münze." Da ist alles. ALLES. Crisios erster Drink. Der Münzwurf. Der mysteriöse Umschlag. Jedes Wort, jedes Gefühl, jede Entscheidung, dokumentiert in einer Handschrift, die sich mit jeder Seite verändert — mal elegant, mal hektisch, mal zitternd, je nach dem was passiert ist. Du blätterst weiter, immer schneller, und das Buch wird DICKER während du liest, weil es in ECHTZEIT weiter schreibt.
 
 Die aktuelle Seite: "Kapitel 26: Die Bibliothek der Verluste. Der Spieler liest sein eigenes Buch und fragt sich, ob das META ist oder einfach nur gruselig." Du schaust auf die Seite. Die Seite schaut zurück. Nicht wörtlich. Aber irgendwie... doch. "Meta," murmelst du. "Definitiv meta."`,
       },
@@ -1303,11 +1303,11 @@ Die aktuelle Seite: "Kapitel 26: Die Bibliothek der Verluste. Der Spieler liest 
         id: "c26s3",
         text: `Der Bibliothekar schwebt neben dir und räuspert sich mit der Autorität einer UNESCO-geschützten Institution. "Wenn Sie ein BESTIMMTES Buch suchen, müssen Sie den Katalog-Index konsultieren." Er zeigt auf ein massives Pult aus dunklem Holz, auf dem ein Buch liegt, das so dick ist, dass es vermutlich seine eigene Postleitzahl hat. "Allerdings..." Er senkt die Stimme. "...ist der Index VERSCHLÜSSELT. Aus Datenschutzgründen. Und aus Gründen des dramatischen Effekts."
 
-Du brauchst das Buch des Dealers. Sein Name, seine Geschichte, seine Schwächen — alles muss in SEINEM Buch stehen. Aber der Index-Code ist ein Sudoku-Gitter, komplex und verschachtelt, weil NATÜRLICH ist es das. Weil im CRISINO sogar die Bibliotheks-Kataloge ein Minispiel sind.
+Du brauchst das Buch Kurainus. Sein Name, seine Geschichte, seine Schwächen — alles muss in SEINEM Buch stehen. Aber der Index-Code ist ein Sudoku-Gitter, komplex und verschachtelt, weil NATÜRLICH ist es das. Weil im CRISINO sogar die Bibliotheks-Kataloge ein Minispiel sind.
 
-Professor Glück hat bereits seinen Laborkittel-Ärmel hochgekrempelt und studiert das Gitter. "Das ist ein 9er-Sudoku! Hoch-sicherheits-verschlüsselung! Oder ein Mittel-schweres Rätsel für meine Enkelin! Je nach Perspektive!" Er klopft dir auf die Schulter. "Finde den Eintrag des Dealers! Wenn jemand diesen Code knacken kann, dann... naja, dann vermutlich ein Computer, aber VERSUCH es trotzdem!"`,
-        character: "🎓 Professor Glück",
-        game: { type: "sudoku9", description: "Der Katalogindex ist verschlüsselt. Finde den Eintrag des Dealers!", mustWin: true, reward: 400 },
+Schrifterz hat bereits seinen Laborkittel-Ärmel hochgekrempelt und studiert das Gitter. "Das ist ein 9er-Sudoku! Hoch-sicherheits-verschlüsselung! Oder ein Mittel-schweres Rätsel für meine Enkelin! Je nach Perspektive!" Er klopft dir auf die Schulter. "Finde den Eintrag Kurainus! Wenn jemand diesen Code knacken kann, dann... naja, dann vermutlich ein Computer, aber VERSUCH es trotzdem!"`,
+        character: "🎓 Schrifterz",
+        game: { type: "sudoku9", description: "Der Katalogindex ist verschlüsselt. Finde den Eintrag Kurainus!", mustWin: true, reward: 400 },
       },
       {
         id: "c26s4",
@@ -1317,8 +1317,8 @@ Es ist schwarz. Komplett schwarz. Kein Name auf dem Rücken. Keine Verzierung. N
 
 "Der Chip kann nicht gewinnen und verlieren gleichzeitig. Oder doch?"
 
-Das war's. Die letzte Seite. Der letzte Satz. Und er stellt eine Frage, die alles in Frage stellt, was du bisher über den Goldenen Chip zu wissen glaubtest. Professor Glück liest über deine Schulter und wird STILL. Der Professor wird NIE still. Das ist das beunruhigendste Zeichen von allen.`,
-        character: "🎓 Professor Glück",
+Das war's. Die letzte Seite. Der letzte Satz. Und er stellt eine Frage, die alles in Frage stellt, was du bisher über den Goldenen Chip zu wissen glaubtest. Schrifterz liest über deine Schulter und wird STILL. Der Professor wird NIE still. Das ist das beunruhigendste Zeichen von allen.`,
+        character: "🎓 Schrifterz",
         giveItem: "Dealers Geheimnis",
       },
     ],
@@ -1333,41 +1333,41 @@ Das war's. Die letzte Seite. Der letzte Satz. Und er stellt eine Frage, die alle
     scenes: [
       {
         id: "c27s1",
-        text: `Zurück in der Himmelslounge. Die Stimmung ist anders jetzt. Die Sterne über dir scheinen weniger zu glitzern und mehr zu... beobachten. Der Champagner schmeckt nicht mehr nach Triumph, sondern nach Vorbereitung. Denn das hier ist der Moment, in dem du realisierst: Du kannst den Dealer NICHT alleine besiegen.
+        text: `Zurück in der Himmelslounge. Die Stimmung ist anders jetzt. Die Sterne über dir scheinen weniger zu glitzern und mehr zu... beobachten. Der Champagner schmeckt nicht mehr nach Triumph, sondern nach Vorbereitung. Denn das hier ist der Moment, in dem du realisierst: Du kannst Kurainu NICHT alleine besiegen.
 
-Du brauchst ein Team. Ein richtiges Team. Nicht nur Rico, der an der Bar motivierende Reden hält und dabei seinen eigenen Cocktail verschüttet. Nicht nur den Professor, der Servietten vollkritzelt und dabei jede zweite Gleichung mit einem Champagnerfleck ruiniert. Du brauchst ALLE. Rico, Kirsche (die dich seit Floor 2 über ihre Netzwerke unterstützt hat), und Professor Glück. Drei Verbündete. Drei Persönlichkeiten. Drei sehr spezifische Probleme.
+Du brauchst ein Team. Ein richtiges Team. Nicht nur Crisio, der an der Bar motivierende Reden hält und dabei seinen eigenen Cocktail verschüttet. Nicht nur den Professor, der Servietten vollkritzelt und dabei jede zweite Gleichung mit einem Champagnerfleck ruiniert. Du brauchst ALLE. Crisio, Arindy (die dich seit Floor 2 über ihre Netzwerke unterstützt hat), und Schrifterz. Drei Verbündete. Drei Persönlichkeiten. Drei sehr spezifische Probleme.
 
-"Okay," sagst du und legst die Hände auf den Tisch. "Wir müssen nach Floor 4. Zusammen. Als Team." Rico verschluckt sich an seinem Drink. Kirsche hebt eine Augenbraue über ihren Kommunikator. Der Professor sucht seine Brille. Sie ist auf seinem Kopf. "Klingt nach einem Plan!" sagt der Professor. "Oder nach einer Katastrophe! Beides aufregend!"`,
-        character: "🎓 Professor Glück",
+"Okay," sagst du und legst die Hände auf den Tisch. "Wir müssen nach Floor 4. Zusammen. Als Team." Crisio verschluckt sich an seinem Drink. Arindy hebt eine Augenbraue über ihren Kommunikator. Der Professor sucht seine Brille. Sie ist auf seinem Kopf. "Klingt nach einem Plan!" sagt der Professor. "Oder nach einer Katastrophe! Beides aufregend!"`,
+        character: "🎓 Schrifterz",
       },
       {
         id: "c27s2",
-        text: `Kirsche meldet sich über den Kommunikator, ihre Stimme knistert durch das kosmische Rauschen von Floor 3. "Du willst mich als Verbündete? Süß. Aber ich riskiere nicht meinen Hals für gute Absichten und ein charmantes Lächeln." Sie hält inne. "Okay, das Lächeln ist ein ARGUMENT, aber nicht genug. Beweis mir, dass du es ernst meinst. Am Pokertisch. Wie echte Erwachsene."
+        text: `Arindy meldet sich über den Kommunikator, ihre Stimme knistert durch das kosmische Rauschen von Floor 3. "Du willst mich als Verbündete? Süß. Aber ich riskiere nicht meinen Hals für gute Absichten und ein charmantes Lächeln." Sie hält inne. "Okay, das Lächeln ist ein ARGUMENT, aber nicht genug. Beweis mir, dass du es ernst meinst. Am Pokertisch. Wie echte Erwachsene."
 
-Rico stellt sich neben dich. "ICH bin auch noch da! Und ich brauche EBENFALLS Überzeugung! Ich meine — ich bin seit Kapitel 1 dabei, ich VERDIENE es, angemessen eingeladen zu werden! Nicht einfach nur 'Hey Rico, wir gehen den mächtigsten Typen im CRISINO herausfordern, komm mit!' — DAS reicht nicht!"
+Crisio stellt sich neben dich. "ICH bin auch noch da! Und ich brauche EBENFALLS Überzeugung! Ich meine — ich bin seit Kapitel 1 dabei, ich VERDIENE es, angemessen eingeladen zu werden! Nicht einfach nur 'Hey Crisio, wir gehen den mächtigsten Typen im CRISINO herausfordern, komm mit!' — DAS reicht nicht!"
 
-Also setzt du dich an den Pokertisch. Kirsche auf der einen Seite, Rico auf der anderen. Beide mit verschränkten Armen und dem Blick von Leuten, die ÜBERZEUGT werden wollen. "Jeder will einen Beweis, dass du es ernst meinst," sagt Kirsche. "Also ZEIG es uns. Am Tisch. Mit Karten. Wie zivilisierte Zocker."`,
-        character: "🍒 Kirsche",
+Also setzt du dich an den Pokertisch. Arindy auf der einen Seite, Crisio auf der anderen. Beide mit verschränkten Armen und dem Blick von Leuten, die ÜBERZEUGT werden wollen. "Jeder will einen Beweis, dass du es ernst meinst," sagt Arindy. "Also ZEIG es uns. Am Tisch. Mit Karten. Wie zivilisierte Zocker."`,
+        character: "🍒 Arindy",
         game: { type: "poker", description: "Jeder will einen Beweis dass du es ernst meinst.", reward: 350 },
       },
       {
         id: "c27s3",
-        text: `Der Professor sitzt abseits und kramt in seinen Taschen. Er zieht nacheinander hervor: drei Servietten, ein halbes Brötchen, einen Schraubenzieher, eine Batterie, und etwas das aussieht wie ein getrockneter Seestern aber vermutlich eine Antenne ist. "ICH? Ich bin dabei! Natürlich bin ich dabei! Das ist MEIN Chip! Den ich gebaut habe! In meiner Garage! Mit—" "—Schnaps, ja, wir wissen," unterbricht Rico.
+        text: `Der Professor sitzt abseits und kramt in seinen Taschen. Er zieht nacheinander hervor: drei Servietten, ein halbes Brötchen, einen Schraubenzieher, eine Batterie, und etwas das aussieht wie ein getrockneter Seestern aber vermutlich eine Antenne ist. "ICH? Ich bin dabei! Natürlich bin ich dabei! Das ist MEIN Chip! Den ich gebaut habe! In meiner Garage! Mit—" "—Schnaps, ja, wir wissen," unterbricht Crisio.
 
 "ABER," der Professor hebt einen Finger, "ich habe ein kleines Problem. Ich habe nämlich... äh... VERGESSEN... was genau mein Plan war." Stille. "Nicht den GANZEN Plan! Nur... die Details. Und die Reihenfolge. Und möglicherweise den Plan selbst." Noch mehr Stille. "ABER ich habe ihn AUFGESCHRIEBEN! Irgendwo! Auf einer Serviette! Oder mehreren! Das Problem ist..." Er schaut auf den Berg Servietten vor sich. "...ich habe SEHR viele Servietten."
 
-Du musst dem Professor helfen, sich an seinen eigenen Plan zu erinnern. Und das geht am besten mit einem Gedächtnistest — denn wenn DU die Informationen findest, kann ER sie zusammensetzen. Hoffentlich. "Hilf dem Professor sich an seinen eigenen Plan zu erinnern!" sagt Rico sarkastisch. "Das ist wie einen Fisch zum Schwimmen animieren. Der Fisch kann es theoretisch, hat aber vergessen WIE."`,
-        character: "🎓 Professor Glück",
+Du musst dem Professor helfen, sich an seinen eigenen Plan zu erinnern. Und das geht am besten mit einem Gedächtnistest — denn wenn DU die Informationen findest, kann ER sie zusammensetzen. Hoffentlich. "Hilf dem Professor sich an seinen eigenen Plan zu erinnern!" sagt Crisio sarkastisch. "Das ist wie einen Fisch zum Schwimmen animieren. Der Fisch kann es theoretisch, hat aber vergessen WIE."`,
+        character: "🎓 Schrifterz",
         game: { type: "memory", description: "Hilf dem Professor sich an seinen eigenen Plan zu erinnern!", reward: 300 },
       },
       {
         id: "c27s4",
-        text: `Die Servietten sind sortiert. Der Plan ist rekonstruiert. Kirsche ist überzeugt. Rico ist motiviert (oder betrunken genug um mutig zu sein, was funktional dasselbe ist). Professor Glück hat seine Gleichungen wieder zusammen und strahlt wie ein Kind am Weihnachtsmorgen — ein Kind das gerade den Bauplan für eine Zeitmaschine geschenkt bekommen hat.
+        text: `Die Servietten sind sortiert. Der Plan ist rekonstruiert. Arindy ist überzeugt. Crisio ist motiviert (oder betrunken genug um mutig zu sein, was funktional dasselbe ist). Schrifterz hat seine Gleichungen wieder zusammen und strahlt wie ein Kind am Weihnachtsmorgen — ein Kind das gerade den Bauplan für eine Zeitmaschine geschenkt bekommen hat.
 
-"Das TEAM steht!" Rico hebt sein Glas. "Auf die verrückteste Gruppe von Idioten, die je versucht hat, das CRISINO zu bezwingen!" Kirsche hebt ebenfalls ihr Glas, über den Kommunikator, was logistisch fragwürdig aber emotional einwandfrei ist. Der Professor hebt... eine Serviette. "Auf die WISSENSCHAFT! Und den Schnaps! Und den goldenen Chip! In genau dieser Reihenfolge!"
+"Das TEAM steht!" Crisio hebt sein Glas. "Auf die verrückteste Gruppe von Idioten, die je versucht hat, das CRISINO zu bezwingen!" Arindy hebt ebenfalls ihr Glas, über den Kommunikator, was logistisch fragwürdig aber emotional einwandfrei ist. Der Professor hebt... eine Serviette. "Auf die WISSENSCHAFT! Und den Schnaps! Und den goldenen Chip! In genau dieser Reihenfolge!"
 
-"Das ist entweder der beste oder der dümmste Plan den ich je gehört habe," sagt Rico und nimmt einen langen Schluck. "Beides motiviert mich." Er stellt das Glas ab. "Floor 4. Der Dealer. Der Goldene Chip." Er atmet tief ein. "Entweder wir kommen als Legenden zurück... oder als sehr unterhaltsame Warnung für alle, die nach uns kommen." Der Professor klatscht begeistert. "BEIDES wäre ein akzeptables Ergebnis! Für die Wissenschaft!"`,
-        character: "🦊 Rico",
+"Das ist entweder der beste oder der dümmste Plan den ich je gehört habe," sagt Crisio und nimmt einen langen Schluck. "Beides motiviert mich." Er stellt das Glas ab. "Floor 4. Kurainu. Der Goldene Chip." Er atmet tief ein. "Entweder wir kommen als Legenden zurück... oder als sehr unterhaltsame Warnung für alle, die nach uns kommen." Der Professor klatscht begeistert. "BEIDES wäre ein akzeptables Ergebnis! Für die Wissenschaft!"`,
+        character: "🦊 Crisio",
       },
     ],
   },
@@ -1385,25 +1385,25 @@ Du musst dem Professor helfen, sich an seinen eigenen Plan zu erinnern. Und das 
 
 Dann gehen die Lichter aus. KOMPLETT. Schwarz wie ein Schwarzes Loch in einem dunklen Raum um Mitternacht. Für drei Herzschläge ist nur Stille. Dann: ROTE LASER. Hunderte davon. Sie schneiden durch die Dunkelheit wie Lichtschwerter auf einer Rave-Party und bilden ein Netz aus Licht, das euch einschließt wie Fliegen in einem Spinnennetz aus Photonen.
 
-"IHR SEID UMZINGELT!" Die Stimme kommt von überall und nirgends gleichzeitig, verstärkt durch Lautsprecher, die so viel Bass haben, dass deine Organe in alphabetischer Reihenfolge vibrieren. "IM NAMEN DES DEALERS! LEGT EURE CHIPS NIEDER! WIDERSTAND IST... naja... MÜHSAM!" Aus den Schatten treten Gestalten — die Elite-Garde des Dealers. Schwarze Anzüge, rote Sonnenbrillen, und jeder einzelne hat die emotionale Wärme eines Tiefkühlschranks.`,
+"IHR SEID UMZINGELT!" Die Stimme kommt von überall und nirgends gleichzeitig, verstärkt durch Lautsprecher, die so viel Bass haben, dass deine Organe in alphabetischer Reihenfolge vibrieren. "IM NAMEN DES DEALERS! LEGT EURE CHIPS NIEDER! WIDERSTAND IST... naja... MÜHSAM!" Aus den Schatten treten Gestalten — die Elite-Garde Kurainus. Schwarze Anzüge, rote Sonnenbrillen, und jeder einzelne hat die emotionale Wärme eines Tiefkühlschranks.`,
       },
       {
         id: "c28s2",
-        text: `Es sind mindestens ein Dutzend. Vielleicht mehr. In der Dunkelheit mit den Lasern ist es schwer zu zählen, und Rico zählt sowieso nicht mit weil er zu beschäftigt ist, hinter dir in Deckung zu gehen. Der Professor scheint die Situation am WENIGSTEN beunruhigend zu finden — er mustert die Laser mit wissenschaftlichem Interesse und murmelt etwas über "Wellenlängen" und "minderwertige Optik."
+        text: `Es sind mindestens ein Dutzend. Vielleicht mehr. In der Dunkelheit mit den Lasern ist es schwer zu zählen, und Crisio zählt sowieso nicht mit weil er zu beschäftigt ist, hinter dir in Deckung zu gehen. Der Professor scheint die Situation am WENIGSTEN beunruhigend zu finden — er mustert die Laser mit wissenschaftlichem Interesse und murmelt etwas über "Wellenlängen" und "minderwertige Optik."
 
-Kirsche meldet sich über den Kommunikator, und ihre Stimme hat den Tonfall von jemandem, der deutlich Schlimmeres erwartet hatte. "Ich hab mit Schlimmerem gerechnet. Zum Beispiel mit dem Kantinenessen." Eine Pause. "Oder mit der Buchhaltungsabteilung. Die sind WIRKLICH furchteinflößend." Selbst jetzt, EINGEKESSELT von der Elite-Garde des größten Antagonisten des CRISINOs, schafft Kirsche es, eine kulinarische Bewertung abzugeben. Das ist eine Art Talent.
+Arindy meldet sich über den Kommunikator, und ihre Stimme hat den Tonfall von jemandem, der deutlich Schlimmeres erwartet hatte. "Ich hab mit Schlimmerem gerechnet. Zum Beispiel mit dem Kantinenessen." Eine Pause. "Oder mit der Buchhaltungsabteilung. Die sind WIRKLICH furchteinflößend." Selbst jetzt, EINGEKESSELT von der Elite-Garde des größten Antagonisten des CRISINOs, schafft Arindy es, eine kulinarische Bewertung abzugeben. Das ist eine Art Talent.
 
-Der Anführer der Garde tritt vor. Er ist größer als die anderen, breiter als die anderen, und seine Sonnenbrille ist roter als die anderen. "Der Dealer hat eine Nachricht für euch," sagt er mit einer Stimme so tief, dass seismographische Instrumente anschlagen. "Die Nachricht lautet: 'Nein.'" Effizient. Prägnant. Bedrohlich.`,
-        character: "🍒 Kirsche",
+Der Anführer der Garde tritt vor. Er ist größer als die anderen, breiter als die anderen, und seine Sonnenbrille ist roter als die anderen. "Kurainu hat eine Nachricht für euch," sagt er mit einer Stimme so tief, dass seismographische Instrumente anschlagen. "Die Nachricht lautet: 'Nein.'" Effizient. Prägnant. Bedrohlich.`,
+        character: "🍒 Arindy",
       },
       {
         id: "c28s3",
-        text: `Professor Glück tritt vor. Die Garde richtet ihre Laser auf ihn. Er ignoriert sie mit der Gelassenheit eines Mannes, der in seinem Leben deutlich gefährlichere Dinge getan hat — zum Beispiel Quantenphysik-Experimente in einer Garage mit Schnaps. "WARTEN SIE!" ruft er und zieht seine Servietten hervor. "Ich habe einen GEGENVORSCHLAG! Statt Gewalt — die so unelegant ist wie ein Paar Socken in Sandalen — schlage ich vor: ROULETTE!"
+        text: `Schrifterz tritt vor. Die Garde richtet ihre Laser auf ihn. Er ignoriert sie mit der Gelassenheit eines Mannes, der in seinem Leben deutlich gefährlichere Dinge getan hat — zum Beispiel Quantenphysik-Experimente in einer Garage mit Schnaps. "WARTEN SIE!" ruft er und zieht seine Servietten hervor. "Ich habe einen GEGENVORSCHLAG! Statt Gewalt — die so unelegant ist wie ein Paar Socken in Sandalen — schlage ich vor: ROULETTE!"
 
 Die Garde starrt ihn an. Der Anführer starrt ihn an. ALLE starren ihn an. "ROULETTE?!" wiederholt der Anführer ungläubig. "Das ist ein CASINO!" erklärt der Professor, als wäre das das offensichtlichste Argument der Welt. "Hier wird ALLES am Spieltisch gelöst! Das ist REGEL EINS! Steht wahrscheinlich irgendwo geschrieben! Auf einer meiner Servietten! Gewinne das Ablenkungsmanöver! Drei Wetten, drei Chancen!"
 
 Und dann — weil das CRISINO das CRISINO ist — materialisiert sich tatsächlich ein Roulette-Tisch. Mitten im dunklen Korridor. Zwischen den Lasern. Die Garde schaut verwirrt. Der Anführer schaut auf den Tisch. Auf die Garde. Auf den Tisch. "...FEIN!" sagt er schließlich. "Aber NUR drei Runden!"`,
-        character: "🎓 Professor Glück",
+        character: "🎓 Schrifterz",
         game: { type: "roulette", description: "Gewinne das Ablenkungsmanöver! Drei Wetten, drei Chancen!", reward: 400 },
       },
       {
@@ -1412,8 +1412,8 @@ Und dann — weil das CRISINO das CRISINO ist — materialisiert sich tatsächli
 
 Die Garde ist VERWIRRT. Nicht "leicht irritiert" verwirrt, sondern "existentiell desorientiert" verwirrt. Sie schauen sich an, schauen auf den Roulette-Tisch, schauen auf ihre Laser, und scheinen kollektiv zu vergessen, warum sie eigentlich hier sind. Der Professor nutzt den Moment und aktiviert etwas an seinem Oszilloskop — die Lichter flackern, die Laser gehen aus, und ein Notausgang öffnet sich in der Wand, von dem NIEMAND wusste, dass er existiert.
 
-"ICH HAB DEN AUCH GEBAUT!" ruft der Professor, während ihr durch die Öffnung rennt. "VOR 40 JAHREN! FÜR GENAU SOLCHE GELEGENHEITEN!" Rico rennt als Erster. Kirsche dirigiert über den Kommunikator: "Links! LINKS! Nein, EUER links! Seid ihr alle GEOGRAPHISCH HERAUSGEFORDERT?!" Die Garde versucht zu folgen, aber der Roulette-Tisch blockiert den Korridor. Logik ist optional auf Floor 3. Und heute arbeitet sie zu euren Gunsten.`,
-        character: "🎓 Professor Glück",
+"ICH HAB DEN AUCH GEBAUT!" ruft der Professor, während ihr durch die Öffnung rennt. "VOR 40 JAHREN! FÜR GENAU SOLCHE GELEGENHEITEN!" Crisio rennt als Erster. Arindy dirigiert über den Kommunikator: "Links! LINKS! Nein, EUER links! Seid ihr alle GEOGRAPHISCH HERAUSGEFORDERT?!" Die Garde versucht zu folgen, aber der Roulette-Tisch blockiert den Korridor. Logik ist optional auf Floor 3. Und heute arbeitet sie zu euren Gunsten.`,
+        character: "🎓 Schrifterz",
       },
     ],
   },
@@ -1431,17 +1431,17 @@ Die Garde ist VERWIRRT. Nicht "leicht irritiert" verwirrt, sondern "existentiell
 
 Die Brücke besteht aus einzelnen Glasfliesen, und jede Fliese leuchtet in einem anderen Rhythmus — manche pulsieren langsam wie ein ruhiger Herzschlag, manche flackern hektisch wie eine Diskokugel mit Koffeinsucht. Und hier ist das DETAIL: nicht alle Fliesen sind FEST. Manche sind Hologramme. Perfekte, wunderschöne, absolut überzeugend ECHTE Hologramme. Die nichts tragen. Weil sie nicht DA sind.
 
-Rico schaut über den Rand und wird SOFORT drei Farbtöne blasser. "Das ist... das ist ein SEHR langer Weg nach unten. Falls es ein 'unten' gibt." Er schluckt. "Und falls nicht, ist es ein SEHR langer Weg ins NICHTS, was irgendwie SCHLIMMER ist."`,
-        character: "🦊 Rico",
+Crisio schaut über den Rand und wird SOFORT drei Farbtöne blasser. "Das ist... das ist ein SEHR langer Weg nach unten. Falls es ein 'unten' gibt." Er schluckt. "Und falls nicht, ist es ein SEHR langer Weg ins NICHTS, was irgendwie SCHLIMMER ist."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c29s2",
-        text: `Professor Glück tritt an den Rand der Brücke und studiert die leuchtenden Fliesen mit der Intensität eines Mannes, der gerade sein eigenes Lebenswerk wiedererkennt — und GLEICHZEITIG realisiert, dass er ein entscheidendes Detail vergessen hat.
+        text: `Schrifterz tritt an den Rand der Brücke und studiert die leuchtenden Fliesen mit der Intensität eines Mannes, der gerade sein eigenes Lebenswerk wiedererkennt — und GLEICHZEITIG realisiert, dass er ein entscheidendes Detail vergessen hat.
 
 "ICH HAB DIE BRÜCKE GEBAUT!" verkündet er mit einer Mischung aus Stolz und Panik. "Vor 30 Jahren! Als Sicherheitsmaßnahme! Nur wer das MUSTER kennt, kommt rüber! Die Hologramm-Fliesen sehen IDENTISCH aus wie die echten, aber sie reagieren auf ein Muster! Ein Muster das ich persönlich entworfen habe! Ein BRILLANTES Muster!" Er strahlt. Dann hört er auf zu strahlen. "Die Lösung ist... äh..." Er kramt in seinen Taschen. Servietten fliegen. "...ich hab sie... äh... VERGESSEN."
 
-Die Stille ist ohrenbetäubend. Rico starrt den Professor an. Du starrst den Professor an. Selbst der Abgrund scheint zu starren. "Sie haben eine TÖDLICHE Brücke über einen BODENLOSEN Abgrund gebaut... und die Lösung VERGESSEN?!" Ricos Stimme erreicht eine Tonlage die normalerweise Hunden vorbehalten ist. Der Professor zuckt die Schultern mit der Unbeschwertheit eines Mannes, der schon viel Schlimmeres vergessen hat. "Aber DU schaffst das! Du hast ein GEFÜHL für Muster! Ich hab das gesehen! In meinen... äh... in meinem Gefühl!"`,
-        character: "🎓 Professor Glück",
+Die Stille ist ohrenbetäubend. Crisio starrt den Professor an. Du starrst den Professor an. Selbst der Abgrund scheint zu starren. "Sie haben eine TÖDLICHE Brücke über einen BODENLOSEN Abgrund gebaut... und die Lösung VERGESSEN?!" Crisios Stimme erreicht eine Tonlage die normalerweise Hunden vorbehalten ist. Der Professor zuckt die Schultern mit der Unbeschwertheit eines Mannes, der schon viel Schlimmeres vergessen hat. "Aber DU schaffst das! Du hast ein GEFÜHL für Muster! Ich hab das gesehen! In meinen... äh... in meinem Gefühl!"`,
+        character: "🎓 Schrifterz",
       },
       {
         id: "c29s3",
@@ -1456,10 +1456,10 @@ Du atmest tief ein. Die Fliesen blinken. Blau-Gold-Gold-Blau-Gold-Blau-Blau... o
         id: "c29s4",
         text: `Der letzte Schritt. Dein Fuß berührt die Fliese auf der anderen Seite. Sie leuchtet GOLD — echtes, festes, wunderschönes Gold — und hält. Du stehst auf der anderen Seite. HEIL. Ganz. Unfragmentiert. Die Brücke hinter dir dimmt ihre Lichter, als würde sie dich verabschieden, und die Hologramm-Fliesen flackern ein letztes Mal bevor sie verschwinden.
 
-Rico RENNT über die Brücke — auf den GLEICHEN Fliesen, auf denen du gerade warst, weil er sich gemerkt hat wo du hingetreten bist, was ehrlich gesagt die cleverste Sache ist, die Rico je getan hat. Der Professor folgt, wobei er gleichzeitig rennt und Notizen macht, was in einer Koordinationsleistung resultiert, die nur durch jahrzehntelange Übung im Multitasking-Wahnsinn möglich ist.
+Crisio RENNT über die Brücke — auf den GLEICHEN Fliesen, auf denen du gerade warst, weil er sich gemerkt hat wo du hingetreten bist, was ehrlich gesagt die cleverste Sache ist, die Crisio je getan hat. Der Professor folgt, wobei er gleichzeitig rennt und Notizen macht, was in einer Koordinationsleistung resultiert, die nur durch jahrzehntelange Übung im Multitasking-Wahnsinn möglich ist.
 
 Vor euch: eine Tür. Nicht irgendeine Tür — DIE Tür. Massiv, aus einem Material das aussieht wie verdichtetes Sternenlicht, mit einer einzelnen Kartenöffnung in der Mitte. Darüber, in Buchstaben die langsam zwischen Gold und Rot wechseln: "FLOOR 4 — NUR FÜR AUTORISIERTES PERSONAL. UND FÜR WAHNSINNIGE MIT EINER SCHLÜSSELKARTE." In der Kartenöffnung blinkt ein Licht. Grün. Wartend. Der Professor grinst. "Ich hab die Tür AUCH gebaut! Und die Schlüsselkarte generiert sich automatisch für jeden, der die Brücke überquert!" Er hält inne. "...hoffe ich. Es sind 30 Jahre vergangen. Software-Updates gab es keine."`,
-        character: "🎓 Professor Glück",
+        character: "🎓 Schrifterz",
         giveItem: "Schlüsselkarte Floor 4",
       },
     ],
@@ -1474,21 +1474,21 @@ Vor euch: eine Tür. Nicht irgendeine Tür — DIE Tür. Massiv, aus einem Mater
     scenes: [
       {
         id: "c30s1",
-        text: `Die Schlüsselkarte gleitet in den Slot. Ein Summen. Ein Klicken. Die Tür schwingt auf — und dahinter steht nicht der Dealer. Noch nicht. Stattdessen stehen dort ZWEI Personen, und sie sind so identisch, dass dein Gehirn kurz einen Neustart macht. Dieselbe Größe, dieselbes Gesicht, dieselbe makellose Eleganz. Aber die FARBEN: einer trägt Weiß — strahlend, blendend, fast schmerzhaft weiß, von den Schuhen über den Anzug bis zum Zylinder. Der andere trägt Schwarz — so tief und absolut schwarz, dass er die Schatten um sich herum dunkler macht.
+        text: `Die Schlüsselkarte gleitet in den Slot. Ein Summen. Ein Klicken. Die Tür schwingt auf — und dahinter steht nicht Kurainu. Noch nicht. Stattdessen stehen dort ZWEI Personen, und sie sind so identisch, dass dein Gehirn kurz einen Neustart macht. Dieselbe Größe, dieselbes Gesicht, dieselbe makellose Eleganz. Aber die FARBEN: einer trägt Weiß — strahlend, blendend, fast schmerzhaft weiß, von den Schuhen über den Anzug bis zum Zylinder. Der andere trägt Schwarz — so tief und absolut schwarz, dass er die Schatten um sich herum dunkler macht.
 
 Sie stehen symmetrisch, wie eine Reflexion an einer unsichtbaren Achse, und als sie sprechen, tun sie es abwechselnd, wie ein perfekt choreographiertes Duett: "Ich bin Glück." Weiß. "Und ich bin Pech." Schwarz. "Einer von uns sagt immer die Wahrheit." "Und einer lügt immer." Sie lächeln. Gleichzeitig. Dasselbe Lächeln. Auf denselben Gesichtern. "Oder lügen wir BEIDE gerade?" Pause. "Wer weiß?" Beide zucken die Schultern. SYNCHRON.
 
-Professor Glück — der ECHTE Glück, mit Laborkittel und Champagnerfleck — wird KREIDEBLEICH. "Oh nein. Die ZWILLINGE. Ich hab gehofft, der Dealer hat sie nicht gefunden..." Er schluckt. "Sie sind... naja... sie sind NICHT von hier. Und mit 'hier' meine ich... die Realität. Mehr oder weniger."`,
-        character: "🎓 Professor Glück",
+Schrifterz — der ECHTE Glück, mit Laborkittel und Champagnerfleck — wird KREIDEBLEICH. "Oh nein. Die ZWILLINGE. Ich hab gehofft, Kurainu hat sie nicht gefunden..." Er schluckt. "Sie sind... naja... sie sind NICHT von hier. Und mit 'hier' meine ich... die Realität. Mehr oder weniger."`,
+        character: "🎓 Schrifterz",
       },
       {
         id: "c30s2",
         text: `Die Zwillinge setzen sich an einen Pokertisch — gleichzeitig, spiegelverkehrt, mit der Präzision von Uhren die aus derselben Fabrik kommen. Glück auf der linken Seite, Pech auf der rechten. Oder umgekehrt. Das ist ja das PROBLEM — man weiß es nie.
 
-"Wir teilen uns eine Hand," erklärt Glück (Weiß). Oder ist es Pech? "Einer von uns spielt." "Der andere berät." "Aber WESSEN Rat kannst du trauen?" Sie lachen. Synchron. Exakt derselbe Ton, dieselbe Länge, derselbe Zeitpunkt. Es ist das Unheimlichste, das du je gehört hast, und du hast Ricos Karaoke-Abend überlebt.
+"Wir teilen uns eine Hand," erklärt Glück (Weiß). Oder ist es Pech? "Einer von uns spielt." "Der andere berät." "Aber WESSEN Rat kannst du trauen?" Sie lachen. Synchron. Exakt derselbe Ton, dieselbe Länge, derselbe Zeitpunkt. Es ist das Unheimlichste, das du je gehört hast, und du hast Crisios Karaoke-Abend überlebt.
 
-Rico tritt nervös von einem Fuß auf den anderen. "Können die... LESEN sie sich gegenseitig? Wissen die was der andere denkt?" Glück und Pech drehen sich GLEICHZEITIG zu Rico und sagen im Chor: "JA." Dann: "NEIN." Dann wieder: "VIELLEICHT." Und dann, als wäre es das Natürlichste der Welt: "Willst DU es herausfinden?" Rico: "NEIN. Definitiv NEIN. Hundertprozentig NEIN."`,
-        character: "🦊 Rico",
+Crisio tritt nervös von einem Fuß auf den anderen. "Können die... LESEN sie sich gegenseitig? Wissen die was der andere denkt?" Glück und Pech drehen sich GLEICHZEITIG zu Crisio und sagen im Chor: "JA." Dann: "NEIN." Dann wieder: "VIELLEICHT." Und dann, als wäre es das Natürlichste der Welt: "Willst DU es herausfinden?" Crisio: "NEIN. Definitiv NEIN. Hundertprozentig NEIN."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c30s3",
@@ -1534,7 +1534,7 @@ Die Gestalt löst sich auf. Wie Rauch. Wie ein Traum. Wie eine Erinnerung an etw
         id: "c31s1",
         text: `Floor 4. Die Aufzugtüren öffnen sich — und du wirst GEBLENDET. Nicht metaphorisch. BUCHSTÄBLICH. Alles ist GOLD. Die Wände: Gold. Der Boden: Gold. Die Decke: Gold, mit einem Kronleuchter aus — du ahnst es — NOCH MEHR GOLD. Selbst die Luft scheint golden, als würde jemand Goldstaub durch die Belüftung blasen. Was wahrscheinlich genau das ist, was passiert.
 
-Rico setzt seine Sonnenbrille auf. "Alter. Das ist... das ist wie der Goldrausch und Versailles ein Kind bekommen hätten, das komplett den Verstand verloren hat." Er berührt die Wand. "Ist das ECHTES Gold?!" Pause. "Natürlich ist das echtes Gold. Warum frage ich überhaupt."
+Crisio setzt seine Sonnenbrille auf. "Alter. Das ist... das ist wie der Goldrausch und Versailles ein Kind bekommen hätten, das komplett den Verstand verloren hat." Er berührt die Wand. "Ist das ECHTES Gold?!" Pause. "Natürlich ist das echtes Gold. Warum frage ich überhaupt."
 
 Dann — eine Stimme. Von überall und nirgendwo gleichzeitig. Ruhig, samtweich, mit einem Hauch von Belustigung. Wie jemand, der einen Witz kennt, den der Rest der Welt noch nicht verstanden hat.
 
@@ -1544,21 +1544,21 @@ Dann — eine Stimme. Von überall und nirgendwo gleichzeitig. Ruhig, samtweich,
         id: "c31s2",
         text: `Du drehst dich um. Einmal. Zweimal. Die Stimme hat keinen Ursprung — sie IST der Raum. Oder der Raum ist sie. Was auch immer das bedeutet.
 
-Dann bemerkt Rico die Bildschirme. Dutzende, eingelassen in die goldenen Wände, so nahtlos, dass sie wie magische Fenster wirken. Und auf jedem Bildschirm: DU. Dein erster Münzwurf mit Rico. Dein Poker gegen Sam den Schakal. Der Moment, als du den USB-Stick von Kirsche bekommen hast. Jeder Kampf, jede Entscheidung, jede Niederlage und jeder Sieg — in kristallklarer Auflösung, aus Winkeln, die UNMÖGLICH sein sollten.
+Dann bemerkt Crisio die Bildschirme. Dutzende, eingelassen in die goldenen Wände, so nahtlos, dass sie wie magische Fenster wirken. Und auf jedem Bildschirm: DU. Dein erster Münzwurf mit Crisio. Dein Poker gegen Sam den Schakal. Der Moment, als du den USB-Stick von Arindy bekommen hast. Jeder Kampf, jede Entscheidung, jede Niederlage und jeder Sieg — in kristallklarer Auflösung, aus Winkeln, die UNMÖGLICH sein sollten.
 
 "Ich habe jede Sekunde gesehen," sagt die Stimme. Kein Triumph, keine Drohung — nur eine Feststellung. Wie jemand, der das Wetter beschreibt. "Jede Karte, die du gespielt hast. Jede Münze, die du geworfen hast. Jedes Risiko, das du eingegangen bist. Beeindruckend. Wirklich."
 
-Rico: "Das ist entweder schmeichelhaft oder EXTREM gruselig." Pause. "Okay, hauptsächlich gruselig."`,
-        character: "🦊 Rico",
+Crisio: "Das ist entweder schmeichelhaft oder EXTREM gruselig." Pause. "Okay, hauptsächlich gruselig."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c31s3",
         text: `Die Stimme lacht leise. Ein warmes Lachen, das nicht zu einem Schurken passt. "Bevor wir uns treffen... zeig mir, dass du es verdienst. Ein letztes Spiel, bevor die goldene Tür sich öffnet."
 
-Ein Spielautomat fährt aus dem Boden — natürlich aus purem Gold, mit Walzen, die wie geschmolzenes Sonnenlicht leuchten. Jedes Symbol darauf: ein Moment deiner Reise. Rico als Symbol. Der Chip. Die Münze von Glück & Pech. Dein eigenes Gesicht.
+Ein Spielautomat fährt aus dem Boden — natürlich aus purem Gold, mit Walzen, die wie geschmolzenes Sonnenlicht leuchten. Jedes Symbol darauf: ein Moment deiner Reise. Crisio als Symbol. Der Chip. Die Münze von Glück & Pech. Dein eigenes Gesicht.
 
 "Die Einsätze sind hoch. Aber das waren sie immer, oder?"`,
-        game: { type: "slots", description: "Der goldene Automat — High Stakes im Penthouse des Dealers!", mustWin: true, reward: 500 },
+        game: { type: "slots", description: "Der goldene Automat — High Stakes im Penthouse Kurainus!", mustWin: true, reward: 500 },
       },
       {
         id: "c31s4",
@@ -1568,7 +1568,7 @@ Eine goldene Tür, die du vorher NICHT gesehen hast — weil sie Teil der Wand w
 
 "Gut." Die Stimme, näher jetzt, fast greifbar. "Komm rein."
 
-Rico schluckt. Du schluckst. Sogar die goldenen Wände scheinen den Atem anzuhalten.`,
+Crisio schluckt. Du schluckst. Sogar die goldenen Wände scheinen den Atem anzuhalten.`,
       },
     ],
   },
@@ -1582,34 +1582,34 @@ Rico schluckt. Du schluckst. Sogar die goldenen Wände scheinen den Atem anzuhal
     scenes: [
       {
         id: "c32s1",
-        text: `Rico hat die Küche gefunden. Natürlich hat er die Küche gefunden. In einem Penthouse voller goldener Geheimnisse, versteckter Räume und kosmischer Mysterien hat Rico — mit der unfehlbaren Intuition eines Mannes, der Prioritäten hat — die KÜCHE gefunden. Und nicht irgendeine Küche: eine goldene Profi-Küche mit Geräten, von denen die meisten noch nicht einmal erfunden sein sollten.
+        text: `Crisio hat die Küche gefunden. Natürlich hat er die Küche gefunden. In einem Penthouse voller goldener Geheimnisse, versteckter Räume und kosmischer Mysterien hat Crisio — mit der unfehlbaren Intuition eines Mannes, der Prioritäten hat — die KÜCHE gefunden. Und nicht irgendeine Küche: eine goldene Profi-Küche mit Geräten, von denen die meisten noch nicht einmal erfunden sein sollten.
 
-"Wenn das unser letztes Abenteuer ist, dann mit vollem Magen!" verkündet er, während er eine Schürze anzieht, die verdächtig nach dem Dealer riecht — Sandelholz und Macht. Er wirbelt ein Messer durch die Luft wie ein Koch-Ninja und beginnt, Zutaten aus goldenen Schränken zu ziehen. "Flambiertes Steak auf Trüffel-Risotto mit Goldblatt-Garnierung? Oder Lobster Thermidor mit Champagner-Schaum? Oder BEIDES? Beides. Definitiv beides."
+"Wenn das unser letztes Abenteuer ist, dann mit vollem Magen!" verkündet er, während er eine Schürze anzieht, die verdächtig nach Kurainu riecht — Sandelholz und Macht. Er wirbelt ein Messer durch die Luft wie ein Koch-Ninja und beginnt, Zutaten aus goldenen Schränken zu ziehen. "Flambiertes Steak auf Trüffel-Risotto mit Goldblatt-Garnierung? Oder Lobster Thermidor mit Champagner-Schaum? Oder BEIDES? Beides. Definitiv beides."
 
-Irgendwo im Hintergrund seufzt die Stimme des Dealers. Fast... amüsiert.`,
-        character: "🦊 Rico",
+Irgendwo im Hintergrund seufzt die Stimme Kurainus. Fast... amüsiert.`,
+        character: "🦊 Crisio",
       },
       {
         id: "c32s2",
-        text: `Der Tisch ist gedeckt. Goldenes Geschirr — offensichtlich. Aber die Gesellschaft ist das Bemerkenswerte: Rico am Kopfende, mit einer Kochmütze aus einer goldenen Serviette. Brutus — JA, BRUTUS, der Türsteher — sitzt am anderen Ende und liest Kierkegaard. Mit einer Lesebrille. Er sieht aus wie ein philosophischer Grizzlybär auf einem Buchclub-Treffen.
+        text: `Der Tisch ist gedeckt. Goldenes Geschirr — offensichtlich. Aber die Gesellschaft ist das Bemerkenswerte: Crisio am Kopfende, mit einer Kochmütze aus einer goldenen Serviette. Wolfkampf — JA, BRUTUS, der Türsteher — sitzt am anderen Ende und liest Kierkegaard. Mit einer Lesebrille. Er sieht aus wie ein philosophischer Grizzlybär auf einem Buchclub-Treffen.
 
-"Die Absurdität des gemeinsamen Essens vor dem Ungewissen," murmelt Brutus, ohne aufzusehen. "Camus hätte das gemocht." Er nimmt einen Bissen Risotto. Seine Augen werden feucht. "Das... das ist das Beste, was ich je gegessen habe." Rico strahlt: "ENDLICH erkennt jemand mein Talent!"
+"Die Absurdität des gemeinsamen Essens vor dem Ungewissen," murmelt Wolfkampf, ohne aufzusehen. "Camus hätte das gemocht." Er nimmt einen Bissen Risotto. Seine Augen werden feucht. "Das... das ist das Beste, was ich je gegessen habe." Crisio strahlt: "ENDLICH erkennt jemand mein Talent!"
 
-${"`"}Und da ist noch jemand — je nachdem, wen du als Verbündeten gewonnen hast, sitzt hier entweder Agent Kirsche, die nervös an ihrem Champagner nippt, oder Professor Glück, der mit einer Gabel auf dem Teller Gleichungen zeichnet. Oder beide. Das Penthouse hat genug Stühle.${"`"}
+${"`"}Und da ist noch jemand — je nachdem, wen du als Verbündeten gewonnen hast, sitzt hier entweder Arindy, die nervös an ihrem Champagner nippt, oder Schrifterz, der mit einer Gabel auf dem Teller Gleichungen zeichnet. Oder beide. Das Penthouse hat genug Stühle.${"`"}
 
 Ein seltsamer Moment der Ruhe. Vor dem Sturm.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c32s3",
-        text: `Rico steht auf. Er hält sein Glas hoch — gefüllt mit etwas, das in sieben Farben gleichzeitig leuchtet und physikalisch nicht stabil sein kann. "Leute. LEUTE. Hört mal zu. Egal was hinter dieser goldenen Tür passiert — ob wir den Chip kriegen, ob wir die Welt retten, ob wir irgendeine kosmische Wahrheit entdecken oder nur rausfinden dass der Dealer eigentlich ein netter Typ ist der Brettspielabende macht —" Er stockt. Seine Stimme wird leiser, ehrlicher. "— es war verdammt gut. Das hier. Wir. Diese ganze verrückte Reise."
+        text: `Crisio steht auf. Er hält sein Glas hoch — gefüllt mit etwas, das in sieben Farben gleichzeitig leuchtet und physikalisch nicht stabil sein kann. "Leute. LEUTE. Hört mal zu. Egal was hinter dieser goldenen Tür passiert — ob wir den Chip kriegen, ob wir die Welt retten, ob wir irgendeine kosmische Wahrheit entdecken oder nur rausfinden dass Kurainu eigentlich ein netter Typ ist der Brettspielabende macht —" Er stockt. Seine Stimme wird leiser, ehrlicher. "— es war verdammt gut. Das hier. Wir. Diese ganze verrückte Reise."
 
-Brutus legt Kierkegaard beiseite. Zum ERSTEN MAL. Das allein ist historisch.
+Wolfkampf legt Kierkegaard beiseite. Zum ERSTEN MAL. Das allein ist historisch.
 
-"Also..." Rico hebt sein Glas höher. "Worauf trinken wir?"`,
-        character: "🦊 Rico",
+"Also..." Crisio hebt sein Glas höher. "Worauf trinken wir?"`,
+        character: "🦊 Crisio",
         choice: {
-          prompt: "Ricos Toast — worauf trinken wir?",
+          prompt: "Crisios Toast — worauf trinken wir?",
           options: [
             { id: "friendship", text: "🥂 \"Auf die Freundschaft!\" — Das Wichtigste ist, wer neben dir steht" },
             { id: "victory", text: "🏆 \"Auf den Sieg!\" — Wir sind hier um zu gewinnen" },
@@ -1620,16 +1620,16 @@ Brutus legt Kierkegaard beiseite. Zum ERSTEN MAL. Das allein ist historisch.
         id: "c32s4",
         text: `Die Gläser klingen. Der Ton hallt durch das goldene Penthouse, länger als er sollte, als würde das Gebäude selbst die Resonanz halten.
 
-Rico setzt sich wieder hin. Langsam. Und dann — etwas, das du in all der Zeit, die du ihn kennst, noch NIE gesehen hast: Rico wird still. Nicht seine übliche "dramatische Pause vor dem nächsten Witz"-Stille, sondern echte, aufrichtige, ungefilterte Stille.
+Crisio setzt sich wieder hin. Langsam. Und dann — etwas, das du in all der Zeit, die du ihn kennst, noch NIE gesehen hast: Crisio wird still. Nicht seine übliche "dramatische Pause vor dem nächsten Witz"-Stille, sondern echte, aufrichtige, ungefilterte Stille.
 
 "Egal was passiert..." sagt er leise, und seine Stimme hat dieses Zittern, das man nur hat, wenn man etwas MEINT. Wirklich meint. Jedes Wort. "...es war mir eine Ehre, dein Barkeeper zu sein."
 
-Er schluchzt. In den Cocktail-Shaker. Laut. Unkontrolliert. Brutus reicht ihm wortlos ein Taschentuch. Es ist das Zarteste, was diese gigantischen Hände jemals getan haben.
+Er schluchzt. In den Cocktail-Shaker. Laut. Unkontrolliert. Wolfkampf reicht ihm wortlos ein Taschentuch. Es ist das Zarteste, was diese gigantischen Hände jemals getan haben.
 
-"Tschuldigung," nuschelt Rico und putzt sich die Nase. "Hab wohl zu viel Zwiebeln geschnitten. Für das Risotto. Ja. Die Zwiebeln. Definitiv die Zwiebeln."
+"Tschuldigung," nuschelt Crisio und putzt sich die Nase. "Hab wohl zu viel Zwiebeln geschnitten. Für das Risotto. Ja. Die Zwiebeln. Definitiv die Zwiebeln."
 
 Niemand korrigiert ihn. Weil alle es wissen. Und weil alle es fühlen.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
     ],
   },
@@ -1643,7 +1643,7 @@ Niemand korrigiert ihn. Weil alle es wissen. Und weil alle es fühlen.`,
     scenes: [
       {
         id: "c33s1",
-        text: `Hinter der Küche — warum ist hinter der Küche ein SPIEGELSAAL? Weil der Dealer offensichtlich Interior-Design-Entscheidungen trifft wie ein Bond-Bösewicht mit unbegrenztem Budget — erstreckt sich ein Raum, der dein Gehirn sofort in den Fehlermodus versetzt.
+        text: `Hinter der Küche — warum ist hinter der Küche ein SPIEGELSAAL? Weil Kurainu offensichtlich Interior-Design-Entscheidungen trifft wie ein Bond-Bösewicht mit unbegrenztem Budget — erstreckt sich ein Raum, der dein Gehirn sofort in den Fehlermodus versetzt.
 
 Spiegel. ÜBERALL Spiegel. Aber nicht normale Spiegel, die einfach nur reflektieren, was vor ihnen steht. Diese Spiegel zeigen... ANDERES.
 
@@ -1651,34 +1651,34 @@ Im ersten Spiegel siehst du dich selbst — aber eine Version von dir, die Sam d
 
 Im zweiten Spiegel: eine Version, die nie das CRISINO betreten hat. Normales Leben, normaler Job, normale Langeweile. Diese Version sieht zufrieden aus. Aber auch... leer.
 
-Rico starrt in einen Spiegel und sieht sich selbst als Sternekoch. Er weint wieder. "DAS HÄTTE ICH SEIN KÖNNEN!"`,
-        character: "🦊 Rico",
+Crisio starrt in einen Spiegel und sieht sich selbst als Sternekoch. Er weint wieder. "DAS HÄTTE ICH SEIN KÖNNEN!"`,
+        character: "🦊 Crisio",
       },
       {
         id: "c33s2",
         text: `Aber ein Spiegel — ganz am Ende des Saals, größer als die anderen, mit einem Rahmen aus schwarzem Gold — zeigt etwas, das dein Blut gefrieren lässt.
 
-DU. Aber als der DEALER. Du trägst die Maske. Du sitzt auf dem goldenen Thron. Und du bist ALLEIN. Komplett, absolut, kosmisch allein. Kein Rico. Kein Verbündeter. Niemand. Nur du und ein Casino, das sich bis ins Unendliche erstreckt.
+DU. Aber als der DEALER. Du trägst die Maske. Du sitzt auf dem goldenen Thron. Und du bist ALLEIN. Komplett, absolut, kosmisch allein. Kein Crisio. Kein Verbündeter. Niemand. Nur du und ein Casino, das sich bis ins Unendliche erstreckt.
 
 Daneben ein weiterer Spiegel, kleiner, fast versteckt: Du als normaler Mensch. Ohne Chip, ohne Casino, ohne Legende. Du sitzt auf einer Parkbank und fütterst Tauben. Und lächelst. Einfach so.
 
-Rico: "Okay, ich weiß nicht, welcher gruseliger ist. Der, wo du ein einsamer Diktator bist, oder der mit den Tauben."
+Crisio: "Okay, ich weiß nicht, welcher gruseliger ist. Der, wo du ein einsamer Diktator bist, oder der mit den Tauben."
 
-Brutus, der in seinen eigenen Spiegel starrt (in dem er als Philosophie-Professor doziert): "Jede Reflexion ist eine Möglichkeit. Sartre sagt: 'Wir sind unsere Entscheidungen.' Die Spiegel zeigen nur, was wir HÄTTEN entscheiden können."`,
-        character: "🐻 Brutus",
+Wolfkampf, der in seinen eigenen Spiegel starrt (in dem er als Philosophie-Professor doziert): "Jede Reflexion ist eine Möglichkeit. Sartre sagt: 'Wir sind unsere Entscheidungen.' Die Spiegel zeigen nur, was wir HÄTTEN entscheiden können."`,
+        character: "🐻 Wolfkampf",
       },
       {
         id: "c33s3",
         text: `In der Mitte des Spiegelsaals steht ein Spielautomat. Natürlich. Aber dieser ist anders — seine Walzen sind aus SPIEGEL-MATERIAL, und jede Walze zeigt ein anderes Schicksal. Eine andere Version von dir. Eine andere Realität.
 
-"Jede Walze zeigt ein anderes Schicksal," flüstert die Stimme des Dealers, als hätte er deine Gedanken gelesen. Oder als hätte er diesen Automaten GENAU dafür gebaut. "Drei gleiche Schicksale auf einer Linie — und du begreifst, was der Chip wirklich ist."
+"Jede Walze zeigt ein anderes Schicksal," flüstert die Stimme Kurainus, als hätte er deine Gedanken gelesen. Oder als hätte er diesen Automaten GENAU dafür gebaut. "Drei gleiche Schicksale auf einer Linie — und du begreifst, was der Chip wirklich ist."
 
 Der Automat summt. Die Spiegelwalzen drehen sich, und in jeder Reflexion siehst du ein anderes Gesicht — deins, aber anders. Glücklicher. Trauriger. Mächtiger. Freier. Alles gleichzeitig.`,
         game: { type: "slots", description: "Der Schicksals-Automat — jede Walze zeigt ein anderes Universum!", reward: 400 },
       },
       {
         id: "c33s4",
-        text: `Die Walzen stoppen. Drei identische Bilder: DU. Genau DU, wie du JETZT bist. Nicht der Dealer, nicht der Taubenfütterer, nicht der Gangster. DU.
+        text: `Die Walzen stoppen. Drei identische Bilder: DU. Genau DU, wie du JETZT bist. Nicht Kurainu, nicht der Taubenfütterer, nicht der Gangster. DU.
 
 Und in diesem Moment VERSTEHST du es. Der Chip ändert nicht das Glück. Er ändert die REALITÄT. Jeder Wurf, jede Karte, jede Entscheidung — sie alle erschaffen neue Zeitlinien, neue Möglichkeiten, neue Versionen von dir. Und der Chip? Er lässt dich WÄHLEN, in welcher Version du landest.
 
@@ -1686,7 +1686,7 @@ Und in diesem Moment VERSTEHST du es. Der Chip ändert nicht das Glück. Er änd
 
 Die Spiegel um dich herum beginnen zu vibrieren. Leise zuerst, dann lauter. Wie ein Herzschlag.
 
-Rico: "Okay, wenn die Spiegel jetzt zerbrechen und irgendwelche Horror-Versionen von uns rausklettern, BIN ICH RAUS."
+Crisio: "Okay, wenn die Spiegel jetzt zerbrechen und irgendwelche Horror-Versionen von uns rausklettern, BIN ICH RAUS."
 
 Sie zerbrechen nicht. Stattdessen werden sie langsam transparent. Und dahinter siehst du: den nächsten Raum. Und was darin wartet.`,
         giveItem: "Schicksals-Erkenntnis",
@@ -1707,44 +1707,44 @@ Sie zerbrechen nicht. Stattdessen werden sie langsam transparent. Und dahinter s
 
 "SICHERHEITSPROTOKOLL AKTIVIERT! PENTHOUSE WIRD IN 5 MINUTEN GESPERRT! ALLE NICHT AUTORISIERTEN PERSONEN WERDEN... ähm... HÖFLICH GEBETEN ZU GEHEN! ODER AUCH NICHT HÖFLICH! DAS SYSTEM IST DA FLEXIBEL!"
 
-Rico: "WAS?! FÜNF MINUTEN?!"
-Brutus: "Die Uhr als ultimativer Existenztest. Heidegger nannte es 'Sein zum Tode'. Ich nenne es 'Dienstag'."
+Crisio: "WAS?! FÜNF MINUTEN?!"
+Wolfkampf: "Die Uhr als ultimativer Existenztest. Heidegger nannte es 'Sein zum Tode'. Ich nenne es 'Dienstag'."
 
-Drei Sicherheitsschleusen fahren herunter. Drei goldene Tore zwischen dir und dem Dealer. Drei Spiele. Fünf Minuten. Kein Druck.`,
-        character: "🦊 Rico",
+Drei Sicherheitsschleusen fahren herunter. Drei goldene Tore zwischen dir und Kurainu. Drei Spiele. Fünf Minuten. Kein Druck.`,
+        character: "🦊 Crisio",
       },
       {
         id: "c34s2",
         text: `Erste Schleuse. Ein gigantischer Münzwurf-Mechanismus — wie ein Flipperautomat, nur ERNST. Die Münze ist so groß wie ein Wagenrad und dreht sich bereits in der Luft, funkelnd wie ein goldener Planet.
 
-"SCHNELL! Erste Sicherung umgehen!" brüllt Rico und schiebt dich nach vorne.
+"SCHNELL! Erste Sicherung umgehen!" brüllt Crisio und schiebt dich nach vorne.
 
-Brutus: "Die Münze als binäres Schicksal. Kopf oder Zahl. Sein oder Nichtsein." Rico: "BRUTUS, JETZT IST NICHT DIE ZEIT FÜR PHILOSOPHIE!" Brutus: "Es ist IMMER die Zeit für Philosophie." Rico: "ICH HASSE DICH!" Brutus: "Das ist auch eine philosophische Position."`,
-        character: "🦊 Rico",
+Wolfkampf: "Die Münze als binäres Schicksal. Kopf oder Zahl. Sein oder Nichtsein." Crisio: "BRUTUS, JETZT IST NICHT DIE ZEIT FÜR PHILOSOPHIE!" Wolfkampf: "Es ist IMMER die Zeit für Philosophie." Crisio: "ICH HASSE DICH!" Wolfkampf: "Das ist auch eine philosophische Position."`,
+        character: "🦊 Crisio",
         game: { type: "flip", description: "Erste Sicherung — schneller Münzwurf gegen die Uhr!", reward: 200 },
       },
       {
         id: "c34s3",
         text: `GESCHAFFT! Die erste Schleuse öffnet sich. Weiter! Zweite Sicherung — und hier wird es ABSURD. Vor dir steht ein gigantischer Rubbellos-Mechanismus. Goldene Flächen, die freigerubbelt werden müssen. Als SICHERHEITSSYSTEM.
 
-"Rubbellos-Mechanismus?! WER BAUT SO ETWAS?!" schreit Rico, während die Sirenen weiter heulen.
+"Rubbellos-Mechanismus?! WER BAUT SO ETWAS?!" schreit Crisio, während die Sirenen weiter heulen.
 
-Brutus, vollkommen ruhig: "Jemand mit Humor." Rico: "DAS IST KEIN HUMOR! DAS IST WAHNSINN!" Brutus: "Ist das nicht dasselbe?"
+Wolfkampf, vollkommen ruhig: "Jemand mit Humor." Crisio: "DAS IST KEIN HUMOR! DAS IST WAHNSINN!" Wolfkampf: "Ist das nicht dasselbe?"
 
 Die mechanische Stimme meldet sich: "NOCH 3 MINUTEN! DAS SYSTEM EMPFIEHLT: SCHNELLER RUBBELN! TIPP: VON LINKS NACH RECHTS! ODER AUCH NICHT! DAS SYSTEM GIBT ZU DASS ES KEINE AHNUNG HAT!"`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
         game: { type: "scratch", description: "Zweite Sicherung — Rubbellos gegen die Zeit! WER BAUT SO ETWAS?!", reward: 300 },
       },
       {
         id: "c34s4",
         text: `ZWEITE SCHLEUSE OFFEN! Die letzte Sicherung. Ein Würfeltisch — aber nicht irgendein Würfeltisch. Die Würfel SCHWEBEN. Über dem Tisch, in einem goldenen Magnetfeld, rotieren sie langsam wie kleine, kubische Planeten. Der Tisch zeigt die Zahl 21.
 
-"LETZTE SICHERUNG! WÜRFLE ALS OB DEIN LEBEN DAVON ABHÄNGT!" kreischt Rico. "TUT ES QUASI!"
+"LETZTE SICHERUNG! WÜRFLE ALS OB DEIN LEBEN DAVON ABHÄNGT!" kreischt Crisio. "TUT ES QUASI!"
 
 Die mechanische Stimme: "NOCH 90 SEKUNDEN! DAS SYSTEM MÖCHTE ANMERKEN DASS ES NICHTS PERSÖNLICHES IST! ES FOLGT NUR PROTOKOLLEN! BITTE HINTERLASSEN SIE EINE POSITIVE BEWERTUNG!"
 
-Brutus steht auf, legt Kierkegaard weg, und KNACKT seine Knöchel. "Falls die Würfel nicht reichen... habe ich einen Plan B." Er schaut auf die Schleuse. Die Schleuse schaut zurück. Sie WEISS was Plan B ist. "Aber versuchen wir es erstmal mit Würfeln."`,
-        character: "🐻 Brutus",
+Wolfkampf steht auf, legt Kierkegaard weg, und KNACKT seine Knöchel. "Falls die Würfel nicht reichen... habe ich einen Plan B." Er schaut auf die Schleuse. Die Schleuse schaut zurück. Sie WEISS was Plan B ist. "Aber versuchen wir es erstmal mit Würfeln."`,
+        character: "🐻 Wolfkampf",
         game: { type: "dice21", description: "Letzte Sicherung — WÜRFLE ALS OB DEIN LEBEN DAVON ABHÄNGT!", mustWin: true, reward: 400 },
       },
     ],
@@ -1759,45 +1759,45 @@ Brutus steht auf, legt Kierkegaard weg, und KNACKT seine Knöchel. "Falls die W�
     scenes: [
       {
         id: "c35s1",
-        text: `Die letzte Schleuse öffnet sich. Dahinter: das innere Sanktuarium des Dealers. Ein kreisrunder Raum, die Wände aus dunklem Gold — nicht das gleißende Gold des Penthouses, sondern ein älteres, ehrwürdigeres Gold. Wie in einem Pharaonengrab. In der Mitte: ein einzelner Spieltisch, darüber ein Lichtkegel, der alles andere im Schatten lässt.
+        text: `Die letzte Schleuse öffnet sich. Dahinter: das innere Sanktuarium Kurainus. Ein kreisrunder Raum, die Wände aus dunklem Gold — nicht das gleißende Gold des Penthouses, sondern ein älteres, ehrwürdigeres Gold. Wie in einem Pharaonengrab. In der Mitte: ein einzelner Spieltisch, darüber ein Lichtkegel, der alles andere im Schatten lässt.
 
 Aber bevor du den Tisch erreichst — eine Bewegung im Schatten. Jemand tritt hervor. Langsam, theatralisch, wie jemand der diesen Moment GEPLANT hat. Lange geplant. Und jetzt GENIESST.
 
-Rico erstarrt. "Nein..."
-Brutus legt sein Buch weg. "Ah. Der Plot-Twist."
+Crisio erstarrt. "Nein..."
+Wolfkampf legt sein Buch weg. "Ah. Der Plot-Twist."
 
 Eine Gestalt im Lichtkegel. Ein Gesicht, das du KENNST.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c35s2_cooperate",
-        text: `Agent Kirsche tritt aus dem Schatten. Aber nicht die Kirsche, die du kennst. Diese Kirsche trägt kein Rot — sie trägt GOLD. Das Kleid, die Schuhe, sogar der Lippenstift. Und ihr Blick... kalt. Berechnend. Der Blick von jemandem, der die ganze Zeit drei Schritte voraus war.
+        text: `Arindy tritt aus dem Schatten. Aber nicht die Arindy, die du kennst. Diese Arindy trägt kein Rot — sie trägt GOLD. Das Kleid, die Schuhe, sogar der Lippenstift. Und ihr Blick... kalt. Berechnend. Der Blick von jemandem, der die ganze Zeit drei Schritte voraus war.
 
-"Sorry." Sie sagt es ohne jede Reue. Mit einem Lächeln, das gleichzeitig charmant und erschreckend ist. "Mein wahrer Auftraggeber ist der Dealer. Immer gewesen." Sie zieht Handschellen hervor — goldene, natürlich. "Die Handschellen? Waren für DICH. Von Anfang an."
+"Sorry." Sie sagt es ohne jede Reue. Mit einem Lächeln, das gleichzeitig charmant und erschreckend ist. "Mein wahrer Auftraggeber ist Kurainu. Immer gewesen." Sie zieht Handschellen hervor — goldene, natürlich. "Die Handschellen? Waren für DICH. Von Anfang an."
 
-Rico: "DU?! Aber wir haben zusammen gekocht! Du hast mein Risotto gelobt!"
-Kirsche: "Das Risotto WAR gut. Das ändert nichts an meiner Mission."
-Rico: "ES ÄNDERT ALLES! VERRÄTER-RISOTTO SCHMECKT ANDERS! ICH WERDE ES NIE WIEDER KOCHEN!"
+Crisio: "DU?! Aber wir haben zusammen gekocht! Du hast mein Risotto gelobt!"
+Arindy: "Das Risotto WAR gut. Das ändert nichts an meiner Mission."
+Crisio: "ES ÄNDERT ALLES! VERRÄTER-RISOTTO SCHMECKT ANDERS! ICH WERDE ES NIE WIEDER KOCHEN!"
 
-Kirsche seufzt. "Dramatisch wie immer, Rico." Sie dreht sich zu dir. "Aber die Handschellen sind ECHT. Und das hier —" sie zeigt auf den Roulette-Tisch, der aus dem Boden fährt "— ist deine letzte Chance."`,
-        character: "🍒 Agent Kirsche",
+Arindy seufzt. "Dramatisch wie immer, Crisio." Sie dreht sich zu dir. "Aber die Handschellen sind ECHT. Und das hier —" sie zeigt auf den Roulette-Tisch, der aus dem Boden fährt "— ist deine letzte Chance."`,
+        character: "🍒 Arindy",
         nextScene: "c35s3",
       },
       {
         id: "c35s2_solo",
-        text: `Professor Glück tritt aus dem Schatten. Aber nicht der zerstreute, champagnerfleckige Professor, den du kennst. Dieser Glück steht AUFRECHT. Kein Zittern, keine Zerstreutheit, keine verschütteten Getränke. Seine Augen sind klar und scharf wie Diamanten.
+        text: `Schrifterz tritt aus dem Schatten. Aber nicht der zerstreute, champagnerfleckige Professor, den du kennst. Dieser Glück steht AUFRECHT. Kein Zittern, keine Zerstreutheit, keine verschütteten Getränke. Seine Augen sind klar und scharf wie Diamanten.
 
-"Überraschung." Er lächelt. Ein Lächeln, das NICHT zu einem verrückten Professor gehört. "Ich hab den Chip GEBAUT. Und den Dealer?" Er macht eine Geste in Richtung des Schattens hinter dem Spieltisch. "Er ist mein SOHN."
+"Überraschung." Er lächelt. Ein Lächeln, das NICHT zu einem verrückten Professor gehört. "Ich hab den Chip GEBAUT. Und Kurainu?" Er macht eine Geste in Richtung des Schattens hinter dem Spieltisch. "Er ist mein SOHN."
 
 STILLE. Absolute, totale, kosmische Stille. Selbst die Sirenen halten die Klappe.
 
-Rico: "DEIN— WAS?! DEIN SOHN?!"
+Crisio: "DEIN— WAS?! DEIN SOHN?!"
 Professor: "Quantenphysik vererbt sich offensichtlich. Zusammen mit dem Hang zur Dramatik."
-Brutus: "Das erklärt... tatsächlich einiges."
+Wolfkampf: "Das erklärt... tatsächlich einiges."
 Professor: "Der Chip war nie ein Spielzeug. Er war ein EXPERIMENT. Und DU —" er zeigt auf dich "— warst die Testperson. Von Anfang an."
 
 Er deutet auf den Roulette-Tisch, der aus dem Boden fährt. "Aber ich gebe dir eine faire Chance. Gewinne, und du darfst weitergehen. Verliere..." Er zuckt die Schultern. "Naja."`,
-        character: "🎓 Professor Glück",
+        character: "🎓 Schrifterz",
         nextScene: "c35s3",
       },
       {
@@ -1808,23 +1808,23 @@ Er deutet auf den Roulette-Tisch, der aus dem Boden fährt. "Aber ich gebe dir e
 
 Die Kugel rollt. Sie klingt wie ein Herzschlag — tick, tick, tick — und jedes Mal, wenn sie eine Zahl berührt, blitzt die entsprechende Erinnerung auf den Wänden auf. Dein Leben, zusammengefasst in der Rotation einer goldenen Kugel auf einem goldenen Rad in einem goldenen Raum.
 
-Rico klammert sich an seinen Cocktail-Shaker wie an einen Rettungsring. Brutus hat die Augen geschlossen. Nicht aus Angst — aus RESPEKT. Vor dem Moment. Vor dem Spiel. Vor dem Schicksal.`,
+Crisio klammert sich an seinen Cocktail-Shaker wie an einen Rettungsring. Wolfkampf hat die Augen geschlossen. Nicht aus Angst — aus RESPEKT. Vor dem Moment. Vor dem Spiel. Vor dem Schicksal.`,
         game: { type: "roulette", description: "Gewinne gegen den Verräter — oder verliere ALLES!", mustWin: true, reward: 500 },
       },
       {
         id: "c35s4",
         text: `Die Kugel stoppt. Auf DEINER Zahl. Deinem Moment. Dem Moment, der alles angefangen hat.
 
-Der Verräter — ob Kirsche oder der Professor — sieht auf das Ergebnis. Und etwas verändert sich in ihrem Blick. Kein Zorn. Kein Frust. Etwas... Tieferes.
+Der Verräter — ob Arindy oder der Professor — sieht auf das Ergebnis. Und etwas verändert sich in ihrem Blick. Kein Zorn. Kein Frust. Etwas... Tieferes.
 
 "Du bist stärker als ich dachte." Leise. Fast ein Flüstern. Und darin liegt etwas, das verdächtig nach Respekt klingt. Oder Trauer. Oder beides.
 
-Sie treten zurück. Aus dem Licht. Zurück in den Schatten, wo sie hergekommen sind. Aber bevor sie verschwinden, noch ein letztes Wort: "Der Dealer wartet. Und er ist..." Eine Pause, die schwerer wiegt als alles Gold in diesem Raum. "...nicht das, was du erwartest."
+Sie treten zurück. Aus dem Licht. Zurück in den Schatten, wo sie hergekommen sind. Aber bevor sie verschwinden, noch ein letztes Wort: "Kurainu wartet. Und er ist..." Eine Pause, die schwerer wiegt als alles Gold in diesem Raum. "...nicht das, was du erwartest."
 
 Dann: Stille. Nur du, deine Verbündeten, und eine goldene Tür, die sich langsam öffnet.
 
-Rico, flüsternd: "Ich brauche einen VIEL stärkeren Drink nach dem hier."`,
-        character: "🦊 Rico",
+Crisio, flüsternd: "Ich brauche einen VIEL stärkeren Drink nach dem hier."`,
+        character: "🦊 Crisio",
       },
     ],
   },
@@ -1840,25 +1840,25 @@ Rico, flüsternd: "Ich brauche einen VIEL stärkeren Drink nach dem hier."`,
         id: "c36s1",
         text: `Vor dir: eine Tür. Aber nicht irgendeine Tür. DIE Tür. Massiv, golden, so hoch, dass die Oberkante im Dunkel verschwindet. Und darauf — eingraviert in das Metall mit einer Präzision, die entweder Laser-Technologie oder göttliche Intervention erfordert — ein 9x9-Zahlenraster. Ein SUDOKU. Als Türschloss.
 
-Professor Glück — oder sein Geist, seine Erinnerung, sein Echo, je nachdem wie man zu dem Verrat steht — hätte sofort gewusst, was das ist: "Der Sudoku-Code! Die letzte Barriere!"
+Schrifterz — oder sein Geist, seine Erinnerung, sein Echo, je nachdem wie man zu dem Verrat steht — hätte sofort gewusst, was das ist: "Der Sudoku-Code! Die letzte Barriere!"
 
 Die Zahlen leuchten sanft, einige Felder leer, wartend auf die richtige Lösung. Neben dem Raster ein kleiner goldener Bildschirm mit der Nachricht: "DIE LÖSUNG IST DER TÜRCODE. KEINE FEHLER ERLAUBT. KEIN RADIERGUMMI. KEIN 'ICH FRAGE MAL GOOGLE'. DAS SYSTEM MEINT ES ERNST."
 
-Rico: "Ein SUDOKU? Das letzte Hindernis vor dem mächtigsten Wesen im Casino ist ein SUDOKU?!" Brutus: "Die Eleganz der Einfachheit."`,
-        character: "🦊 Rico",
+Crisio: "Ein SUDOKU? Das letzte Hindernis vor dem mächtigsten Wesen im Casino ist ein SUDOKU?!" Wolfkampf: "Die Eleganz der Einfachheit."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c36s2",
-        text: `Brutus betrachtet die Tür. Dann die Angeln. Dann die Wand daneben. Sein Blick sagt: "Ich KÖNNTE." Seine Fäuste sagen: "Ich SOLLTE." Sein Verstand sagt: etwas anderes.
+        text: `Wolfkampf betrachtet die Tür. Dann die Angeln. Dann die Wand daneben. Sein Blick sagt: "Ich KÖNNTE." Seine Fäuste sagen: "Ich SOLLTE." Sein Verstand sagt: etwas anderes.
 
-"Ich würde die Tür eintreten," sagt Brutus langsam, und jedes Wort klingt wie ein Kompromiss zwischen seinem Körper und seiner Seele. "Aber..." Er atmet tief. Man kann förmlich sehen, wie Philosophie gegen Muskelkraft kämpft. "...ich respektiere den Prozess."
+"Ich würde die Tür eintreten," sagt Wolfkampf langsam, und jedes Wort klingt wie ein Kompromiss zwischen seinem Körper und seiner Seele. "Aber..." Er atmet tief. Man kann förmlich sehen, wie Philosophie gegen Muskelkraft kämpft. "...ich respektiere den Prozess."
 
-Rico starrt ihn an. "Seit wann respektierst du TÜREN?"
-Brutus: "Seit ich Wittgenstein gelesen habe. 'Wovon man nicht sprechen kann, darüber muss man schweigen.' Und wovon man nicht eintreten kann..." Er deutet auf das Sudoku. "...darüber muss man nachdenken."
+Crisio starrt ihn an. "Seit wann respektierst du TÜREN?"
+Wolfkampf: "Seit ich Wittgenstein gelesen habe. 'Wovon man nicht sprechen kann, darüber muss man schweigen.' Und wovon man nicht eintreten kann..." Er deutet auf das Sudoku. "...darüber muss man nachdenken."
 
-Rico: "Das... das ergibt überhaupt keinen Sinn."
-Brutus: "Philosophie muss keinen Sinn ergeben. Sie muss nur WEH TUN." Pause. "Emotional. Nicht physisch. Physisch ist meine Abteilung."`,
-        character: "🐻 Brutus",
+Crisio: "Das... das ergibt überhaupt keinen Sinn."
+Wolfkampf: "Philosophie muss keinen Sinn ergeben. Sie muss nur WEH TUN." Pause. "Emotional. Nicht physisch. Physisch ist meine Abteilung."`,
+        character: "🐻 Wolfkampf",
       },
       {
         id: "c36s3",
@@ -1866,8 +1866,8 @@ Brutus: "Philosophie muss keinen Sinn ergeben. Sie muss nur WEH TUN." Pause. "Em
 
 "Die Lösung IST der Türcode. Keine Fehler erlaubt!" erinnert dich das System mit übertriebener Freundlichkeit. "TIPP: DIE ZAHLEN 1-9 KOMMEN IN JEDER REIHE, SPALTE UND BLOCK GENAU EINMAL VOR! DAS SYSTEM WEISS, DASS SIE DAS WISSEN! ES SAGT ES TROTZDEM! FÜR DIE ATMOSPHÄRE!"
 
-Rico hält den Atem an. Brutus schließt sein Buch — ENDGÜLTIG. Sogar das Penthouse scheint stiller zu werden, als würde das Universum selbst darauf warten, dass du dieses letzte Rätsel löst.`,
-        game: { type: "sudoku9", description: "Der Sudoku-Code — die letzte Barriere vor dem Dealer! KEINE FEHLER!", mustWin: true, reward: 1000 },
+Crisio hält den Atem an. Wolfkampf schließt sein Buch — ENDGÜLTIG. Sogar das Penthouse scheint stiller zu werden, als würde das Universum selbst darauf warten, dass du dieses letzte Rätsel löst.`,
+        game: { type: "sudoku9", description: "Der Sudoku-Code — die letzte Barriere vor Kurainu! KEINE FEHLER!", mustWin: true, reward: 1000 },
       },
       {
         id: "c36s4",
@@ -1881,7 +1881,7 @@ Die Tür öffnet sich. Langsam. SO langsam, dass du die Sekunden zählen kannst.
 
 Dahinter: ein einzelner Raum. Darin: ein einzelner Tisch. Daran: ein einzelner Stuhl. Und auf dem Stuhl, im Zentrum von allem, im Herz des CRISINO, im Auge des Sturms, im letzten Kapitel der Legende...
 
-Der Dealer. Allein. Ruhig. Die Maske auf dem Tisch vor ihm.
+Kurainu. Allein. Ruhig. Die Maske auf dem Tisch vor ihm.
 
 Er schaut auf. Und er lächelt.
 
@@ -1910,8 +1910,8 @@ Du erstarrst.
 
 Weil du in den Spiegel schaust. Weil sein Gesicht DEIN Gesicht ist. Älter. Müder. Mit Linien, die Geschichten erzählen, die du noch nicht gelebt hast. Aber DEIN Gesicht. Unmissverständlich. Unbestreitbar.
 
-Rico lässt sein Glas fallen. Es zerbricht nicht — es ist zu schockiert zum Zerbrechen.`,
-        character: "🎭 Der Dealer",
+Crisio lässt sein Glas fallen. Es zerbricht nicht — es ist zu schockiert zum Zerbrechen.`,
+        character: "🎭 Kurainu",
       },
       {
         id: "c37s2",
@@ -1921,10 +1921,10 @@ Er geht um den Tisch herum. Jeder Schritt hallt in der Stille.
 
 "Jeder Wurf, jede Karte, jede Entscheidung... splittet die Realität. Wie die Spiegel, die du gesehen hast — nur REAL. Jedes Mal, wenn eine Münze fällt, entstehen zwei Universen. Eins wo sie Kopf zeigt. Eins wo sie Zahl zeigt. Und der Chip?" Er hält inne. "Der Chip lässt dich ZWISCHEN den Universen wandern. Das ist kein Glück. Das ist keine Magie. Das ist NAVIGATION durch die Unendlichkeit."
 
-Brutus flüstert: "Everetts Viele-Welten-Interpretation... aber REAL."
+Wolfkampf flüstert: "Everetts Viele-Welten-Interpretation... aber REAL."
 
-Der Dealer nickt. "Der Philosoph versteht es. Natürlich tut er das."`,
-        character: "🎭 Der Dealer",
+Kurainu nickt. "Der Philosoph versteht es. Natürlich tut er das."`,
+        character: "🎭 Kurainu",
       },
       {
         id: "c37s3",
@@ -1936,12 +1936,12 @@ Er legt dir die Hand auf die Schulter. Sie ist warm. Real. DEINE Hand, älter.
 
 "Und du hast es bis hierher geschafft. Durch jeden Floor, jeden Boss, jeden Verrat. Du hast gespielt, verloren, gewonnen, und weitergespielt. Das allein ist..." Er sucht nach dem richtigen Wort. Findet es. "...bemerkenswert."
 
-Rico, der leise weint (wieder): "Das ist der SCHÖNSTE Bösewicht-Monolog den ich je gehört habe."`,
-        character: "🎭 Der Dealer",
+Crisio, der leise weint (wieder): "Das ist der SCHÖNSTE Bösewicht-Monolog den ich je gehört habe."`,
+        character: "🎭 Kurainu",
       },
       {
         id: "c37s4",
-        text: `Der Dealer geht zurück zum Tisch. Setzt sich. Greift nach einem Kartendeck. Aber nicht irgendeinem Deck — die Karten schimmern, und als er sie mischt, siehst du BILDER darauf. Szenen deiner Reise. Rico, der dir den ersten Drink mischt. Sam, der im Schatten verschwindet. Die Zwillinge, die sich vereinen. Jede Karte eine Erinnerung, jede Erinnerung ein Moment, in dem die Realität sich gespalten hat.
+        text: `Kurainu geht zurück zum Tisch. Setzt sich. Greift nach einem Kartendeck. Aber nicht irgendeinem Deck — die Karten schimmern, und als er sie mischt, siehst du BILDER darauf. Szenen deiner Reise. Crisio, der dir den ersten Drink mischt. Sam, der im Schatten verschwindet. Die Zwillinge, die sich vereinen. Jede Karte eine Erinnerung, jede Erinnerung ein Moment, in dem die Realität sich gespalten hat.
 
 "Bereit für die letzte Hand?" Er fächert die Karten auf. Sie bilden einen Halbkreis vor ihm, und jede einzelne pulsiert mit goldenem Licht. Dein Leben, ausgelegt wie ein Kartenspiel.
 
@@ -1952,7 +1952,7 @@ Er schaut dich an. Mit deinen eigenen Augen. Und in diesem Blick liegt kein Hass
 Du setzt dich. Gegenüber von dir selbst. An einem goldenen Tisch, in einem goldenen Raum, am Ende einer Reise, die mit einer letzten Münze begonnen hat.
 
 Die letzte Hand beginnt.`,
-        character: "🎭 Der Dealer",
+        character: "🎭 Kurainu",
       },
     ],
   },
@@ -1966,39 +1966,39 @@ Die letzte Hand beginnt.`,
     scenes: [
       {
         id: "c38s1",
-        text: `"Fünf Runden. Wer drei gewinnt, bekommt den Chip. Für IMMER." Der Dealer legt die Regeln fest wie jemand, der Verträge mit dem Universum schließt. Kein Verhandeln. Kein Nachverhandeln. Kein "Kann ich nochmal?" Dies ist es. Das Endgame.
+        text: `"Fünf Runden. Wer drei gewinnt, bekommt den Chip. Für IMMER." Kurainu legt die Regeln fest wie jemand, der Verträge mit dem Universum schließt. Kein Verhandeln. Kein Nachverhandeln. Kein "Kann ich nochmal?" Dies ist es. Das Endgame.
 
 Der Tisch LEUCHTET golden. Nicht die Lampen darüber — der Tisch SELBST. Das Holz, das Filz, die Einlegearbeiten, alles strahlt von innen heraus, als wäre in der Tischplatte eine kleine Sonne eingesperrt. Die Karten auf dem Tisch werfen keine Schatten, weil das Licht von ÜBERALL kommt.
 
-Rico hat sich hinter deinem Stuhl positioniert. Wie ein Cornerman beim Boxen. Oder ein sehr emotionaler Schutzengel. "Fünf Runden," wiederholt er flüsternd. "Drei Siege. Du hast schon schlimmere Odds geschlagen."
+Crisio hat sich hinter deinem Stuhl positioniert. Wie ein Cornerman beim Boxen. Oder ein sehr emotionaler Schutzengel. "Fünf Runden," wiederholt er flüsternd. "Drei Siege. Du hast schon schlimmere Odds geschlagen."
 
-Brutus steht daneben. Regungslos. Eine Statue der Konzentration. Er hat Kierkegaard ENDGÜLTIG zugeklappt. Zum allerletzten Mal. "Dies ist der Moment," sagt er leise. "Nicht der Moment VOR dem Moment. Nicht der Moment NACH dem Moment. DER Moment."`,
-        character: "🦊 Rico",
+Wolfkampf steht daneben. Regungslos. Eine Statue der Konzentration. Er hat Kierkegaard ENDGÜLTIG zugeklappt. Zum allerletzten Mal. "Dies ist der Moment," sagt er leise. "Nicht der Moment VOR dem Moment. Nicht der Moment NACH dem Moment. DER Moment."`,
+        character: "🦊 Crisio",
       },
       {
         id: "c38s2",
-        text: `Rico kann nicht stillhalten. Er zittert. Nicht vor Angst — vor EMOTION. Vor der Wucht dieses Augenblicks. Seine Hände umklammern den Cocktail-Shaker, den er irgendwoher gezaubert hat — wahrscheinlich trägt er ihn IMMER bei sich, wie ein Ritter sein Schwert.
+        text: `Crisio kann nicht stillhalten. Er zittert. Nicht vor Angst — vor EMOTION. Vor der Wucht dieses Augenblicks. Seine Hände umklammern den Cocktail-Shaker, den er irgendwoher gezaubert hat — wahrscheinlich trägt er ihn IMMER bei sich, wie ein Ritter sein Schwert.
 
 "DU SCHAFFST DAS!" brüllt er plötzlich, und seine Stimme bricht, und Tränen laufen über sein Fuchsgesicht, und er wischt sie weg mit der Schürze, und neue kommen, und er wischt wieder, und es ist ein endloser Kreislauf von Tränen und Schürze. "ICH GLAUBE AN DICH!"
 
-Brutus legt ihm wortlos eine Hand auf die Schulter. Rico schluchzt lauter. Brutus' Hand drückt fester zu. Es ist der emotionalste und gleichzeitig maskulinste Moment der Casino-Geschichte.
+Wolfkampf legt ihm wortlos eine Hand auf die Schulter. Crisio schluchzt lauter. Wolfkampf' Hand drückt fester zu. Es ist der emotionalste und gleichzeitig maskulinste Moment der Casino-Geschichte.
 
-Der Dealer beobachtet das Ganze mit einem Ausdruck, der fast... SEHNSÜCHTIG aussieht. Als hätte er so etwas mal gehabt. Vor langer Zeit. In einer anderen Zeitlinie.
+Kurainu beobachtet das Ganze mit einem Ausdruck, der fast... SEHNSÜCHTIG aussieht. Als hätte er so etwas mal gehabt. Vor langer Zeit. In einer anderen Zeitlinie.
 
 "Spielen wir."`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c38s3",
-        text: `Die Karten fliegen. Der Dealer mischt mit einer Eleganz, die über menschliches Können hinausgeht — aber natürlich tut sie das, er hat UNENDLICHE Versionen von sich selbst, in denen er Kartentricks geübt hat. Die Karten bilden Muster in der Luft, Spiralen, Kreise, und für einen Moment sieht es aus, als würden sie von selbst fliegen.
+        text: `Die Karten fliegen. Kurainu mischt mit einer Eleganz, die über menschliches Können hinausgeht — aber natürlich tut sie das, er hat UNENDLICHE Versionen von sich selbst, in denen er Kartentricks geübt hat. Die Karten bilden Muster in der Luft, Spiralen, Kreise, und für einen Moment sieht es aus, als würden sie von selbst fliegen.
 
 "Zeig mir, was du gelernt hast." Er teilt aus. Fünf Karten für dich. Fünf Karten für ihn. Die größte Pokerpartie, die das CRISINO je gesehen hat. Nicht wegen des Einsatzes — obwohl der Einsatz ALLES ist — sondern weil hier zwei Versionen desselben Menschen gegeneinander spielen. Vergangenheit gegen Zukunft. Möglichkeit gegen Realität. ICH gegen ICH.
 
-Rico hat aufgehört zu weinen. Stattdessen betet er. Zu welchem Gott ist unklar, aber er betet zu ALLEN, sicherheitshalber. Brutus meditiert. Oder schläft. Schwer zu sagen.
+Crisio hat aufgehört zu weinen. Stattdessen betet er. Zu welchem Gott ist unklar, aber er betet zu ALLEN, sicherheitshalber. Wolfkampf meditiert. Oder schläft. Schwer zu sagen.
 
 Das goldene Licht pulsiert. Die Karten warten.`,
         boss: {
-          name: "Der Dealer",
+          name: "Kurainu",
           emoji: "🎭",
           game: "poker",
           reward: 2000,
@@ -2009,7 +2009,7 @@ Das goldene Licht pulsiert. Die Karten warten.`,
         id: "c38s4",
         text: `Die letzte Karte liegt auf dem Tisch. Die Stille ist so absolut, dass du deinen eigenen Herzschlag hörst. Und seinen. Denselben Rhythmus. Natürlich denselben Rhythmus.
 
-Der Dealer betrachtet seine Karten. Dann deine. Dann wieder seine. Und langsam — so langsam, dass die Zeit selbst innezuhalten scheint — legt er seine Hand auf den Tisch.
+Kurainu betrachtet seine Karten. Dann deine. Dann wieder seine. Und langsam — so langsam, dass die Zeit selbst innezuhalten scheint — legt er seine Hand auf den Tisch.
 
 Er schaut auf. Und er LÄCHELT. Nicht das kalkulierte Lächeln des Casino-Bosses. Nicht das müde Lächeln des einsamen Mannes. Ein ECHTES Lächeln. Das Lächeln von jemandem, der endlich — ENDLICH — das gefunden hat, wonach er gesucht hat.
 
@@ -2019,8 +2019,8 @@ Er schiebt den Goldenen Chip über den Tisch. Er gleitet lautlos über das leuch
 
 "Er gehört dir. Du hast ihn verdient."
 
-Rico EXPLODIERT vor Freude. Brutus nickt. Einmal. Das ist sein Standing Ovation.`,
-        character: "🎭 Der Dealer",
+Crisio EXPLODIERT vor Freude. Wolfkampf nickt. Einmal. Das ist sein Standing Ovation.`,
+        character: "🎭 Kurainu",
       },
     ],
   },
@@ -2034,18 +2034,18 @@ Rico EXPLODIERT vor Freude. Brutus nickt. Einmal. Das ist sein Standing Ovation.
     scenes: [
       {
         id: "c39s1",
-        text: `Der Chip schwebt. Du hast nicht bemerkt, WANN er angefangen hat zu schweben, aber er TUT es. Zwischen dir und dem Dealer, genau in der Mitte, rotiert er langsam um seine eigene Achse. Golden, warm, pulsierend — wie ein Stern kurz vor der Supernova. Oder wie ein Herz kurz vor der wichtigsten Entscheidung.
+        text: `Der Chip schwebt. Du hast nicht bemerkt, WANN er angefangen hat zu schweben, aber er TUT es. Zwischen dir und Kurainu, genau in der Mitte, rotiert er langsam um seine eigene Achse. Golden, warm, pulsierend — wie ein Stern kurz vor der Supernova. Oder wie ein Herz kurz vor der wichtigsten Entscheidung.
 
 Du spürst seine Macht. Nicht metaphorisch — PHYSISCH. Die Luft um den Chip vibriert. Die Realität BIEGT sich um ihn herum wie Licht um ein schwarzes Loch. Du siehst Schimmer an den Rändern — andere Welten, andere Möglichkeiten, andere DUs, die alle auf diesen Moment schauen.
 
-Rico steht hinter dir. Seine Hand liegt auf deiner Schulter. Sie zittert, aber sie ist DA. "Was auch immer du entscheidest..." flüstert er. "Ich stehe hinter dir. Buchstäblich. Und metaphorisch."
+Crisio steht hinter dir. Seine Hand liegt auf deiner Schulter. Sie zittert, aber sie ist DA. "Was auch immer du entscheidest..." flüstert er. "Ich stehe hinter dir. Buchstäblich. Und metaphorisch."
 
-Brutus nickt. Einmal. Fest. Endgültig.`,
-        character: "🦊 Rico",
+Wolfkampf nickt. Einmal. Fest. Endgültig.`,
+        character: "🦊 Crisio",
       },
       {
         id: "c39s2",
-        text: `Der Dealer steht auf. Zum letzten Mal. Er tritt zurück vom Tisch, weg vom Chip, und sein Blick hat etwas... Friedliches. Als hätte er eine Last abgelegt, die er Äonen getragen hat.
+        text: `Kurainu steht auf. Zum letzten Mal. Er tritt zurück vom Tisch, weg vom Chip, und sein Blick hat etwas... Friedliches. Als hätte er eine Last abgelegt, die er Äonen getragen hat.
 
 "Er gehört dir. Aber WISSE:" Sein Ton wird ernst. Ernster als alles, was er bisher gesagt hat. Ernster als die Maske, ernster als die Spiele, ernster als die ganze verdammte goldene Architektur. "Wer den Chip besitzt, wird zum Dealer. Zur neuen Legende. Zur neuen Stimme im goldenen Raum."
 
@@ -2055,23 +2055,23 @@ Er macht eine Geste, die den gesamten Raum umfasst. Das Gold. Die Einsamkeit. De
 
 Das Wort hallt nach. Einsamkeit. Es klingt in einem goldenen Raum schlimmer als irgendwo sonst. Weil Gold nicht wärmt. Gold GLÄNZT nur.
 
-"Oder..." Der Dealer hebt die Hand. "Du kannst ihn zerstören. Den Chip. Die Macht. Die Möglichkeit. Alles." Er schnippt mit den Fingern, und ein Riss erscheint im Boden — darunter NICHTS. Absolute Leere. "Ein Wurf in die Leere, und es ist vorbei. Für immer."`,
-        character: "🎭 Der Dealer",
+"Oder..." Kurainu hebt die Hand. "Du kannst ihn zerstören. Den Chip. Die Macht. Die Möglichkeit. Alles." Er schnippt mit den Fingern, und ein Riss erscheint im Boden — darunter NICHTS. Absolute Leere. "Ein Wurf in die Leere, und es ist vorbei. Für immer."`,
+        character: "🎭 Kurainu",
       },
       {
         id: "c39s3",
         text: `Der Chip schwebt still. Wartet. Auf DICH. Die ganze Reise — jede Münze, jede Karte, jedes Würfelspiel, jeder Boss, jeder Freund und jeder Verräter — hat zu DIESEM Moment geführt. Zu dieser einen Entscheidung, die alles bestimmt.
 
-Rico sagt nichts. Zum ersten Mal in seiner gesamten Existenz sagt Rico NICHTS. Weil er weiß, dass das DEINE Entscheidung ist. Nur deine.
+Crisio sagt nichts. Zum ersten Mal in seiner gesamten Existenz sagt Crisio NICHTS. Weil er weiß, dass das DEINE Entscheidung ist. Nur deine.
 
-Brutus schließt die Augen. "Die Existenz geht der Essenz voraus," flüstert er. Sartre. Natürlich Sartre. "Was du WÄHLST, definiert was du BIST."
+Wolfkampf schließt die Augen. "Die Existenz geht der Essenz voraus," flüstert er. Sartre. Natürlich Sartre. "Was du WÄHLST, definiert was du BIST."
 
-Der Dealer wartet. Geduldig. Er hat EWIG gewartet. Was sind ein paar Sekunden mehr?
+Kurainu wartet. Geduldig. Er hat EWIG gewartet. Was sind ein paar Sekunden mehr?
 
 Der Chip pulsiert. Golden. Warm. Voller Möglichkeiten. Voller Einsamkeit. Voller Macht. Voller Freiheit. Alles gleichzeitig.
 
 Was tust du?`,
-        character: "🎭 Der Dealer",
+        character: "🎭 Kurainu",
         choice: {
           prompt: "Der Goldene Chip — die letzte Entscheidung.",
           options: [
@@ -2084,14 +2084,14 @@ Was tust du?`,
         id: "c39s4",
         text: `Die Entscheidung ist gefallen. Und im Moment, in dem du sie triffst — in dem EXAKTEN Moment, in dem dein Herz sich entscheidet — verändert sich ALLES. Die Luft im Raum. Das Licht. Die Temperatur. Sogar die Zeit selbst scheint zu stolpern, als hätte sie nicht erwartet, dass du dich SO entscheidest.
 
-Der Dealer sieht es in deinen Augen. Er WEISS es, bevor du es sagst. Natürlich weiß er es. Er IST du.
+Kurainu sieht es in deinen Augen. Er WEISS es, bevor du es sagst. Natürlich weiß er es. Er IST du.
 
 "So sei es," sagt er leise. Und in diesen drei Worten liegt alles — Akzeptanz, Stolz, Trauer, Hoffnung, Abschied.
 
 Die goldenen Wände beginnen sich zu verändern. Langsam, wie ein Sonnenuntergang, der sich über einen ganzen Horizont erstreckt. Das Ende beginnt.
 
-"Komm," sagt der Dealer — dein anderes Ich, dein Schatten, dein Spiegel. "Lass mich dir zeigen, wie die Geschichte endet."`,
-        character: "🎭 Der Dealer",
+"Komm," sagt Kurainu — dein anderes Ich, dein Schatten, dein Spiegel. "Lass mich dir zeigen, wie die Geschichte endet."`,
+        character: "🎭 Kurainu",
       },
     ],
   },
@@ -2111,27 +2111,27 @@ Du stehst am Fenster des Penthouses. Draußen erstreckt sich die Stadt — Licht
 
 Was für ein Weg.
 
-Der Dealer steht neben dir. Sein Gesicht — DEIN Gesicht — reflektiert im Fensterglas. Zwei Versionen. Ein Moment. "Jede Geschichte braucht ein Ende," sagt er. "Aber nicht jedes Ende ist gleich."
+Kurainu steht neben dir. Sein Gesicht — DEIN Gesicht — reflektiert im Fensterglas. Zwei Versionen. Ein Moment. "Jede Geschichte braucht ein Ende," sagt er. "Aber nicht jedes Ende ist gleich."
 
 Er hat Recht. Denn was jetzt kommt, hängt davon ab, wer du auf dieser Reise GEWORDEN bist.`,
-        character: "🎭 Der Dealer",
+        character: "🎭 Kurainu",
       },
       {
         id: "c40s2",
-        text: `Rico kommt durch die Tür. Er trägt — unfassbarerweise — ein TABLETT. Darauf stehen Gläser. Natürlich stehen darauf Gläser. Der Mann hört NIE auf, Barkeeper zu sein.
+        text: `Crisio kommt durch die Tür. Er trägt — unfassbarerweise — ein TABLETT. Darauf stehen Gläser. Natürlich stehen darauf Gläser. Der Mann hört NIE auf, Barkeeper zu sein.
 
 "Ich dachte mir... egal wie es endet... einen letzten Drink." Er lächelt. Es ist das ehrlichste Lächeln, das du je an einem Fuchsgesicht gesehen hast. "Auf die Reise. Auf uns. Auf alles, was war, und alles, was kommt."
 
-Brutus nimmt ein Glas. Hält es hoch. "Und auf die Freiheit, zu wählen," fügt er hinzu. Zum ersten Mal klingt er nicht wie ein Philosophie-Lehrbuch, sondern wie ein FREUND.
+Wolfkampf nimmt ein Glas. Hält es hoch. "Und auf die Freiheit, zu wählen," fügt er hinzu. Zum ersten Mal klingt er nicht wie ein Philosophie-Lehrbuch, sondern wie ein FREUND.
 
-Selbst der Dealer nimmt ein Glas. Dein anderes Ich, das Glas in der Hand, das goldene Licht im Gesicht. Einen Moment lang seid ihr keine Gegner mehr. Keine verschiedenen Zeitlinien. Einfach nur... Menschen.
+Selbst Kurainu nimmt ein Glas. Dein anderes Ich, das Glas in der Hand, das goldene Licht im Gesicht. Einen Moment lang seid ihr keine Gegner mehr. Keine verschiedenen Zeitlinien. Einfach nur... Menschen.
 
-"Auf die Geschichte," sagt der Dealer.
+"Auf die Geschichte," sagt Kurainu.
 
 "Auf die Geschichte," sagt ihr alle.
 
 Die Gläser klingen. Zum letzten Mal.`,
-        character: "🦊 Rico",
+        character: "🦊 Crisio",
       },
       {
         id: "c40s3",
@@ -2139,7 +2139,7 @@ Die Gläser klingen. Zum letzten Mal.`,
 
 Denn dein Ende wurde nicht HIER geschrieben. Es wurde geschrieben in Kapitel 32, als du dein Glas erhoben hast. Und in Kapitel 39, als du deine Hand nach dem Chip ausgestreckt hast. Jede Entscheidung eine Weggabelung. Jede Weggabelung ein anderes Schicksal.
 
-Der Dealer tritt zurück. Das goldene Licht wird heller. Die Wände lösen sich auf — nicht zerstörerisch, sondern sanft, wie Nebel im Morgenlicht. Und was dahinter liegt...
+Kurainu tritt zurück. Das goldene Licht wird heller. Die Wände lösen sich auf — nicht zerstörerisch, sondern sanft, wie Nebel im Morgenlicht. Und was dahinter liegt...
 
 ...ist DEIN Ende. Nur deins. Geschrieben von deinen Entscheidungen. Versiegelt von deinem Mut.
 
@@ -2154,7 +2154,7 @@ ENDING 1: "DER KÖNIG"
 
 Du hast den Chip behalten. Und du hast auf den SIEG getrunken. Der Chip wusste es. Er WUSSTE, dass du ihn wählen würdest. Und jetzt formt er sich um — von einer Münze zu einem Ring, von einem Ring zu einer Krone, die auf deiner Stirn wächst wie etwas, das schon immer dort hätte sein sollen.
 
-Du setzt dich auf den Stuhl des Dealers. Den THRON. Er ist kalt — so kalt wie Gold sein kann, wenn niemand daneben sitzt, der es wärmt. Aber er PASST. Jede Kurve, jede Kante, als wäre er für dich gemacht worden. Weil er für dich gemacht wurde. Von einer Version von dir, die genau WUSSTE, wer ihn eines Tages besetzen würde.
+Du setzt dich auf den Stuhl Kurainus. Den THRON. Er ist kalt — so kalt wie Gold sein kann, wenn niemand daneben sitzt, der es wärmt. Aber er PASST. Jede Kurve, jede Kante, als wäre er für dich gemacht worden. Weil er für dich gemacht wurde. Von einer Version von dir, die genau WUSSTE, wer ihn eines Tages besetzen würde.
 
 Die Maske gleitet auf dein Gesicht. Sie passt perfekt. Natürlich tut sie das.
 
@@ -2162,7 +2162,7 @@ CRISINO ist DEINS. Jeder Floor, jeder Tisch, jeder Automat — sie alle gehorche
 
 Macht jenseits der Vorstellungskraft.
 
-Aber der Stuhl ist kalt. Und Rico... Rico kommt nicht mehr vorbei. Niemand kommt vorbei. Denn wer den Thron besteigt, verlässt ihn nicht. Und wer ihn nicht verlässt, verliert — langsam, unmerklich, aber unaufhaltsam — alles, was kein Gold ist.
+Aber der Stuhl ist kalt. Und Crisio... Crisio kommt nicht mehr vorbei. Niemand kommt vorbei. Denn wer den Thron besteigt, verlässt ihn nicht. Und wer ihn nicht verlässt, verliert — langsam, unmerklich, aber unaufhaltsam — alles, was kein Gold ist.
 
 Du bist der König. Du bist die Legende. Du bist der neue Dealer.
 
@@ -2184,13 +2184,13 @@ Das Gold an den Wänden beginnt zu verblassen. Langsam, sanft, wie Farbe, die vo
 
 Du gehst nach draußen. Die Tür des CRISINO schließt sich hinter dir. Zum letzten Mal. Und vor dir: der Sonnenaufgang. Orange. Rosa. Gold — ECHTES Gold, am Himmel, wo es hingehört.
 
-Rico steht neben dir. Natürlich steht er neben dir. Wo sollte er sonst stehen?
+Crisio steht neben dir. Natürlich steht er neben dir. Wo sollte er sonst stehen?
 
 "Was jetzt?" fragt er. Die ehrlichste Frage, die er je gestellt hat.
 
 "Vielleicht..." Du atmest ein. Die Morgenluft schmeckt nach Anfang. "...ein normales Leben?"
 
-Rico grinst. Das breiteste, ehrlichste, fuchsigste Grinsen der Welt.
+Crisio grinst. Das breiteste, ehrlichste, fuchsigste Grinsen der Welt.
 
 "Langweilig." Pause. "Ich bin dabei."
 
@@ -2212,7 +2212,7 @@ Das Gebäude BEBT. Wände reißen — aber nicht zerstörerisch. Chirurgisch. Pr
 
 Aus den Ruinen des alten CRISINO wächst etwas NEUES. Ein Casino, in dem NIEMAND verliert. Wo jedes Spiel nicht um Geld geht, sondern um Erfahrung, um Freude, um VERBINDUNG. Es klingt unmöglich. Es IST unmöglich. Oder war es — bis jetzt.
 
-Eine vertraute Stimme hinter dir: "Das war mein Plan. All along." Professor Glück — der ECHTE, unabhängig davon was er vorher getan hat — steht in der Tür. Tränen in den Augen. Aber gute Tränen. Wissenschaftler-Tränen. "Der Chip MUSSTE zerstört werden. Nur so konnte seine Energie freigesetzt werden. Nicht für EINEN Menschen — für ALLE."
+Eine vertraute Stimme hinter dir: "Das war mein Plan. All along." Schrifterz — der ECHTE, unabhängig davon was er vorher getan hat — steht in der Tür. Tränen in den Augen. Aber gute Tränen. Wissenschaftler-Tränen. "Der Chip MUSSTE zerstört werden. Nur so konnte seine Energie freigesetzt werden. Nicht für EINEN Menschen — für ALLE."
 
 Er lächelt. "Danke. Du hast die Gleichung gelöst."
 
@@ -2234,7 +2234,7 @@ Jeder Splitter findet seinen Weg. Durch die Gänge des CRISINO, durch die Türen
 
 Du hast die Macht nicht AUFGEGEBEN. Du hast sie GETEILT.
 
-Rico wird Co-Besitzer. NATÜRLICH wird Rico Co-Besitzer. "Beste Business-Entscheidung meines Lebens!" ruft er, während er die Bar komplett umgestaltet. Brutus wird Sicherheitschef UND Resident-Philosoph. Der Dealer — dein anderes Ich — löst sich auf. Nicht in Trauer, sondern in FRIEDEN. "Du hast das geschafft, was ich nie konnte," flüstert er, bevor er verschwindet. "Du hast den Chip benutzt, ohne dich von ihm benutzen zu lassen."
+Crisio wird Co-Besitzer. NATÜRLICH wird Crisio Co-Besitzer. "Beste Business-Entscheidung meines Lebens!" ruft er, während er die Bar komplett umgestaltet. Wolfkampf wird Sicherheitschef UND Resident-Philosoph. Kurainu — dein anderes Ich — löst sich auf. Nicht in Trauer, sondern in FRIEDEN. "Du hast das geschafft, was ich nie konnte," flüstert er, bevor er verschwindet. "Du hast den Chip benutzt, ohne dich von ihm benutzen zu lassen."
 
 Das CRISINO wird legendär. Nicht als Ort des Glücksspiels, sondern als Ort des GLÜCKS. Ein feiner, aber entscheidender Unterschied.
 

@@ -282,6 +282,13 @@ export function CasinoPage() {
   const [sudokuStart, setSudokuStart] = useState(0);
   const [sudokuDone, setSudokuDone] = useState(false);
   const [sudokuMsg, setSudokuMsg] = useState<string | null>(null);
+  // 9x9 Sudoku
+  const [s9Puzzle, setS9Puzzle] = useState<(number | 0)[][] | null>(null);
+  const [s9Grid, setS9Grid] = useState<number[][]>([]);
+  const [s9Diff, setS9Diff] = useState<"easy" | "medium" | "hard">("easy");
+  const [s9Start, setS9Start] = useState(0);
+  const [s9Done, setS9Done] = useState(false);
+  const [s9Msg, setS9Msg] = useState<string | null>(null);
 
   // Dice 21
   const [d21, setD21] = useState<{ total: number; rolls: number[]; bet: number; finished: boolean } | null>(null);
@@ -1961,6 +1968,18 @@ export function CasinoPage() {
               <div className="text-xs text-gray-500 mt-1">4x4 · Bis zu 75 Pts</div>
               <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(59,130,246,0.2)", color: "#60a5fa" }}>Spielen</div>
             </button>
+            {/* 9x9 Sudoku */}
+            <button onClick={() => {
+              setActiveMinigame("sudoku9" as any); setS9Done(false); setS9Msg(null);
+              api.get<any>(`/viewer/${channelName}/casino/minigame/sudoku9?difficulty=${s9Diff}`).then((r: any) => {
+                if (r.data) { setS9Puzzle(r.data.puzzle); setS9Grid(r.data.puzzle.map((row: number[]) => [...row])); setS9Start(Date.now()); }
+              });
+            }} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(234,179,8,0.3)" }}>
+              <div className="text-4xl mb-2">🧩</div>
+              <div className="font-black text-yellow-400">Sudoku 9x9</div>
+              <div className="text-xs text-gray-500 mt-1">Bis zu 15K Pts!</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(234,179,8,0.2)", color: "#eab308" }}>Spielen</div>
+            </button>
             {/* Over/Under */}
             <button onClick={() => setActiveMinigame("overunder" as any)} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
               <div className="text-4xl mb-2">🎯</div>
@@ -2187,8 +2206,14 @@ export function CasinoPage() {
                 const allFilled = sudokuGrid.every(row => row.every(v => v > 0));
                 if (!allFilled) { setSudokuMsg("Fülle alle Felder aus!"); return; }
                 // Validate
-                const correct = sudokuSolution && sudokuGrid.every((row, r) => row.every((v, c) => v === sudokuSolution[r]![c]));
-                if (!correct) { setSudokuMsg("❌ Falsch! Versuche es nochmal."); casinoSounds.loss(); return; }
+                // Validate: rows, cols, boxes (accepts any valid solution)
+                const sz = sudokuGrid.length; const bx = sz === 9 ? 3 : 2; let ok = true;
+                for (let r = 0; r < sz && ok; r++) { if (new Set(sudokuGrid[r]).size !== sz) ok = false; }
+                for (let c = 0; c < sz && ok; c++) { if (new Set(sudokuGrid.map(row => row[c])).size !== sz) ok = false; }
+                for (let br = 0; br < sz && ok; br += bx) for (let bc = 0; bc < sz && ok; bc += bx) {
+                  const s = new Set<number>(); for (let r = br; r < br + bx; r++) for (let c = bc; c < bc + bx; c++) s.add(sudokuGrid[r]![c]!); if (s.size !== sz) ok = false;
+                }
+                if (!ok) { setSudokuMsg("❌ Falsch! Versuche es nochmal."); casinoSounds.loss(); return; }
                 // Submit
                 const timeMs = Date.now() - sudokuStart;
                 const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/sudoku/submit`, { difficulty: sudokuDiff, timeMs }) as any;
@@ -2207,6 +2232,83 @@ export function CasinoPage() {
                   if (r.data) { setSudokuPuzzle(r.data.puzzle); setSudokuSolution(r.data.solution); setSudokuGrid(r.data.puzzle.map((row: number[]) => [...row])); setSudokuStart(Date.now()); }
                 });
               }} className="casino-btn px-8 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(59,130,246,0.2)", border: "1px solid rgba(59,130,246,0.4)" }}>
+                🔄 Nochmal
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 9x9 Sudoku Modal */}
+      {activeMinigame === ("sudoku9" as any) && s9Puzzle && (
+        <div className="fixed inset-0 z-[35] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-4 text-center max-w-lg w-full mx-4 max-h-[95vh] overflow-y-auto" style={{ background: "linear-gradient(180deg, #0a0a1a, #000)", border: "2px solid rgba(234,179,8,0.4)" }}>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-black text-lg text-yellow-400">🧩 Sudoku 9x9</h3>
+              <button onClick={() => { setActiveMinigame(null); setS9Puzzle(null); }} className="text-gray-500 hover:text-white text-lg">✕</button>
+            </div>
+            <div className="flex justify-center gap-2 mb-2">
+              {(["easy", "medium", "hard"] as const).map(d => (
+                <button key={d} onClick={() => {
+                  setS9Diff(d); setS9Done(false); setS9Msg(null);
+                  api.get<any>(`/viewer/${channelName}/casino/minigame/sudoku9?difficulty=${d}`).then((r: any) => {
+                    if (r.data) { setS9Puzzle(r.data.puzzle); setS9Grid(r.data.puzzle.map((row: number[]) => [...row])); setS9Start(Date.now()); }
+                  });
+                }} className={`text-[10px] px-2 py-1 rounded-full font-bold ${s9Diff === d ? "bg-yellow-500 text-black" : "bg-yellow-500/20 text-yellow-300"}`}>
+                  {d === "easy" ? "Leicht (2.5K)" : d === "medium" ? "Mittel (5K)" : "Schwer (10K)"}
+                </button>
+              ))}
+            </div>
+            {s9Msg && <p className={`text-sm mb-2 font-bold ${s9Msg.includes("+") ? "text-green-400" : s9Msg.includes("Falsch") ? "text-red-400" : "text-yellow-400"}`}>{s9Msg}</p>}
+            <div className="inline-grid gap-[1px] mx-auto mb-2" style={{ gridTemplateColumns: "repeat(9, 1fr)" }}>
+              {s9Grid.map((row, r) => row.map((val, c) => {
+                const isOrig = s9Puzzle![r]![c] !== 0;
+                return (
+                  <div key={`${r}-${c}`} className={`w-8 h-8 flex items-center justify-center text-sm font-bold rounded ${isOrig ? "bg-yellow-500/20 text-yellow-300" : val > 0 ? "bg-white/10 text-white" : "bg-white/5 text-gray-600"}`}
+                    style={{
+                      border: `1px solid ${isOrig ? "rgba(234,179,8,0.3)" : "rgba(255,255,255,0.08)"}`,
+                      borderRight: (c === 2 || c === 5) ? "2px solid rgba(234,179,8,0.5)" : undefined,
+                      borderBottom: (r === 2 || r === 5) ? "2px solid rgba(234,179,8,0.5)" : undefined,
+                    }}>
+                    {isOrig ? val : (
+                      <select value={val || ""} onChange={e => {
+                        const g = s9Grid.map(row => [...row]);
+                        g[r]![c] = parseInt(e.target.value) || 0;
+                        setS9Grid(g);
+                      }} className="w-full h-full bg-transparent text-center text-sm font-bold appearance-none cursor-pointer" style={{ color: val > 0 ? "#fff" : "#666" }}>
+                        <option value="">-</option>
+                        {[1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    )}
+                  </div>
+                );
+              }))}
+            </div>
+            {!s9Done ? (
+              <button onClick={async () => {
+                if (s9Grid.some(row => row.some(v => !v || v < 1 || v > 9))) { setS9Msg("Fülle alle Felder!"); return; }
+                // Validate locally
+                let ok = true;
+                for (let r = 0; r < 9 && ok; r++) { if (new Set(s9Grid[r]).size !== 9) ok = false; }
+                for (let c = 0; c < 9 && ok; c++) { if (new Set(s9Grid.map(row => row[c])).size !== 9) ok = false; }
+                for (let br = 0; br < 9 && ok; br += 3) for (let bc = 0; bc < 9 && ok; bc += 3) {
+                  const s = new Set<number>(); for (let r = br; r < br + 3; r++) for (let c = bc; c < bc + 3; c++) s.add(s9Grid[r]![c]!); if (s.size !== 9) ok = false;
+                }
+                if (!ok) { setS9Msg("❌ Falsch!"); casinoSounds.loss(); return; }
+                const timeMs = Date.now() - s9Start;
+                const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/sudoku9/submit`, { submitted: s9Grid, difficulty: s9Diff, timeMs }) as any;
+                if (res.success) { setS9Done(true); setS9Msg(`✅ Gelöst in ${(timeMs/1000).toFixed(0)}s! +${formatNumber(res.data.points)} Pts!`); casinoSounds.jackpot(); fetchPoints(); }
+                else setS9Msg(res.error ?? "Fehler!");
+              }} className="casino-btn px-6 py-2 rounded-xl font-black text-black" style={{ background: "linear-gradient(135deg, #eab308, #ca8a04)" }}>
+                ✅ Prüfen
+              </button>
+            ) : (
+              <button onClick={() => {
+                setS9Done(false); setS9Msg(null);
+                api.get<any>(`/viewer/${channelName}/casino/minigame/sudoku9?difficulty=${s9Diff}`).then((r: any) => {
+                  if (r.data) { setS9Puzzle(r.data.puzzle); setS9Grid(r.data.puzzle.map((row: number[]) => [...row])); setS9Start(Date.now()); }
+                });
+              }} className="casino-btn px-6 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(234,179,8,0.2)", border: "1px solid rgba(234,179,8,0.4)" }}>
                 🔄 Nochmal
               </button>
             )}

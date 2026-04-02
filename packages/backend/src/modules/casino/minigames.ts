@@ -586,11 +586,36 @@ export function generateSudoku(difficulty: "easy" | "medium" | "hard"): {
   return { puzzle, solution, blanks: blanksCount, difficulty, reward };
 }
 
-export function validateSudoku(solution: number[][], submitted: number[][]): boolean {
-  // Check all cells match
-  for (let r = 0; r < 4; r++) {
-    for (let c = 0; c < 4; c++) {
-      if (solution[r]![c] !== submitted[r]?.[c]) return false;
+/** Validate a completed sudoku grid — accepts ANY valid solution, not just the generated one */
+export function validateSudoku(solution: number[][], submitted: number[][], size = 4): boolean {
+  const boxSize = size === 9 ? 3 : 2;
+  // Check original clue cells are unchanged
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const val = submitted[r]?.[c];
+      if (!val || val < 1 || val > size) return false;
+    }
+  }
+  // Check rows
+  for (let r = 0; r < size; r++) {
+    const seen = new Set<number>();
+    for (let c = 0; c < size; c++) { seen.add(submitted[r]![c]!); }
+    if (seen.size !== size) return false;
+  }
+  // Check cols
+  for (let c = 0; c < size; c++) {
+    const seen = new Set<number>();
+    for (let r = 0; r < size; r++) { seen.add(submitted[r]![c]!); }
+    if (seen.size !== size) return false;
+  }
+  // Check boxes
+  for (let br = 0; br < size; br += boxSize) {
+    for (let bc = 0; bc < size; bc += boxSize) {
+      const seen = new Set<number>();
+      for (let r = br; r < br + boxSize; r++) {
+        for (let c = bc; c < bc + boxSize; c++) { seen.add(submitted[r]![c]!); }
+      }
+      if (seen.size !== size) return false;
     }
   }
   return true;
@@ -628,5 +653,65 @@ export async function submitSudoku(
   await redis.lpush(`casino:feed:${channelId}`, entry);
   await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
 
+  return { points: pts };
+}
+
+// ── 9x9 Sudoku (up to 10,000 pts) ──
+
+function generate9x9Solution(): number[][] {
+  const grid: number[][] = Array.from({ length: 9 }, () => Array(9).fill(0));
+  function isValid(r: number, c: number, num: number): boolean {
+    for (let i = 0; i < 9; i++) { if (grid[r]![i] === num || grid[i]![c] === num) return false; }
+    const br = Math.floor(r / 3) * 3, bc = Math.floor(c / 3) * 3;
+    for (let i = br; i < br + 3; i++) for (let j = bc; j < bc + 3; j++) { if (grid[i]![j] === num) return false; }
+    return true;
+  }
+  function solve(): boolean {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (grid[r]![c] !== 0) continue;
+        const nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+        for (const n of nums) {
+          if (isValid(r, c, n)) { grid[r]![c] = n; if (solve()) return true; grid[r]![c] = 0; }
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+  solve();
+  return grid;
+}
+
+export function generate9x9Sudoku(difficulty: "easy" | "medium" | "hard"): {
+  puzzle: (number | 0)[][]; solution: number[][]; blanks: number; difficulty: string; reward: number; size: 9;
+} {
+  const solution = generate9x9Solution();
+  const blanksCount = difficulty === "easy" ? 35 : difficulty === "medium" ? 45 : 55;
+  const reward = difficulty === "easy" ? 2500 : difficulty === "medium" ? 5000 : 10000;
+  const puzzle: (number | 0)[][] = solution.map(r => [...r]);
+  const positions: [number, number][] = [];
+  for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) positions.push([r, c]);
+  positions.sort(() => Math.random() - 0.5);
+  for (let i = 0; i < blanksCount; i++) { const [r, c] = positions[i]!; puzzle[r]![c!] = 0; }
+  return { puzzle, solution, blanks: blanksCount, difficulty, reward, size: 9 };
+}
+
+export async function submit9x9Sudoku(
+  channelId: string, userId: string, displayName: string,
+  submitted: number[][], difficulty: "easy" | "medium" | "hard", timeMs: number,
+): Promise<{ points: number } | { error: string }> {
+  const cdKey = `casino:sudoku9:cd:${channelId}:${userId}`;
+  if (await redis.get(cdKey)) return { error: "9x9 Sudoku Cooldown! Warte 60 Sekunden." };
+  if (!validateSudoku([], submitted, 9)) return { error: "Lösung ist nicht korrekt!" };
+  const baseReward = difficulty === "easy" ? 2500 : difficulty === "medium" ? 5000 : 10000;
+  let timeBonus = 0;
+  if (timeMs < 120000) timeBonus = Math.round(baseReward * 0.5);
+  else if (timeMs < 300000) timeBonus = Math.round(baseReward * 0.25);
+  const pts = baseReward + timeBonus;
+  await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId, twitchUserId: userId } }, data: { points: { increment: pts } } });
+  await redis.set(cdKey, "1", "EX", 60);
+  const entry = JSON.stringify({ user: displayName, game: "sudoku9x9", payout: pts, profit: pts, detail: `🔢 9x9 Sudoku (${difficulty}) gelöst! +${pts} (${(timeMs/1000).toFixed(0)}s)`, time: Date.now() });
+  await redis.lpush(`casino:feed:${channelId}`, entry); await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
   return { points: pts };
 }

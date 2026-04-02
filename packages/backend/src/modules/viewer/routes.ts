@@ -1250,6 +1250,36 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── 9x9 Sudoku ──
+  app.get<{ Params: { channelName: string }; Querystring: { difficulty?: string } }>(
+    "/:channelName/casino/minigame/sudoku9",
+    async (request, reply) => {
+      const { generate9x9Sudoku } = await import("../casino/minigames.js");
+      const diff = (request.query.difficulty ?? "easy") as "easy" | "medium" | "hard";
+      return { success: true, data: generate9x9Sudoku(diff) };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { submitted: number[][]; difficulty: string; timeMs: number } }>(
+    "/:channelName/casino/minigame/sudoku9/submit",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil!" });
+      const { submit9x9Sudoku } = await import("../casino/minigames.js");
+      const diff = request.body.difficulty as "easy" | "medium" | "hard";
+      const result = await submit9x9Sudoku(channel.id, user.twitchId, channelUser.displayName, request.body.submitted, diff, request.body.timeMs);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, points: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
   // ── Dice 21 ──
   app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
     "/:channelName/casino/minigame/dice21/start",

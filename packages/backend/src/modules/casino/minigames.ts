@@ -13,9 +13,6 @@ export async function submitSnakeScore(
   const capped = Math.min(score, 50);
 
   // Cooldown 30s
-  const cdKey = `cd:minigame:snake:${channelId}:${userId}`;
-  const set = await redis.set(cdKey, "1", "EX", 30, "NX");
-  if (!set) return { error: "Cooldown! Warte 30 Sekunden." };
 
   // Award points
   if (capped > 0) {
@@ -257,9 +254,6 @@ export async function submitMemoryScore(
   const cappedPairs = Math.min(pairs, 8);
 
   // Cooldown 60s
-  const cdKey = `cd:minigame:memory:${channelId}:${userId}`;
-  const set = await redis.set(cdKey, "1", "EX", 60, "NX");
-  if (!set) return { error: "Cooldown! Warte 60 Sekunden." };
 
   // Calculate points: 2 per pair + time bonus
   let pts = cappedPairs * 2;
@@ -325,9 +319,6 @@ export async function startDice21(
   }
 
   // Cooldown 30s
-  const cdKey = `cd:dice21:${channelId}:${userId}`;
-  const cdSet = await redis.set(cdKey, "1", "EX", 30, "NX");
-  if (!cdSet) return { error: "Cooldown! Warte 30 Sekunden." };
 
   const cu = await prisma.channelUser.findUnique({
     where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
@@ -418,10 +409,10 @@ export async function standDice21(
 
   state.finished = true;
 
-  // House rolls — hit until 15+
+  // House rules: hit on 16 or below, stand on 17+ (like real casino blackjack)
   let houseTotal = 0;
   const houseRolls: number[] = [];
-  while (houseTotal < 15) {
+  while (houseTotal < 17) {
     const roll = Math.floor(Math.random() * 6) + 1;
     houseRolls.push(roll);
     houseTotal += roll;
@@ -626,9 +617,6 @@ export async function submitSudoku(
   difficulty: "easy" | "medium" | "hard", timeMs: number,
 ): Promise<{ points: number } | { error: string }> {
   // Cooldown 30s
-  const cdKey = `casino:sudoku:cd:${channelId}:${userId}`;
-  const cd = await redis.get(cdKey);
-  if (cd) return { error: "Sudoku Cooldown! Warte 30 Sekunden." };
 
   const baseReward = difficulty === "easy" ? 10 : difficulty === "medium" ? 25 : 50;
   // Time bonus: under 30s +50%, under 60s +25%
@@ -643,7 +631,6 @@ export async function submitSudoku(
     data: { points: { increment: pts } },
   });
 
-  await redis.set(cdKey, "1", "EX", 30);
 
   const entry = JSON.stringify({
     user: displayName, game: "sudoku", payout: pts, profit: pts,
@@ -701,8 +688,6 @@ export async function submit9x9Sudoku(
   channelId: string, userId: string, displayName: string,
   submitted: number[][], difficulty: "easy" | "medium" | "hard", timeMs: number,
 ): Promise<{ points: number } | { error: string }> {
-  const cdKey = `casino:sudoku9:cd:${channelId}:${userId}`;
-  if (await redis.get(cdKey)) return { error: "9x9 Sudoku Cooldown! Warte 60 Sekunden." };
   if (!validateSudoku([], submitted, 9)) return { error: "Lösung ist nicht korrekt!" };
   const baseReward = difficulty === "easy" ? 2500 : difficulty === "medium" ? 5000 : 10000;
   let timeBonus = 0;
@@ -710,7 +695,6 @@ export async function submit9x9Sudoku(
   else if (timeMs < 300000) timeBonus = Math.round(baseReward * 0.25);
   const pts = baseReward + timeBonus;
   await prisma.channelUser.update({ where: { channelId_twitchUserId: { channelId, twitchUserId: userId } }, data: { points: { increment: pts } } });
-  await redis.set(cdKey, "1", "EX", 60);
   const entry = JSON.stringify({ user: displayName, game: "sudoku9x9", payout: pts, profit: pts, detail: `🔢 9x9 Sudoku (${difficulty}) gelöst! +${pts} (${(timeMs/1000).toFixed(0)}s)`, time: Date.now() });
   await redis.lpush(`casino:feed:${channelId}`, entry); await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
   return { points: pts };

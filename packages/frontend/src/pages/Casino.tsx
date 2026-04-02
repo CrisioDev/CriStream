@@ -2324,14 +2324,13 @@ export function CasinoPage() {
               <h3 className="font-black text-lg text-orange-400">🎲 Würfel 21</h3>
               <button onClick={() => { setActiveMinigame(null); setD21(null); setD21Msg(null); }} className="text-gray-500 hover:text-white text-lg">✕</button>
             </div>
-            {d21Msg && <p className={`text-sm mb-2 font-bold ${d21Msg.includes("+") ? "text-green-400" : d21Msg.includes("BUST") ? "text-red-400" : "text-yellow-400"}`}>{d21Msg}</p>}
+            {d21Msg && <p className={`text-sm mb-2 font-bold ${d21Msg.includes("+") || d21Msg.includes("Gewonnen") ? "text-green-400" : d21Msg.includes("BUST") || d21Msg.includes("verloren") || d21Msg.includes("Haus") ? "text-red-400" : "text-yellow-400"}`}>{d21Msg}</p>}
             {!d21 || d21.finished ? (
               <div>
-                <p className="text-gray-400 text-sm mb-3">Würfle so nah an 21 wie möglich — aber nicht drüber!</p>
+                <p className="text-gray-400 text-sm mb-3">Würfle gegen das Haus! Näher an 21 gewinnt.</p>
                 <div className="text-xs text-gray-500 mb-3 space-y-0.5">
-                  <p>20-21: x3 · 18-19: x2.5 · 16-17: x2</p>
-                  <p>14-15: x1.5 · 12-13: x1.2 · &lt;12: x1</p>
-                  <p>Über 21: Alles verloren! · Genau 21: x3!</p>
+                  <p>Du würfelst → dann würfelt das Haus (stoppt bei 15+)</p>
+                  <p>Gewinn: x2 · Genau 21: x3! · Gleichstand: Haus gewinnt</p>
                 </div>
                 <div className="flex items-center justify-center gap-2 mb-3">
                   <span className="text-gray-500 text-sm">Einsatz:</span>
@@ -2342,19 +2341,20 @@ export function CasinoPage() {
                   if (res.success) { setD21({ total: res.data.total, rolls: res.data.rolls, bet: d21Bet, finished: false }); setD21Msg(null); casinoSounds.coinFlip(); }
                   else setD21Msg(res.error ?? "Fehler!");
                 }} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black" style={{ background: "linear-gradient(135deg, #fb923c, #ea580c)" }}>
-                  🎲 Würfeln! ({d21Bet} Pts)
+                  🎲 Würfeln! ({formatNumber(d21Bet)} Pts)
                 </button>
               </div>
             ) : (
               <div>
-                <div className="flex justify-center gap-2 mb-3">
+                <p className="text-xs text-gray-500 mb-2">Deine Würfel:</p>
+                <div className="flex justify-center gap-2 mb-2">
                   {d21.rolls.map((r, i) => (
-                    <div key={i} className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black" style={{ background: "rgba(251,146,60,0.2)", border: "1px solid rgba(251,146,60,0.4)" }}>
+                    <div key={i} className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black" style={{ background: "rgba(251,146,60,0.2)", border: "1px solid rgba(251,146,60,0.4)" }}>
                       {r}
                     </div>
                   ))}
                 </div>
-                <p className={`text-4xl font-black mb-3 ${d21.total > 18 ? "text-orange-400" : d21.total > 14 ? "text-yellow-400" : "text-white"}`}>{d21.total}</p>
+                <p className={`text-4xl font-black mb-3 ${d21.total > 18 ? "text-orange-400" : d21.total > 14 ? "text-yellow-400" : "text-white"}`}>{d21.total} <span className="text-lg text-gray-500">/ 21</span></p>
                 <div className="flex justify-center gap-3">
                   <button onClick={async () => {
                     casinoSounds.coinFlip();
@@ -2362,28 +2362,35 @@ export function CasinoPage() {
                     if (res.success) {
                       if (res.data.bust) {
                         setD21({ ...d21, total: res.data.total, rolls: res.data.rolls, finished: true });
-                        setD21Msg(`💥 BUST! ${res.data.total} — Einsatz verloren!`);
+                        setD21Msg(`💥 BUST! ${res.data.total} > 21 — Einsatz verloren!`);
                         casinoSounds.loss(); fetchPoints();
                       } else if (res.data.payout) {
                         setD21({ ...d21, total: 21, rolls: res.data.rolls, finished: true });
-                        setD21Msg(`🎯 PERFEKT 21! x3 → +${res.data.payout} Pts!`);
+                        setD21Msg(`🎯 BLACKJACK! 21! x3 → +${formatNumber(res.data.payout)} Pts!`);
                         casinoSounds.jackpot(); fetchPoints();
                       } else {
                         setD21({ ...d21, total: res.data.total, rolls: res.data.rolls });
                       }
                     } else setD21Msg(res.error ?? "Fehler!");
                   }} className="casino-btn px-6 py-3 rounded-xl font-black text-white" style={{ background: "linear-gradient(135deg, #fb923c, #ea580c)" }}>
-                    🎲 WÜRFELN
+                    🎲 NOCH EINS
                   </button>
                   <button onClick={async () => {
                     const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/dice21/stand`, {}) as any;
                     if (res.success) {
                       setD21({ ...d21, finished: true });
-                      setD21Msg(`✅ ${res.data.total} · x${res.data.multiplier} → +${res.data.payout} Pts!`);
-                      casinoSounds.win(); fetchPoints();
+                      const d = res.data;
+                      if (d.playerWins) {
+                        setD21Msg(`✅ Gewonnen! Du: ${d.playerTotal} vs Haus: ${d.houseTotal}${d.houseBust ? " (BUST)" : ""} → x${d.multiplier} → +${formatNumber(d.payout)} Pts!`);
+                        casinoSounds.bigWin();
+                      } else {
+                        setD21Msg(`❌ Haus gewinnt! Du: ${d.playerTotal} vs Haus: ${d.houseTotal}${d.houseBust ? " (BUST)" : ""}`);
+                        casinoSounds.loss();
+                      }
+                      fetchPoints();
                     } else setD21Msg(res.error ?? "Fehler!");
                   }} className="casino-btn px-6 py-3 rounded-xl font-black text-black" style={{ background: "linear-gradient(135deg, #4ade80, #22c55e)" }}>
-                    ✋ STOPP
+                    ✋ STOPP (Haus würfelt)
                   </button>
                 </div>
               </div>

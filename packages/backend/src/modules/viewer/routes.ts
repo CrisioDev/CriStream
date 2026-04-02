@@ -1280,6 +1280,26 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Roulette ──
+  app.post<{ Params: { channelName: string }; Body: { betAmount: number; bets: any[] } }>(
+    "/:channelName/casino/minigame/roulette",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const channelUser = await prisma.channelUser.findUnique({
+        where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+      });
+      if (!channelUser) return reply.status(400).send({ success: false, error: "Kein Profil!" });
+      const { playRoulette } = await import("../casino/minigames.js");
+      const result = await playRoulette(channel.id, user.twitchId, channelUser.displayName, request.body.betAmount, request.body.bets);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, points: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
   // ── Poker ──
   app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
     "/:channelName/casino/minigame/poker/start",

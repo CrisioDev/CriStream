@@ -282,6 +282,13 @@ export function CasinoPage() {
   const [sudokuStart, setSudokuStart] = useState(0);
   const [sudokuDone, setSudokuDone] = useState(false);
   const [sudokuMsg, setSudokuMsg] = useState<string | null>(null);
+  // Roulette
+  const [rouletteBet, setRouletteBet] = useState(20);
+  const [rouletteBets, setRouletteBets] = useState<any[]>([]);
+  const [rouletteResult, setRouletteResult] = useState<any>(null);
+  const [rouletteSpinning, setRouletteSpinning] = useState(false);
+  const [rouletteMsg, setRouletteMsg] = useState<string | null>(null);
+
   // Poker
   const [pokerHand, setPokerHand] = useState<any[] | null>(null);
   const [pokerSelected, setPokerSelected] = useState<Set<number>>(new Set());
@@ -1987,6 +1994,14 @@ export function CasinoPage() {
               <div className="text-xs text-gray-500 mt-1">Bis zu 15K Pts!</div>
               <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(234,179,8,0.2)", color: "#eab308" }}>Spielen</div>
             </button>
+            {/* Roulette */}
+            <button onClick={() => { setActiveMinigame("roulette" as any); setRouletteResult(null); setRouletteBets([]); setRouletteMsg(null); }}
+              className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(34,197,94,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(34,197,94,0.3)" }}>
+              <div className="text-4xl mb-2">🎰</div>
+              <div className="font-black text-green-400">Roulette</div>
+              <div className="text-xs text-gray-500 mt-1">Nummer x36 · Farbe x2</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80" }}>Spielen</div>
+            </button>
             {/* Poker */}
             <button onClick={() => { setActiveMinigame("poker" as any); setPokerHand(null); setPokerResult(null); setPokerMsg(null); setPokerSelected(new Set()); }}
               className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(220,38,38,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(220,38,38,0.3)" }}>
@@ -2327,6 +2342,95 @@ export function CasinoPage() {
                 🔄 Nochmal
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Roulette Modal */}
+      {activeMinigame === ("roulette" as any) && (
+        <div className="fixed inset-0 z-[35] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-5 text-center max-w-md w-full mx-4 max-h-[95vh] overflow-y-auto" style={{ background: "linear-gradient(180deg, #0a1a0a, #000)", border: "2px solid rgba(34,197,94,0.4)" }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-black text-lg text-green-400">🎰 Roulette</h3>
+              <button onClick={() => setActiveMinigame(null)} className="text-gray-500 hover:text-white text-lg">✕</button>
+            </div>
+            {rouletteMsg && <p className={`text-sm mb-2 font-bold ${rouletteMsg.includes("+") ? "text-green-400" : "text-red-400"}`}>{rouletteMsg}</p>}
+
+            {rouletteResult && (
+              <div className="mb-3">
+                <div className={`text-5xl font-black mb-1 ${rouletteResult.color === "red" ? "text-red-500" : rouletteResult.color === "black" ? "text-white" : "text-green-500"}`}>
+                  {rouletteResult.result}
+                </div>
+                <div className="text-lg">{rouletteResult.color === "red" ? "🔴 Rot" : rouletteResult.color === "black" ? "⚫ Schwarz" : "🟢 Grün (0)"}</div>
+              </div>
+            )}
+
+            {/* Bet amount */}
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <span className="text-gray-500 text-xs">Pro Wette:</span>
+              <input type="number" min={5} value={rouletteBet} onChange={e => setRouletteBet(Math.max(5, +e.target.value))} className="w-20 bg-black/40 border border-green-500/30 rounded-lg px-2 py-1 text-center text-white text-sm" />
+            </div>
+
+            {/* Active bets */}
+            {rouletteBets.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1 mb-2">
+                {rouletteBets.map((b, i) => (
+                  <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                    {b.type === "number" ? `#${b.value}` : b.type === "dozen" ? `D${b.value}` : b.type === "column" ? `C${b.value}` : b.type}
+                    <button onClick={() => setRouletteBets(rouletteBets.filter((_, j) => j !== i))} className="ml-1 text-red-400">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Bet buttons */}
+            <div className="space-y-2 mb-3">
+              <div className="flex justify-center gap-1">
+                <button onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "red" }])} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white">🔴 Rot x2</button>
+                <button onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "black" }])} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-white border border-gray-600">⚫ Schwarz x2</button>
+                <button onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "even" }])} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600/30 text-blue-300">Gerade x2</button>
+                <button onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "odd" }])} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600/30 text-purple-300">Ungerade x2</button>
+              </div>
+              <div className="flex justify-center gap-1">
+                <button onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "low" }])} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-600/30 text-cyan-300">1-18 x2</button>
+                <button onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "high" }])} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-600/30 text-orange-300">19-36 x2</button>
+                {[1,2,3].map(d => (
+                  <button key={d} onClick={() => rouletteBets.length < 5 && setRouletteBets([...rouletteBets, { type: "dozen", value: d }])} className="px-2 py-1.5 rounded-lg text-xs font-bold bg-yellow-600/30 text-yellow-300">D{d} x3</button>
+                ))}
+              </div>
+              {/* Number bet */}
+              <div className="flex justify-center gap-1 items-center">
+                <span className="text-xs text-gray-500">Nummer:</span>
+                <input type="number" min={0} max={36} defaultValue={7} id="roulette-num" className="w-14 bg-black/40 border border-green-500/30 rounded-lg px-1 py-1 text-center text-white text-xs" />
+                <button onClick={() => {
+                  const num = parseInt((document.getElementById("roulette-num") as HTMLInputElement).value);
+                  if (num >= 0 && num <= 36 && rouletteBets.length < 5) setRouletteBets([...rouletteBets, { type: "number", value: num }]);
+                }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white">x36</button>
+              </div>
+            </div>
+
+            {/* Spin */}
+            <button onClick={async () => {
+              if (rouletteBets.length === 0) { setRouletteMsg("Platziere mindestens 1 Wette!"); return; }
+              setRouletteSpinning(true); setRouletteResult(null); setRouletteMsg(null);
+              casinoSounds.spin();
+              const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/roulette`, { betAmount: rouletteBet, bets: rouletteBets }) as any;
+              setTimeout(() => {
+                setRouletteSpinning(false);
+                if (!res.success) { setRouletteMsg(res.error ?? "Fehler!"); return; }
+                setRouletteResult(res.data);
+                const p = res.data.totalProfit;
+                setRouletteMsg(p >= 0 ? `+${formatNumber(res.data.totalPayout)} Pts!` : `${formatNumber(p)} Pts`);
+                if (p > 0) casinoSounds.win(); else casinoSounds.loss();
+                setRouletteBets([]);
+                fetchPoints();
+              }, 1500);
+            }} disabled={rouletteSpinning || rouletteBets.length === 0}
+              className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-black w-full"
+              style={{ background: rouletteSpinning ? "#666" : "linear-gradient(135deg, #4ade80, #22c55e)" }}>
+              {rouletteSpinning ? "DREHT..." : `🎰 DREHEN (${formatNumber(rouletteBet * rouletteBets.length)} Pts)`}
+            </button>
+            <p className="text-[10px] text-gray-600 mt-2">Max 5 Wetten gleichzeitig · 0 = Grün (Haus)</p>
           </div>
         </div>
       )}

@@ -700,6 +700,88 @@ export async function submit9x9Sudoku(
   return { points: pts };
 }
 
+// ── Roulette ──
+// Bet on: number (0-36), color (red/black), even/odd, high/low, dozen, column
+// Payouts: number=x36, color=x2, even/odd=x2, high/low=x2, dozen=x3, column=x3
+
+const RED_NUMBERS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+
+type RouletteBet = { type: "number"; value: number } | { type: "red" | "black" | "even" | "odd" | "high" | "low" } | { type: "dozen"; value: 1 | 2 | 3 } | { type: "column"; value: 1 | 2 | 3 };
+
+function evaluateRouletteBet(bet: RouletteBet, result: number): { win: boolean; multiplier: number } {
+  if (result === 0) {
+    // 0 = only exact number bet wins
+    if (bet.type === "number" && bet.value === 0) return { win: true, multiplier: 36 };
+    return { win: false, multiplier: 0 };
+  }
+  switch (bet.type) {
+    case "number": return { win: bet.value === result, multiplier: 36 };
+    case "red": return { win: RED_NUMBERS.has(result), multiplier: 2 };
+    case "black": return { win: !RED_NUMBERS.has(result), multiplier: 2 };
+    case "even": return { win: result % 2 === 0, multiplier: 2 };
+    case "odd": return { win: result % 2 === 1, multiplier: 2 };
+    case "high": return { win: result >= 19, multiplier: 2 };
+    case "low": return { win: result <= 18, multiplier: 2 };
+    case "dozen":
+      if (bet.value === 1) return { win: result >= 1 && result <= 12, multiplier: 3 };
+      if (bet.value === 2) return { win: result >= 13 && result <= 24, multiplier: 3 };
+      return { win: result >= 25 && result <= 36, multiplier: 3 };
+    case "column":
+      return { win: result % 3 === (bet.value % 3), multiplier: 3 };
+    default: return { win: false, multiplier: 0 };
+  }
+}
+
+export async function playRoulette(
+  channelId: string, userId: string, displayName: string,
+  betAmount: number, bets: RouletteBet[],
+): Promise<{ result: number; color: string; wins: { bet: RouletteBet; win: boolean; payout: number }[]; totalPayout: number; totalProfit: number } | { error: string }> {
+  if (betAmount < 5) return { error: "Mindesteinsatz: 5 Punkte pro Wette!" };
+  if (bets.length < 1 || bets.length > 5) return { error: "1-5 Wetten erlaubt!" };
+
+  const totalCost = betAmount * bets.length;
+  const cu = await prisma.channelUser.findUnique({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+  });
+  if (!cu || cu.points < totalCost) return { error: `Nicht genug Punkte! Brauchst ${totalCost}.` };
+
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { decrement: totalCost } },
+  });
+
+  // Spin the wheel
+  const result = Math.floor(Math.random() * 37); // 0-36
+  const color = result === 0 ? "green" : RED_NUMBERS.has(result) ? "red" : "black";
+
+  // Evaluate all bets
+  const wins = bets.map(bet => {
+    const { win, multiplier } = evaluateRouletteBet(bet, result);
+    return { bet, win, payout: win ? betAmount * multiplier : 0 };
+  });
+
+  const totalPayout = wins.reduce((s, w) => s + w.payout, 0);
+  if (totalPayout > 0) {
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+      data: { points: { increment: totalPayout } },
+    });
+  }
+
+  const totalProfit = totalPayout - totalCost;
+  const winCount = wins.filter(w => w.win).length;
+
+  const entry = JSON.stringify({
+    user: displayName, game: "roulette", payout: totalPayout, profit: totalProfit,
+    detail: `🎰 Roulette: ${result} ${color === "red" ? "🔴" : color === "black" ? "⚫" : "🟢"} · ${winCount}/${bets.length} Treffer → ${totalPayout}`,
+    time: Date.now(),
+  });
+  await redis.lpush(`casino:feed:${channelId}`, entry);
+  await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+  return { result, color, wins, totalPayout, totalProfit };
+}
+
 // ── Poker vs House (5-Card Draw) ──
 
 const SUITS = ["♠", "♥", "♦", "♣"] as const;

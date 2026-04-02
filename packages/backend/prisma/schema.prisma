@@ -60,6 +60,7 @@ model Channel {
   tradeOffers              TradeOffer[]
   achievements             ViewerAchievement[]
   seasons                  Season[]
+  casinoProfiles           CasinoProfile[]
 }
 
 model Command {
@@ -501,4 +502,21 @@ model SeasonProgress {
 
   season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   @@unique([channelId, twitchUserId, seasonId])
+}
+
+model CasinoProfile {
+  id           String   @id @default(uuid())
+  channelId    String
+  twitchUserId String
+  petData      Json     @default("{}")
+  skillData    Json     @default("{}")
+  statsData    Json     @default("{}")
+  breedData    Json     @default("{}")
+  prestige     Int      @default(0)
+  autoflipData Json     @default("{}")
+  updatedAt    DateTime @updatedAt
+
+  channel      Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  @@unique([channelId, twitchUserId])
+  @@index([channelId])
 }

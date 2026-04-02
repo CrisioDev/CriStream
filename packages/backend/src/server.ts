@@ -72,6 +72,18 @@ async function start() {
   const { startPassivePointsScheduler } = await import("./modules/casino/sse.js");
   startPassivePointsScheduler();
 
+  // Periodic DB sync for casino profiles (every 5 minutes)
+  const { syncAllToDb } = await import("./modules/casino/profile-store.js");
+  setInterval(async () => {
+    try {
+      const count = await syncAllToDb();
+      if (count > 0) logger.info({ count }, "Casino profiles synced to DB");
+    } catch (err) {
+      logger.error({ err }, "Casino profile sync error");
+    }
+  }, 300000); // 5 minutes
+  logger.info("Casino DB sync scheduler started (5min interval)");
+
   // Graceful shutdown
   const shutdown = async () => {
     logger.info("Shutting down...");

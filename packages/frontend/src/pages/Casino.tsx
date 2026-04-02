@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 import { casinoSounds } from "@/lib/casino-sounds";
+import { formatNumber } from "@/lib/format-number";
 
 // ── Types ──
 interface CasinoSpecial {
@@ -837,7 +838,7 @@ export function CasinoPage() {
         }
         setTierReels(prev => ({ ...prev, [tierId]: res.data.reels }));
         const profit = res.data.payout - res.data.cost;
-        setTierResult(prev => ({ ...prev, [tierId]: { text: `${res.data.label} → ${res.data.payout.toLocaleString()} Pts (${profit>=0?"+":""}${profit.toLocaleString()})`, win: profit > 0 } }));
+        setTierResult(prev => ({ ...prev, [tierId]: { text: `${res.data.label} → ${formatNumber(res.data.payout)} Pts (${profit>=0?"+":""}${formatNumber(profit)})`, win: profit > 0 } }));
         if (profit > 0) { showWin(profit); startDouble(res.data.payout); if (profit >= 50) casinoSounds.bigWin(); else casinoSounds.win(); } else { showLoss(-profit); casinoSounds.loss(); }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         processProgression(res.data.progression);
@@ -1655,7 +1656,7 @@ export function CasinoPage() {
             <div className="flex items-center justify-center gap-4">
               <span className="text-gray-400">{user.displayName}</span>
               <div className="points-flash rounded-full px-5 py-1.5 font-black text-xl" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00)", color: "#000" }} key={points}>
-                {points !== null ? `${points.toLocaleString()} PTS` : "..."}
+                {points !== null ? `${formatNumber(points)} PTS` : "..."}
               </div>
               <input value={channelInput} onChange={(e) => setChannelInput(e.target.value)} placeholder="Channel" className="bg-black/40 border border-yellow-500/20 rounded-lg px-2 py-1 text-xs text-center w-28" />
               {loginStreak && loginStreak.streak > 0 && (
@@ -1778,7 +1779,7 @@ export function CasinoPage() {
           }}>
             <h3 className="text-2xl font-black text-red-400 mb-1">💀 ALL-IN 💀</h3>
             <p className="text-3xl font-black text-white mb-3">
-              {points !== null && points > 0 ? `${points.toLocaleString()} PUNKTE` : "---"}
+              {points !== null && points > 0 ? `${formatNumber(points)} PUNKTE` : "---"}
             </p>
             {allInResult && (
               <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${allInResult.win ? "text-green-400 bg-green-500/10 border border-green-500/30" : "text-red-400 bg-red-500/10 border border-red-500/30"}`}>
@@ -1789,7 +1790,7 @@ export function CasinoPage() {
               <button onClick={playAllIn} disabled={allInPlaying || !points || points <= 0}
                 className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
                 style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #dc2626, #991b1b)" }}>
-                {allInPlaying ? "..." : `💀 90% ALL-IN (${points ? Math.floor(points * 0.9).toLocaleString() : 0})`}
+                {allInPlaying ? "..." : `💀 90% ALL-IN (${points ? formatNumber(Math.floor(points * 0.9)) : 0})`}
               </button>
               <button onClick={async () => {
                 if (!user || allInPlaying || !points || points <= 0) return;
@@ -1802,12 +1803,12 @@ export function CasinoPage() {
                     if (res.data.specials?.length) enqueueSpecials(res.data.specials);
                     processProgression(res.data.progression);
                     if (res.data.win) {
-                      setAllInResult({ text: `DEADLY WIN! x3! +${res.data.payout.toLocaleString()}!`, win: true });
+                      setAllInResult({ text: `DEADLY WIN! x3! +${formatNumber(res.data.payout)}!`, win: true });
                       showWin(res.data.payout);
                       if (confettiRef.current) spawnConfetti(confettiRef.current, 300, true);
                       showMultiplier("DEADLY WIN x3!");
                     } else {
-                      setAllInResult({ text: `☠️ ALLES WEG! ${res.data.amount.toLocaleString()} Punkte verloren!`, win: false });
+                      setAllInResult({ text: `☠️ ALLES WEG! ${formatNumber(res.data.amount)} Punkte verloren!`, win: false });
                       showLoss(res.data.amount || 0);
                     }
                     fetchPoints();
@@ -1816,7 +1817,7 @@ export function CasinoPage() {
               }} disabled={allInPlaying || !points || points <= 0}
                 className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white"
                 style={{ background: allInPlaying ? "#666" : "linear-gradient(135deg, #000, #4a0000, #000)", border: "2px solid rgba(220,38,38,0.8)" }}>
-                {allInPlaying ? "..." : `☠️ DEADLY (${points?.toLocaleString() || 0})`}
+                {allInPlaying ? "..." : `☠️ DEADLY (${points ? formatNumber(points) : 0})`}
               </button>
             </div>
             <div className="flex justify-center gap-4 text-[10px] text-gray-600">
@@ -2377,7 +2378,7 @@ export function CasinoPage() {
         <div className="fixed inset-0 z-30 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
           <div className="double-glow rounded-2xl p-5 text-center max-w-lg w-full mx-4" style={{ background: "linear-gradient(180deg, rgba(20,10,0,0.95), rgba(10,5,0,0.98))", border: "2px solid rgba(255,215,0,0.4)" }}>
             <h3 className="text-2xl font-black text-yellow-400 mb-1">DOPPELT ODER NICHTS</h3>
-            <p className="text-4xl font-black text-white mb-3">{doubleAmount.toLocaleString()} PTS</p>
+            <p className="text-4xl font-black text-white mb-3">{formatNumber(doubleAmount)} PTS</p>
             {doubleResult && (
               <div className={`text-lg font-bold mb-3 rounded-lg py-2 ${doubleResult.includes("VERDOPPELT") ? "text-green-400 bg-green-500/10" : doubleResult.includes("VERLOREN") ? "text-red-400 bg-red-500/10" : "text-yellow-400"}`}>
                 {doubleResult}
@@ -2778,7 +2779,7 @@ export function CasinoPage() {
                     <div key={i} className="flex items-center gap-2 text-xs rounded-lg px-3 py-1.5" style={{ background: i < 3 ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)" }}>
                       <span className="w-6 text-center shrink-0">{medal}</span>
                       <span className={`flex-1 truncate ${i < 3 ? "font-bold text-indigo-300" : "text-white"}`}>{entry.displayName}</span>
-                      <span className="text-indigo-400 font-bold">{entry.score.toLocaleString()} Pts</span>
+                      <span className="text-indigo-400 font-bold">{formatNumber(entry.score)} Pts</span>
                     </div>
                   );
                 })}
@@ -2808,7 +2809,7 @@ export function CasinoPage() {
                   <span className="text-3xl">{myGuild.emoji}</span>
                   <div className="flex-1">
                     <div className="font-black text-white text-lg">{myGuild.name}</div>
-                    <div className="text-xs text-gray-400">Anführer: {myGuild.leaderName} · {myGuild.members?.length || 0} Mitglieder · {myGuild.totalXp?.toLocaleString() || 0} XP</div>
+                    <div className="text-xs text-gray-400">Anführer: {myGuild.leaderName} · {myGuild.members?.length || 0} Mitglieder · {formatNumber(myGuild.totalXp ?? 0)} XP</div>
                   </div>
                 </div>
                 {myGuild.members && myGuild.members.length > 0 && (
@@ -2844,7 +2845,7 @@ export function CasinoPage() {
                         <span className="text-2xl">{g.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-sm text-white truncate">{g.name}</div>
-                          <div className="text-[10px] text-gray-500">{g.members?.length || 0} Mitglieder · {g.totalXp?.toLocaleString() || 0} XP</div>
+                          <div className="text-[10px] text-gray-500">{g.members?.length || 0} Mitglieder · {formatNumber(g.totalXp ?? 0)} XP</div>
                         </div>
                         <button onClick={async () => {
                           setGuildLoading(true);
@@ -2902,7 +2903,7 @@ export function CasinoPage() {
           <div className="rounded-2xl p-5" style={{ background: "linear-gradient(180deg, rgba(255,182,193,0.06), rgba(0,0,0,0.2))", border: "1px solid rgba(255,182,193,0.2)" }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-black text-lg text-pink-300">🐾 V-PET</h3>
-              {pet && <span className="text-xs text-gray-500">LVL {pet.level} · {pet.totalSpent?.toLocaleString()} Pts ausgegeben</span>}
+              {pet && <span className="text-xs text-gray-500">LVL {pet.level} · {formatNumber(pet.totalSpent ?? 0)} Pts ausgegeben</span>}
             </div>
 
             {!pet ? (
@@ -2930,7 +2931,7 @@ export function CasinoPage() {
                       }}>
                         <div className="text-3xl mb-1">{p.emoji}</div>
                         <div className="text-xs font-bold text-white">{p.name}</div>
-                        <div className="text-[10px] text-yellow-400">{p.price.toLocaleString()} Pts</div>
+                        <div className="text-[10px] text-yellow-400">{formatNumber(p.price)} Pts</div>
                       </button>
                     ))
                   )}
@@ -3113,7 +3114,7 @@ export function CasinoPage() {
                         <div className="text-xs text-gray-400">
                           {breedData ? (
                             <>
-                              <span>Kosten: <span className="text-yellow-400 font-bold">{breedData.nextCost.toLocaleString()} Pts</span></span>
+                              <span>Kosten: <span className="text-yellow-400 font-bold">{formatNumber(breedData.nextCost)} Pts</span></span>
                               <span className="ml-3">Züchtungen: {breedData.breedCount}</span>
                               {breedData.cooldownLeft > 0 && <span className="ml-3 text-red-400">Cooldown: {Math.ceil(breedData.cooldownLeft / 60)}m</span>}
                             </>
@@ -3166,7 +3167,7 @@ export function CasinoPage() {
                             }}>
                               <div className="text-2xl">{p.emoji}</div>
                               <div className="text-[10px] text-gray-300">{p.name}</div>
-                              <div className="text-[9px] text-yellow-400">{p.price.toLocaleString()}</div>
+                              <div className="text-[9px] text-yellow-400">{formatNumber(p.price)}</div>
                               <div className="text-[8px] text-purple-400">{p.bonusDesc}</div>
                             </button>
                           ))}
@@ -3252,7 +3253,7 @@ export function CasinoPage() {
                                     const s = await api.get<any>(`/viewer/${channelName}/casino/pet/shop`) as any; if (s.data) setShop(s.data);
                                   } else setMessage(res.error ?? "Fehler!");
                                 }} className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30">
-                                  {item.price.toLocaleString()} Pts
+                                  {formatNumber(item.price)} Pts
                                 </button>
                               </div>
                             </div>
@@ -3277,7 +3278,7 @@ export function CasinoPage() {
           <div className="rounded-2xl p-5" style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.05), rgba(0,0,0,0.2))", border: "1px solid rgba(168,85,247,0.2)" }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-black text-lg text-purple-300">🌳 SKILL TREE</h3>
-              <div className="text-xs text-gray-500">Level {skillData.totalLevel} · {skillData.totalInvested.toLocaleString()} Pts investiert</div>
+              <div className="text-xs text-gray-500">Level {skillData.totalLevel} · {formatNumber(skillData.totalInvested)} Pts investiert</div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {skillData.details.map((skill: any) => (
@@ -3309,7 +3310,7 @@ export function CasinoPage() {
                     className="casino-btn w-full py-1.5 rounded-lg text-xs font-bold text-black"
                     style={{ background: upgrading === skill.id ? "#666" : "linear-gradient(135deg, #9146ff, #6441a5)" }}
                   >
-                    {upgrading === skill.id ? "..." : `⬆ ${skill.nextCost.toLocaleString()} Pts`}
+                    {upgrading === skill.id ? "..." : `⬆ ${formatNumber(skill.nextCost)} Pts`}
                   </button>
                 </div>
               ))}
@@ -3339,7 +3340,7 @@ export function CasinoPage() {
               return (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-white">{s.totalPlays.toLocaleString()}</div>
+                  <div className="text-xl font-black text-white">{formatNumber(s.totalPlays)}</div>
                   <div className="text-[10px] text-gray-500">Spiele gesamt</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
@@ -3351,11 +3352,11 @@ export function CasinoPage() {
                   <div className="text-[10px] text-gray-500">Bester Streak</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-green-400">+{s.totalPointsWon.toLocaleString()}</div>
+                  <div className="text-xl font-black text-green-400">+{formatNumber(s.totalPointsWon)}</div>
                   <div className="text-[10px] text-gray-500">Gewonnen</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-red-400">-{s.totalPointsLost.toLocaleString()}</div>
+                  <div className="text-xl font-black text-red-400">-{formatNumber(s.totalPointsLost)}</div>
                   <div className="text-[10px] text-gray-500">Verloren</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
@@ -3363,7 +3364,7 @@ export function CasinoPage() {
                   <div className="text-[10px] text-gray-500">Boss Kills</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="text-xl font-black text-yellow-300">{s.maxDoubleAmount.toLocaleString()}</div>
+                  <div className="text-xl font-black text-yellow-300">{formatNumber(s.maxDoubleAmount)}</div>
                   <div className="text-[10px] text-gray-500">Größter Double</div>
                 </div>
                 <div className="text-center p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.02)" }}>
@@ -3632,7 +3633,7 @@ export function CasinoPage() {
                   <div key={i} className="flex items-center gap-2 text-sm rounded-lg px-3 py-1.5" style={{ background: i < 3 ? "rgba(255,215,0,0.05)" : "rgba(255,255,255,0.02)" }}>
                     <span className="w-8 text-center shrink-0">{medal}</span>
                     <span className={`flex-1 truncate ${i < 3 ? "font-bold text-yellow-300" : "text-white"}`}>{entry.displayName}</span>
-                    <span className="font-bold text-yellow-400">{entry.points.toLocaleString()}</span>
+                    <span className="font-bold text-yellow-400">{formatNumber(entry.points)}</span>
                   </div>
                 );
               })}

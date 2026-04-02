@@ -40,6 +40,14 @@ export interface PlayerStats {
   heistsWon: number;
   totalDoubleStreak: number;
   lastPlayDate: string;
+  dice21Played: number;
+  dice21Won: number;
+  overUnderPlayed: number;
+  overUnderWon: number;
+  minigamesPlayed: number;
+  tierSlotsPlayed: number;
+  prestigeLevel: number;
+  breedsDone: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -82,6 +90,14 @@ const DEFAULT_STATS: PlayerStats = {
   heistsWon: 0,
   totalDoubleStreak: 0,
   lastPlayDate: "",
+  dice21Played: 0,
+  dice21Won: 0,
+  overUnderPlayed: 0,
+  overUnderWon: 0,
+  minigamesPlayed: 0,
+  tierSlotsPlayed: 0,
+  prestigeLevel: 0,
+  breedsDone: 0,
 };
 
 function statsKey(channelId: string, userId: string): string {
@@ -113,7 +129,7 @@ export async function recordPlay(
   channelId: string,
   userId: string,
   data: {
-    game: "flip" | "slots" | "scratch" | "double" | "allin";
+    game: "flip" | "slots" | "scratch" | "double" | "allin" | "dice21" | "overunder" | "minigame" | "tier_slots";
     win: boolean;
     payout: number;
     cost: number;
@@ -166,6 +182,20 @@ export async function recordPlay(
     case "allin":
       stats.allInsPlayed++;
       if (data.win) stats.allInsWon++;
+      break;
+    case "dice21":
+      stats.dice21Played++;
+      if (data.win) stats.dice21Won++;
+      break;
+    case "overunder":
+      stats.overUnderPlayed++;
+      if (data.win) stats.overUnderWon++;
+      break;
+    case "minigame":
+      stats.minigamesPlayed++;
+      break;
+    case "tier_slots":
+      stats.tierSlotsPlayed++;
       break;
   }
 

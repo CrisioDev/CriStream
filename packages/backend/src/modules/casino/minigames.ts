@@ -296,10 +296,11 @@ export async function submitMemoryScore(
   return { points: pts };
 }
 
-// ── Dice 21 ──
+// ── Dice 21 — Player vs House ──
 // Player rolls dice trying to get close to 21 without going over.
-// Each roll adds 1-6. Player decides when to stop.
-// State stored in Redis during game.
+// After player stands, house rolls automatically (hits until 15+).
+// Whoever is closer to 21 without busting wins. Tie/both bust = house wins.
+// Player 21 exact = x3 (blackjack bonus). Normal win = x2. Loss = 0.
 
 interface Dice21State {
   total: number;
@@ -322,6 +323,11 @@ export async function startDice21(
     const state = JSON.parse(existing) as Dice21State;
     if (!state.finished) return { error: "Du hast bereits ein laufendes Spiel! Stoppe oder würfle weiter." };
   }
+
+  // Cooldown 30s
+  const cdKey = `cd:dice21:${channelId}:${userId}`;
+  const cdSet = await redis.set(cdKey, "1", "EX", 30, "NX");
+  if (!cdSet) return { error: "Cooldown! Warte 30 Sekunden." };
 
   const cu = await prisma.channelUser.findUnique({
     where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
@@ -353,19 +359,23 @@ export async function hitDice21(
   state.rolls.push(roll);
 
   if (state.total > 21) {
-    // Bust!
+    // Bust — player loses immediately
     state.finished = true;
     await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 60);
 
-    const entry = JSON.stringify({ user: userId, game: "dice21", payout: 0, profit: -state.bet, detail: `🎲 21: ${state.total} BUST! -${state.bet}`, time: Date.now() });
+    const cu = await prisma.channelUser.findUnique({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    });
+    const entry = JSON.stringify({ user: cu?.displayName ?? userId, game: "dice21", payout: 0, profit: -state.bet, detail: `🎲 21: ${state.total} BUST! -${state.bet}`, time: Date.now() });
     await redis.lpush(`casino:feed:${channelId}`, entry);
     await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+    await redis.expire(`casino:feed:${channelId}`, 86400);
 
     return { total: state.total, roll, rolls: state.rolls, bust: true, payout: 0 };
   }
 
   if (state.total === 21) {
-    // Perfect 21! 3x payout
+    // Perfect 21! Blackjack bonus x3
     state.finished = true;
     const payout = state.bet * 3;
     await prisma.channelUser.update({
@@ -374,9 +384,13 @@ export async function hitDice21(
     });
     await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 60);
 
-    const entry = JSON.stringify({ user: userId, game: "dice21", payout, profit: payout - state.bet, detail: `🎲 21! PERFEKT! x3 → ${payout}`, time: Date.now() });
+    const cu = await prisma.channelUser.findUnique({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    });
+    const entry = JSON.stringify({ user: cu?.displayName ?? userId, game: "dice21", payout, profit: payout - state.bet, detail: `🎲 BLACKJACK! 21! x3 → ${payout}`, time: Date.now() });
     await redis.lpush(`casino:feed:${channelId}`, entry);
     await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+    await redis.expire(`casino:feed:${channelId}`, 86400);
 
     return { total: 21, roll, rolls: state.rolls, bust: false, payout };
   }
@@ -387,42 +401,83 @@ export async function hitDice21(
 
 export async function standDice21(
   channelId: string, userId: string,
-): Promise<{ total: number; payout: number; multiplier: number; rolls: number[] } | { error: string }> {
+): Promise<{
+  playerTotal: number; houseTotal: number; houseRolls: number[];
+  playerRolls: number[]; houseBust: boolean; playerWins: boolean;
+  payout: number; multiplier: number;
+} | { error: string }> {
   const raw = await redis.get(dice21Key(channelId, userId));
   if (!raw) return { error: "Kein laufendes Spiel!" };
   const state = JSON.parse(raw) as Dice21State;
   if (state.finished) return { error: "Spiel bereits beendet!" };
 
-  state.finished = true;
-
-  // Must roll at least 3 times before standing
-  if (state.rolls.length < 3) {
-    return { error: "Mindestens 3 Würfe nötig bevor du stoppen kannst!" };
+  // Must roll at least 2 times before standing
+  if (state.rolls.length < 2) {
+    return { error: "Mindestens 2 Würfe nötig bevor du stoppen kannst!" };
   }
 
-  // Payout based on how close to 21:
-  // 20-21: x3, 18-19: x2.5, 16-17: x2, 14-15: x1.5
-  // Below 14: LOSS (you played it too safe)
-  let multiplier: number;
-  if (state.total >= 20) multiplier = 3;
-  else if (state.total >= 18) multiplier = 2.5;
-  else if (state.total >= 16) multiplier = 2;
-  else if (state.total >= 14) multiplier = 1.5;
-  else if (state.total >= 12) multiplier = 0.5; // loss: get half back
-  else multiplier = 0.2; // big loss: played too safe
+  state.finished = true;
 
-  const payout = Math.round(state.bet * multiplier);
-  await prisma.channelUser.update({
-    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
-    data: { points: { increment: payout } },
-  });
+  // House rolls — hit until 15+
+  let houseTotal = 0;
+  const houseRolls: number[] = [];
+  while (houseTotal < 15) {
+    const roll = Math.floor(Math.random() * 6) + 1;
+    houseRolls.push(roll);
+    houseTotal += roll;
+  }
+
+  const houseBust = houseTotal > 21;
+  const playerTotal = state.total;
+
+  // Determine winner
+  // Both bust = house wins, Tie = house wins
+  let playerWins = false;
+  let multiplier = 0;
+  let payout = 0;
+
+  if (playerTotal === 21) {
+    // Blackjack bonus x3
+    playerWins = true;
+    multiplier = 3;
+  } else if (houseBust && playerTotal <= 21) {
+    // House bust, player didn't = player wins x2
+    playerWins = true;
+    multiplier = 2;
+  } else if (!houseBust && playerTotal <= 21 && playerTotal > houseTotal) {
+    // Player closer to 21
+    playerWins = true;
+    multiplier = 2;
+  }
+  // All other cases: house wins (tie, both bust, house closer)
+
+  payout = Math.round(state.bet * multiplier);
+
+  if (payout > 0) {
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+      data: { points: { increment: payout } },
+    });
+  }
+
   await redis.set(dice21Key(channelId, userId), JSON.stringify(state), "EX", 60);
 
-  const entry = JSON.stringify({ user: userId, game: "dice21", payout, profit: payout - state.bet, detail: `🎲 21: ${state.total} · x${multiplier} → ${payout}`, time: Date.now() });
+  const cu = await prisma.channelUser.findUnique({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+  });
+  const resultText = playerWins
+    ? `🎲 21: Spieler ${playerTotal} vs Haus ${houseTotal}${houseBust ? " (BUST)" : ""} → x${multiplier} → ${payout}`
+    : `🎲 21: Spieler ${playerTotal} vs Haus ${houseTotal}${houseBust ? " (BUST)" : ""} → Haus gewinnt! -${state.bet}`;
+  const entry = JSON.stringify({
+    user: cu?.displayName ?? userId, game: "dice21",
+    payout, profit: payout - state.bet,
+    detail: resultText, time: Date.now(),
+  });
   await redis.lpush(`casino:feed:${channelId}`, entry);
   await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+  await redis.expire(`casino:feed:${channelId}`, 86400);
 
-  return { total: state.total, payout, multiplier, rolls: state.rolls };
+  return { playerTotal, houseTotal, houseRolls, playerRolls: state.rolls, houseBust, playerWins, payout, multiplier };
 }
 
 export async function getDice21(channelId: string, userId: string): Promise<Dice21State | null> {

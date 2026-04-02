@@ -10,7 +10,7 @@ export interface AchievementDef {
   id: string;
   name: string;
   description: string;
-  category: "start" | "milestone" | "luck" | "pech" | "specials" | "double" | "social" | "grind" | "legendary";
+  category: "start" | "milestone" | "luck" | "pech" | "specials" | "double" | "social" | "grind" | "legendary" | "tier" | "dice" | "minigame" | "prestige" | "guild" | "economy";
   rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
   reward: AchievementReward;
   check: (stats: PlayerStats) => boolean;
@@ -111,6 +111,127 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "allin_5_wins", name: "All-In Profi", description: "Gewinne 5 All-Ins", category: "legendary", rarity: "epic", reward: { points: 200, title: "All-In Profi" }, check: (s) => s.allInsWon >= 5 },
   { id: "specials_25", name: "Special-Magnet", description: "Löse 25 Specials aus", category: "legendary", rarity: "uncommon", reward: { points: 30 }, check: (s) => s.specialsTriggered >= 25 },
   { id: "specials_100", name: "Special-Legende", description: "Löse 100 Specials aus", category: "legendary", rarity: "epic", reward: { points: 150, title: "Special-Legende" }, check: (s) => s.specialsTriggered >= 100 },
+
+  // ── TIER SLOTS (8) ──
+  { id: "tier_first", name: "Tier-Slot Anfänger", description: "Spiele deinen ersten Tier-Slot", category: "tier", rarity: "common", reward: { points: 10 }, check: (s) => s.tierSlotsPlayed >= 1 },
+  { id: "tier_10", name: "Tier-Slot Fan", description: "Spiele 10 Tier-Slots", category: "tier", rarity: "uncommon", reward: { points: 25 }, check: (s) => s.tierSlotsPlayed >= 10 },
+  { id: "tier_50", name: "Diamond Spieler", description: "Spiele 50 Tier-Slots", category: "tier", rarity: "rare", reward: { points: 75, title: "Diamond Spieler" }, check: (s) => s.tierSlotsPlayed >= 50 },
+  { id: "tier_100", name: "Royal Gambler", description: "Spiele 100 Tier-Slots", category: "tier", rarity: "epic", reward: { points: 150, title: "Royal Gambler" }, check: (s) => s.tierSlotsPlayed >= 100 },
+  { id: "tier_250", name: "Kosmischer Spieler", description: "Spiele 250 Tier-Slots", category: "tier", rarity: "epic", reward: { points: 200, title: "Kosmischer Spieler" }, check: (s) => s.tierSlotsPlayed >= 250 },
+  { id: "tier_500", name: "Mythischer Spieler", description: "Spiele 500 Tier-Slots", category: "tier", rarity: "legendary", reward: { points: 400, title: "Mythischer Spieler" }, check: (s) => s.tierSlotsPlayed >= 500 },
+  { id: "tier_triple", name: "Tier-Triple!", description: "Erziele einen Triple auf Tier-Slots", category: "tier", rarity: "rare", reward: { points: 50 }, check: (s) => s.triplesHit >= 1 && s.tierSlotsPlayed >= 1 },
+  { id: "tier_jackpot", name: "Tier-Jackpot!", description: "Erziele 777 auf Tier-Slots", category: "tier", rarity: "legendary", reward: { points: 300, title: "Tier-Jackpot König" }, check: (s) => s.jackpots777 >= 1 && s.tierSlotsPlayed >= 1 },
+
+  // ── DICE 21 (8) ──
+  { id: "dice_first", name: "Würfelnovize", description: "Spiele dein erstes Dice 21", category: "dice", rarity: "common", reward: { points: 5 }, check: (s) => s.dice21Played >= 1 },
+  { id: "dice_10", name: "Würfelveteran", description: "Spiele 10 Dice 21 Runden", category: "dice", rarity: "uncommon", reward: { points: 25 }, check: (s) => s.dice21Played >= 10 },
+  { id: "dice_25", name: "Würfelprofi", description: "Spiele 25 Dice 21 Runden", category: "dice", rarity: "rare", reward: { points: 50, title: "Würfelprofi" }, check: (s) => s.dice21Played >= 25 },
+  { id: "dice_50", name: "Würfelmeister", description: "Spiele 50 Dice 21 Runden", category: "dice", rarity: "epic", reward: { points: 100, title: "Würfelmeister" }, check: (s) => s.dice21Played >= 50 },
+  { id: "dice_win_5", name: "Gegen das Haus", description: "Schlage das Haus 5x bei Dice 21", category: "dice", rarity: "uncommon", reward: { points: 30 }, check: (s) => s.dice21Won >= 5 },
+  { id: "dice_win_20", name: "Hausbezwinger", description: "Schlage das Haus 20x bei Dice 21", category: "dice", rarity: "rare", reward: { points: 75, title: "Hausbezwinger" }, check: (s) => s.dice21Won >= 20 },
+  { id: "dice_blackjack", name: "Blackjack!", description: "Triff exakt 21 bei Dice 21", category: "dice", rarity: "epic", reward: { points: 100, title: "Blackjack" }, check: (s) => s.dice21Won >= 1 && s.dice21Played >= 1 },
+  { id: "dice_100", name: "Dice-Legende", description: "Spiele 100 Dice 21 Runden", category: "dice", rarity: "legendary", reward: { points: 200, title: "Dice-Legende" }, check: (s) => s.dice21Played >= 100 },
+
+  // ── OVER/UNDER (5) ──
+  { id: "overunder_first", name: "Glückstipp", description: "Spiele dein erstes Over/Under", category: "dice", rarity: "common", reward: { points: 5 }, check: (s) => s.overUnderPlayed >= 1 },
+  { id: "overunder_10", name: "Tipp-Profi", description: "Spiele 10 Over/Under Runden", category: "dice", rarity: "uncommon", reward: { points: 25 }, check: (s) => s.overUnderPlayed >= 10 },
+  { id: "overunder_50", name: "Tipp-Meister", description: "Spiele 50 Over/Under Runden", category: "dice", rarity: "rare", reward: { points: 50, title: "Tipp-Meister" }, check: (s) => s.overUnderPlayed >= 50 },
+  { id: "overunder_win_10", name: "Tipp-König", description: "Gewinne 10 Over/Under Runden", category: "dice", rarity: "uncommon", reward: { points: 30 }, check: (s) => s.overUnderWon >= 10 },
+  { id: "overunder_win_25", name: "Orakel", description: "Gewinne 25 Over/Under Runden", category: "dice", rarity: "rare", reward: { points: 75, title: "Orakel" }, check: (s) => s.overUnderWon >= 25 },
+
+  // ── MINIGAMES (6) ──
+  { id: "minigame_first", name: "Mini-Spieler", description: "Spiele dein erstes Minigame", category: "minigame", rarity: "common", reward: { points: 5 }, check: (s) => s.minigamesPlayed >= 1 },
+  { id: "minigame_10", name: "Minigame-Fan", description: "Spiele 10 Minigames", category: "minigame", rarity: "uncommon", reward: { points: 25 }, check: (s) => s.minigamesPlayed >= 10 },
+  { id: "minigame_25", name: "Minigame-Profi", description: "Spiele 25 Minigames", category: "minigame", rarity: "rare", reward: { points: 50, title: "Minigame-Profi" }, check: (s) => s.minigamesPlayed >= 25 },
+  { id: "minigame_50", name: "Allrounder-Gamer", description: "Spiele 50 Minigames", category: "minigame", rarity: "epic", reward: { points: 100, title: "Allrounder" }, check: (s) => s.minigamesPlayed >= 50 },
+  { id: "minigame_100", name: "Minigame-Legende", description: "Spiele 100 Minigames", category: "minigame", rarity: "legendary", reward: { points: 200, title: "Minigame-Legende" }, check: (s) => s.minigamesPlayed >= 100 },
+  { id: "minigame_grinder", name: "Minigame-Grinder", description: "Spiele 250 Minigames", category: "minigame", rarity: "legendary", reward: { points: 400, title: "Minigame-Gott" }, check: (s) => s.minigamesPlayed >= 250 },
+
+  // ── PRESTIGE (5) ──
+  { id: "prestige_1", name: "Prestige I", description: "Erreiche Prestige-Stufe 1", category: "prestige", rarity: "uncommon", reward: { points: 50, title: "Prestige I" }, check: (s) => s.prestigeLevel >= 1 },
+  { id: "prestige_3", name: "Prestige III", description: "Erreiche Prestige-Stufe 3", category: "prestige", rarity: "rare", reward: { points: 100, title: "Prestige III" }, check: (s) => s.prestigeLevel >= 3 },
+  { id: "prestige_5", name: "Prestige V", description: "Erreiche Prestige-Stufe 5", category: "prestige", rarity: "epic", reward: { points: 200, title: "Prestige V" }, check: (s) => s.prestigeLevel >= 5 },
+  { id: "prestige_10", name: "Prestige X", description: "Erreiche Prestige-Stufe 10", category: "prestige", rarity: "legendary", reward: { points: 500, title: "Prestige X" }, check: (s) => s.prestigeLevel >= 10 },
+  { id: "prestige_max", name: "Maximum Prestige", description: "Erreiche Prestige-Stufe 15", category: "prestige", rarity: "legendary", reward: { points: 750, title: "Maximum Prestige" }, check: (s) => s.prestigeLevel >= 15 },
+
+  // ── GUILD (4) ──
+  { id: "guild_plays_50", name: "Gilden-Mitglied", description: "Spiele 50 Spiele als Gilden-Mitglied", category: "guild", rarity: "uncommon", reward: { points: 30, title: "Gilden-Mitglied" }, check: (s) => s.totalPlays >= 50 },
+  { id: "guild_plays_200", name: "Gilden-Veteran", description: "Spiele 200 Spiele als aktiver Spieler", category: "guild", rarity: "rare", reward: { points: 75, title: "Gilden-Veteran" }, check: (s) => s.totalPlays >= 200 },
+  { id: "guild_plays_500", name: "Gilden-Elite", description: "Spiele 500 Spiele — Gilden-Elite", category: "guild", rarity: "epic", reward: { points: 150, title: "Gilden-Elite" }, check: (s) => s.totalPlays >= 500 },
+  { id: "guild_plays_1000", name: "Gilden-Legende", description: "Spiele 1000 Spiele — Gilden-Legende", category: "guild", rarity: "legendary", reward: { points: 300, title: "Gilden-Legende" }, check: (s) => s.totalPlays >= 1000 },
+
+  // ── HEIST EXTENDED (6) ──
+  { id: "heist_10", name: "Heist-Veteran", description: "Nimm an 10 Heists teil", category: "social", rarity: "rare", reward: { points: 50, title: "Heist-Veteran" }, check: (s) => s.heistsPlayed >= 10 },
+  { id: "heist_25", name: "Heist-Meister", description: "Nimm an 25 Heists teil", category: "social", rarity: "epic", reward: { points: 100, title: "Heist-Meister" }, check: (s) => s.heistsPlayed >= 25 },
+  { id: "heist_win_5", name: "Räuber-Bande", description: "Gewinne 5 Heists", category: "social", rarity: "rare", reward: { points: 75, title: "Räuber" }, check: (s) => s.heistsWon >= 5 },
+  { id: "heist_win_10", name: "Meister-Dieb", description: "Gewinne 10 Heists", category: "social", rarity: "epic", reward: { points: 150, title: "Meister-Dieb" }, check: (s) => s.heistsWon >= 10 },
+  { id: "heist_win_25", name: "Großer Fang", description: "Gewinne 25 Heists", category: "social", rarity: "legendary", reward: { points: 300, title: "Großer Fang" }, check: (s) => s.heistsWon >= 25 },
+  { id: "heist_50", name: "Heist-Legende", description: "Nimm an 50 Heists teil", category: "social", rarity: "legendary", reward: { points: 250, title: "Heist-Legende" }, check: (s) => s.heistsPlayed >= 50 },
+
+  // ── BREEDING (4) ──
+  { id: "breed_first", name: "Züchter", description: "Züchte dein erstes Pet", category: "specials", rarity: "uncommon", reward: { points: 25 }, check: (s) => s.breedsDone >= 1 },
+  { id: "breed_5", name: "Züchter-Meister", description: "Züchte 5 Pets", category: "specials", rarity: "rare", reward: { points: 75, title: "Züchter-Meister" }, check: (s) => s.breedsDone >= 5 },
+  { id: "breed_10", name: "Zucht-Experte", description: "Züchte 10 Pets", category: "specials", rarity: "epic", reward: { points: 150, title: "Zucht-Experte" }, check: (s) => s.breedsDone >= 10 },
+  { id: "breed_25", name: "Zucht-Legende", description: "Züchte 25 Pets", category: "specials", rarity: "legendary", reward: { points: 300, title: "Zucht-Legende" }, check: (s) => s.breedsDone >= 25 },
+
+  // ── ECONOMY (8) ──
+  { id: "won_50000", name: "Millionär", description: "Gewinne insgesamt 50.000 Punkte", category: "economy", rarity: "epic", reward: { points: 200, title: "Millionär" }, check: (s) => s.totalPointsWon >= 50000 },
+  { id: "won_100000", name: "Multi-Millionär", description: "Gewinne insgesamt 100.000 Punkte", category: "economy", rarity: "legendary", reward: { points: 400, title: "Multi-Millionär" }, check: (s) => s.totalPointsWon >= 100000 },
+  { id: "won_500000", name: "Hundert-Millionär", description: "Gewinne insgesamt 500.000 Punkte", category: "economy", rarity: "legendary", reward: { points: 750, title: "Hundert-Millionär" }, check: (s) => s.totalPointsWon >= 500000 },
+  { id: "lost_10000", name: "Investor", description: "Verliere insgesamt 10.000 Punkte (investiert!)", category: "economy", rarity: "rare", reward: { points: 75 }, check: (s) => s.totalPointsLost >= 10000 },
+  { id: "lost_50000", name: "Großinvestor", description: "Verliere insgesamt 50.000 Punkte", category: "economy", rarity: "epic", reward: { points: 150, title: "Großinvestor" }, check: (s) => s.totalPointsLost >= 50000 },
+  { id: "allin_3", name: "Adrenalin-Junkie", description: "Spiele 3 All-Ins", category: "economy", rarity: "rare", reward: { points: 50, title: "Adrenalin-Junkie" }, check: (s) => s.allInsPlayed >= 3 },
+  { id: "allin_10", name: "All-In Süchtiger", description: "Spiele 10 All-Ins", category: "economy", rarity: "epic", reward: { points: 125, title: "All-In Süchtiger" }, check: (s) => s.allInsPlayed >= 10 },
+  { id: "allin_win_10", name: "Todesmutig", description: "Gewinne 10 All-Ins", category: "economy", rarity: "legendary", reward: { points: 300, title: "Todesmutig" }, check: (s) => s.allInsWon >= 10 },
+
+  // ── STREAKS & MILESTONES EXTENDED (8) ──
+  { id: "days_3", name: "Drei Tage", description: "Spiele an 3 verschiedenen Tagen", category: "milestone", rarity: "common", reward: { points: 15 }, check: (s) => s.daysPlayed >= 3 },
+  { id: "days_60", name: "Zwei Monate", description: "Spiele an 60 verschiedenen Tagen", category: "milestone", rarity: "epic", reward: { points: 150, title: "Dauerspieler" }, check: (s) => s.daysPlayed >= 60 },
+  { id: "days_100", name: "100 Tage", description: "Spiele an 100 verschiedenen Tagen", category: "milestone", rarity: "legendary", reward: { points: 300, title: "100-Tage-Veteran" }, check: (s) => s.daysPlayed >= 100 },
+  { id: "plays_2000", name: "2000er Club", description: "Spiele 2000 Casino-Spiele", category: "milestone", rarity: "rare", reward: { points: 100, title: "2000er Club" }, check: (s) => s.totalPlays >= 2000 },
+  { id: "plays_5000", name: "5000er Club", description: "Spiele 5000 Casino-Spiele", category: "milestone", rarity: "epic", reward: { points: 250, title: "5000er Club" }, check: (s) => s.totalPlays >= 5000 },
+  { id: "plays_10000", name: "10K Club", description: "Spiele 10.000 Casino-Spiele", category: "milestone", rarity: "legendary", reward: { points: 500, title: "10K Club" }, check: (s) => s.totalPlays >= 10000 },
+  { id: "loss_streak_15", name: "Eiserner Wille", description: "Überlebe eine 15er Pechsträhne", category: "pech", rarity: "rare", reward: { points: 50, title: "Eiserner Wille" }, check: (s) => s.maxLossStreak >= 15 },
+  { id: "loss_streak_30", name: "Unzerbrechlich", description: "Überlebe eine 30er Pechsträhne", category: "pech", rarity: "legendary", reward: { points: 200, title: "Unzerbrechlich" }, check: (s) => s.maxLossStreak >= 30 },
+
+  // ── QUEST EXTENDED (3) ──
+  { id: "quests_10", name: "Quest-Sammler", description: "Schließe 10 tägliche Quests ab", category: "grind", rarity: "common", reward: { points: 20 }, check: (s) => s.questsCompleted >= 10 },
+  { id: "quests_50", name: "Quest-Veteran", description: "Schließe 50 tägliche Quests ab", category: "grind", rarity: "rare", reward: { points: 75, title: "Quest-Veteran" }, check: (s) => s.questsCompleted >= 50 },
+  { id: "quests_200", name: "Quest-Gott", description: "Schließe 200 tägliche Quests ab", category: "grind", rarity: "legendary", reward: { points: 400, title: "Quest-Gott" }, check: (s) => s.questsCompleted >= 200 },
+
+  // ── SPECIAL EXTENDED (4) ──
+  { id: "specials_50", name: "Special-Sammler", description: "Löse 50 Specials aus", category: "legendary", rarity: "rare", reward: { points: 75, title: "Special-Sammler" }, check: (s) => s.specialsTriggered >= 50 },
+  { id: "mystery_25", name: "Mystery-Jäger", description: "Öffne 25 Mystery Boxen", category: "specials", rarity: "epic", reward: { points: 100, title: "Mystery-Jäger" }, check: (s) => s.mysteryBoxes >= 25 },
+  { id: "mystery_50", name: "Mystery-Legende", description: "Öffne 50 Mystery Boxen", category: "specials", rarity: "legendary", reward: { points: 200, title: "Mystery-Legende" }, check: (s) => s.mysteryBoxes >= 50 },
+  { id: "boss_10", name: "Boss-Vernichter", description: "Besiege 10 Bosse", category: "specials", rarity: "legendary", reward: { points: 250, title: "Boss-Vernichter" }, check: (s) => s.bossesKilled >= 10 },
+
+  // ── FLIP EXTENDED (3) ──
+  { id: "flip_250", name: "Flip-Gott", description: "Gewinne 250 Flips", category: "luck", rarity: "epic", reward: { points: 125, title: "Flip-Gott" }, check: (s) => s.flipWon >= 250 },
+  { id: "flip_500", name: "Flip-Legende", description: "Gewinne 500 Flips", category: "luck", rarity: "legendary", reward: { points: 300, title: "Flip-Legende" }, check: (s) => s.flipWon >= 500 },
+  { id: "flip_played_1000", name: "Münz-Süchtiger", description: "Spiele 1000 Flips", category: "luck", rarity: "legendary", reward: { points: 250, title: "Münz-Süchtiger" }, check: (s) => s.flipPlayed >= 1000 },
+
+  // ── SLOTS EXTENDED (3) ──
+  { id: "slot_100", name: "Slot-König", description: "Gewinne 100 Slots", category: "luck", rarity: "epic", reward: { points: 125, title: "Slot-König" }, check: (s) => s.slotsWon >= 100 },
+  { id: "slot_250", name: "Slot-Legende", description: "Gewinne 250 Slots", category: "luck", rarity: "legendary", reward: { points: 300, title: "Slot-Legende" }, check: (s) => s.slotsWon >= 250 },
+  { id: "slot_played_500", name: "Slot-Süchtiger", description: "Spiele 500 Slots", category: "luck", rarity: "legendary", reward: { points: 250, title: "Slot-Süchtiger" }, check: (s) => s.slotsPlayed >= 500 },
+
+  // ── SCRATCH EXTENDED (2) ──
+  { id: "scratch_100", name: "Rubbellos-König", description: "Gewinne 100 Rubbellose", category: "luck", rarity: "epic", reward: { points: 125, title: "Rubbellos-König" }, check: (s) => s.scratchWon >= 100 },
+  { id: "scratch_played_500", name: "Kratz-Süchtiger", description: "Spiele 500 Rubbellose", category: "luck", rarity: "legendary", reward: { points: 250, title: "Kratz-Süchtiger" }, check: (s) => s.scratchPlayed >= 500 },
+
+  // ── DOUBLE EXTENDED (3) ──
+  { id: "double_50", name: "Double-König", description: "Gewinne 50 Double-or-Nothing", category: "double", rarity: "epic", reward: { points: 100, title: "Double-König" }, check: (s) => s.doublesWon >= 50 },
+  { id: "double_100", name: "Double-Legende", description: "Gewinne 100 Double-or-Nothing", category: "double", rarity: "legendary", reward: { points: 250, title: "Double-Legende" }, check: (s) => s.doublesWon >= 100 },
+  { id: "double_big_2000", name: "Riesen-Double", description: "Gewinne 2000+ Punkte in einem Double", category: "double", rarity: "legendary", reward: { points: 200, title: "Riesen-Double" }, check: (s) => s.maxDoubleAmount >= 2000 },
+
+  // ── GLUECKSRAD EXTENDED (2) ──
+  { id: "gluecksrad_50", name: "Glücksrad-Meister", description: "Drehe 50x das Glücksrad", category: "specials", rarity: "epic", reward: { points: 100, title: "Glücksrad-Meister" }, check: (s) => s.gluecksradSpins >= 50 },
+  { id: "gluecksrad_100", name: "Glücksrad-Legende", description: "Drehe 100x das Glücksrad", category: "specials", rarity: "legendary", reward: { points: 250, title: "Glücksrad-Legende" }, check: (s) => s.gluecksradSpins >= 100 },
+
+  // ── SOCIAL EXTENDED (3) ──
+  { id: "gifts_25", name: "Geschenke-König", description: "Löse 25 Geschenke an Chat aus", category: "social", rarity: "epic", reward: { points: 150, title: "Geschenke-König" }, check: (s) => s.giftsTriggered >= 25 },
+  { id: "mitleid_10", name: "Mitleids-Magnet", description: "Erhalte 10x Mitleids-Punkte", category: "pech", rarity: "uncommon", reward: { points: 20, title: "Mitleids-Magnet" }, check: (s) => s.mitleidReceived >= 10 },
+  { id: "mitleid_25", name: "Dauerbedauert", description: "Erhalte 25x Mitleids-Punkte", category: "pech", rarity: "rare", reward: { points: 50, title: "Dauerbedauert" }, check: (s) => s.mitleidReceived >= 25 },
 ];
 
 export async function checkAchievements(

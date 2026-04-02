@@ -2841,9 +2841,12 @@ export function CasinoPage() {
                   return (
                     <div key={i} className="flex items-center gap-2 text-xs rounded-lg px-3 py-1.5" style={{ background: i < 3 ? "rgba(168,85,247,0.1)" : "rgba(255,255,255,0.02)" }}>
                       <span className="w-6 text-center shrink-0">{medal}</span>
-                      <span className={`flex-1 truncate ${i < 3 ? "font-bold text-purple-300" : "text-white"}`}>{entry.displayName}</span>
+                      <span className={`flex-1 truncate ${i < 3 ? "font-bold text-purple-300" : "text-white"}`}>
+                        {entry.displayName}
+                        {(entry as any).prestige > 0 && <span className="ml-1 text-[9px] text-yellow-400">P{(entry as any).prestige}</span>}
+                      </span>
                       <span className="text-purple-400 font-bold">LVL {entry.level}</span>
-                      <span className="text-gray-500">{entry.xp} XP</span>
+                      <span className="text-gray-500">{formatNumber(entry.xp)} XP</span>
                     </div>
                   );
                 })}
@@ -3860,7 +3863,10 @@ export function CasinoPage() {
                 return (
                   <div key={i} className="flex items-center gap-2 text-sm rounded-lg px-3 py-1.5" style={{ background: i < 3 ? "rgba(255,215,0,0.05)" : "rgba(255,255,255,0.02)" }}>
                     <span className="w-8 text-center shrink-0">{medal}</span>
-                    <span className={`flex-1 truncate ${i < 3 ? "font-bold text-yellow-300" : "text-white"}`}>{entry.displayName}</span>
+                    <span className={`flex-1 truncate ${i < 3 ? "font-bold text-yellow-300" : "text-white"}`}>
+                      {entry.displayName}
+                      {(entry as any).prestige > 0 && <span className="ml-1 text-[10px] text-purple-400">P{(entry as any).prestige}</span>}
+                    </span>
                     <span className="font-bold text-yellow-400">{formatNumber(entry.points)}</span>
                   </div>
                 );

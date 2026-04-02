@@ -334,9 +334,18 @@ export async function getSeasonLeaderboard(
   });
   const nameMap = new Map(channelUsers.map((u) => [u.twitchUserId, u.displayName]));
 
+  // Fetch prestige levels
+  const { redis } = await import("../../lib/redis.js");
+  const prestigeMap = new Map<string, number>();
+  for (const uid of userIds) {
+    const pRaw = await redis.get(`casino:prestige:${channelId}:${uid}`);
+    if (pRaw) prestigeMap.set(uid, parseInt(pRaw));
+  }
+
   return progress.map((p) => ({
     displayName: nameMap.get(p.twitchUserId) ?? "Unbekannt",
     xp: p.xp,
     level: p.level,
+    prestige: prestigeMap.get(p.twitchUserId) ?? 0,
   }));
 }

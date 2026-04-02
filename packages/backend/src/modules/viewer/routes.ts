@@ -1547,9 +1547,15 @@ export async function viewerRoutes(app: FastifyInstance) {
         where: { channelId: channel.id },
         orderBy: { points: "desc" },
         take: 15,
-        select: { displayName: true, points: true },
+        select: { displayName: true, points: true, twitchUserId: true },
       });
-      return { success: true, data: top };
+      // Add prestige level to leaderboard
+      const { redis } = await import("../../lib/redis.js");
+      const data = await Promise.all(top.map(async (u) => {
+        const pRaw = await redis.get(`casino:prestige:${channel.id}:${u.twitchUserId}`);
+        return { displayName: u.displayName, points: u.points, prestige: pRaw ? parseInt(pRaw) : 0 };
+      }));
+      return { success: true, data };
     }
   );
 

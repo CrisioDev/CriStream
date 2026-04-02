@@ -179,6 +179,7 @@ export function CasinoPage() {
   const { user } = useAuthStore();
   const [channelInput, setChannelInput] = useState("");
   const confettiRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<"play"|"minigames"|"pets"|"progress"|"social">("play");
   const channelName = channelInput || "TheCrisio";
 
   // Handle token from OAuth callback redirect
@@ -1715,6 +1716,26 @@ export function CasinoPage() {
         {message && <p className="text-red-400 mt-2 text-sm">{message}</p>}
       </div>
 
+      {/* ── TAB NAVIGATION ── */}
+      <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-md border-b border-purple-500/20 mb-4">
+        <div className="max-w-4xl mx-auto flex">
+          {([
+            { id: "play" as const, label: "\uD83C\uDFB0 Spielen", color: "#ffd700" },
+            { id: "minigames" as const, label: "\uD83C\uDFAE Minigames", color: "#4ade80" },
+            { id: "pets" as const, label: "\uD83D\uDC3E Pets", color: "#f472b6" },
+            { id: "progress" as const, label: "\uD83C\uDFC6 Fortschritt", color: "#a78bfa" },
+            { id: "social" as const, label: "\uD83D\uDC65 Social", color: "#60a5fa" },
+          ]).map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-3 text-xs sm:text-sm font-bold transition-all ${activeTab === tab.id ? "border-b-2" : "text-gray-500 hover:text-gray-300"}`}
+              style={activeTab === tab.id ? { color: tab.color, borderColor: tab.color } : {}}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === "play" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           GAME MACHINES (3 existing + All-In below)
          ══════════════════════════════════════════════════════════════════ */}
@@ -1928,10 +1949,12 @@ export function CasinoPage() {
           </div>
         </div>
       )}
+      </>)}
 
       {/* ══════════════════════════════════════════════════════════════════
           MINIGAMES
          ══════════════════════════════════════════════════════════════════ */}
+      {activeTab === "minigames" && (<>
       {user && (
         <div className="max-w-4xl mx-auto px-6 pb-6">
           <h3 className="font-black text-lg text-purple-300 mb-3">🎮 MINIGAMES</h3>
@@ -2020,6 +2043,7 @@ export function CasinoPage() {
           </div>
         </div>
       )}
+      </>)}
 
       {/* ── Snake Modal ── */}
       {activeMinigame === "snake" && (
@@ -2670,6 +2694,7 @@ export function CasinoPage() {
         </div>
       )}
 
+      {activeTab === "progress" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           1. DAILY QUESTS
          ══════════════════════════════════════════════════════════════════ */}
@@ -2702,6 +2727,7 @@ export function CasinoPage() {
           </div>
         </div>
       )}
+      </>)}
 
       {/* ══════════════════════════════════════════════════════════════════
           DOUBLE OR NOTHING
@@ -2729,6 +2755,7 @@ export function CasinoPage() {
         </div>
       )}
 
+      {activeTab === "play" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           BOSS FIGHT
          ══════════════════════════════════════════════════════════════════ */}
@@ -2751,7 +2778,9 @@ export function CasinoPage() {
           </div>
         </div>
       )}
+      </>)}
 
+      {activeTab === "pets" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           PET BATTLES
          ══════════════════════════════════════════════════════════════════ */}
@@ -2831,7 +2860,9 @@ export function CasinoPage() {
           </div>
         </div>
       )}
+      </>)}
 
+      {activeTab === "progress" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           3. BATTLE PASS / SEASON
          ══════════════════════════════════════════════════════════════════ */}
@@ -3141,6 +3172,9 @@ export function CasinoPage() {
         </div>
       )}
 
+      </>)}
+
+      {activeTab === "social" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           GUILDS
          ══════════════════════════════════════════════════════════════════ */}
@@ -3244,6 +3278,9 @@ export function CasinoPage() {
         </div>
       )}
 
+      </>)}
+
+      {activeTab === "pets" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           V-PET + SHOP + BREED + RENAME
          ══════════════════════════════════════════════════════════════════ */}
@@ -3619,6 +3656,9 @@ export function CasinoPage() {
         </div>
       )}
 
+      </>)}
+
+      {activeTab === "progress" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           SKILL TREE
          ══════════════════════════════════════════════════════════════════ */}
@@ -3804,6 +3844,9 @@ export function CasinoPage() {
         </div>
       )}
 
+      </>)}
+
+      {activeTab === "social" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           5. HEIST
          ══════════════════════════════════════════════════════════════════ */}
@@ -3941,6 +3984,9 @@ export function CasinoPage() {
         </div>
       )}
 
+      </>)}
+
+      {activeTab === "play" && (<>
       {/* ══════════════════════════════════════════════════════════════════
           LIVE FEED + LEADERBOARD
          ══════════════════════════════════════════════════════════════════ */}
@@ -4013,6 +4059,8 @@ export function CasinoPage() {
           </div>
         </div>
       </div>
+
+      </>)}
 
       {/* ══════════════════════════════════════════════════════════════════
           FOOTER

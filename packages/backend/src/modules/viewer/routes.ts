@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma.js";
 import jwt from "jsonwebtoken";
 import { config } from "../../config/index.js";
 import { addClient, removeClient, getInitialState, broadcastCasinoUpdate } from "../casino/sse.js";
+import { jwtAuth } from "../../middleware/jwt-auth.js";
 
 function getUser(request: FastifyRequest): { sub: string; twitchId: string } | null {
   const auth = request.headers.authorization;
@@ -1823,4 +1824,146 @@ export async function viewerRoutes(app: FastifyInstance) {
       return { success: true, data: users };
     }
   );
+
+  // ── Admin Casino Management ──
+  app.get("/:channelName/casino/admin/players", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const players = await prisma.channelUser.findMany({
+      where: { channelId: channel.id },
+      orderBy: { points: "desc" },
+      take: 100,
+      select: { twitchUserId: true, displayName: true, points: true, watchMinutes: true },
+    });
+    return { success: true, data: players };
+  });
+
+  app.post("/:channelName/casino/admin/points", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const { twitchUserId, amount } = request.body as any;
+    if (!twitchUserId || typeof amount !== "number") return reply.status(400).send({ success: false, error: "twitchUserId + amount required" });
+
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId } },
+      data: { points: { increment: amount } },
+    });
+    return { success: true };
+  });
+
+  app.post("/:channelName/casino/admin/set-points", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const { twitchUserId, points } = request.body as any;
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId } },
+      data: { points },
+    });
+    return { success: true };
+  });
+
+  app.post("/:channelName/casino/admin/give-all", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const { amount } = request.body as any;
+    const result = await prisma.channelUser.updateMany({
+      where: { channelId: channel.id },
+      data: { points: { increment: amount } },
+    });
+    return { success: true, data: { updated: result.count } };
+  });
+
+  app.post("/:channelName/casino/admin/reset-player", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const { twitchUserId } = request.body as any;
+    if (!twitchUserId) return reply.status(400).send({ success: false, error: "twitchUserId required" });
+
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId } },
+      data: { points: 0, watchMinutes: 0 },
+    });
+    return { success: true };
+  });
+
+  // ── Story Mode ──
+  app.get("/:channelName/casino/story", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getStoryState } = await import("../casino/story-mode.js");
+    const state = await getStoryState(channel.id, user.twitchId);
+    return { success: true, data: state };
+  });
+
+  app.post("/:channelName/casino/story/start", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { startStory } = await import("../casino/story-mode.js");
+    const state = await startStory(channel.id, user.twitchId);
+    return { success: true, data: state };
+  });
+
+  app.post("/:channelName/casino/story/next", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { advanceStory } = await import("../casino/story-mode.js");
+    const result = await advanceStory(channel.id, user.twitchId);
+    if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+    return { success: true, data: result };
+  });
+
+  app.post("/:channelName/casino/story/choice", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { choiceId } = request.body as any;
+    const { makeChoice } = await import("../casino/story-mode.js");
+    const result = await makeChoice(channel.id, user.twitchId, choiceId);
+    if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+    return { success: true, data: result };
+  });
+
+  app.post("/:channelName/casino/story/game", async (request: any, reply) => {
+    const user = getUser(request);
+    if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { won } = request.body as any;
+    const { reportGameResult } = await import("../casino/story-mode.js");
+    const result = await reportGameResult(channel.id, user.twitchId, !!won);
+    if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+    return { success: true, data: result };
+  });
 }

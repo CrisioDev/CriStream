@@ -282,6 +282,13 @@ export function CasinoPage() {
   const [sudokuStart, setSudokuStart] = useState(0);
   const [sudokuDone, setSudokuDone] = useState(false);
   const [sudokuMsg, setSudokuMsg] = useState<string | null>(null);
+  // Poker
+  const [pokerHand, setPokerHand] = useState<any[] | null>(null);
+  const [pokerSelected, setPokerSelected] = useState<Set<number>>(new Set());
+  const [pokerResult, setPokerResult] = useState<any>(null);
+  const [pokerBet, setPokerBet] = useState(50);
+  const [pokerMsg, setPokerMsg] = useState<string | null>(null);
+
   // 9x9 Sudoku
   const [s9Puzzle, setS9Puzzle] = useState<(number | 0)[][] | null>(null);
   const [s9Grid, setS9Grid] = useState<number[][]>([]);
@@ -1980,6 +1987,14 @@ export function CasinoPage() {
               <div className="text-xs text-gray-500 mt-1">Bis zu 15K Pts!</div>
               <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(234,179,8,0.2)", color: "#eab308" }}>Spielen</div>
             </button>
+            {/* Poker */}
+            <button onClick={() => { setActiveMinigame("poker" as any); setPokerHand(null); setPokerResult(null); setPokerMsg(null); setPokerSelected(new Set()); }}
+              className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(220,38,38,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(220,38,38,0.3)" }}>
+              <div className="text-4xl mb-2">🃏</div>
+              <div className="font-black text-red-400">Poker</div>
+              <div className="text-xs text-gray-500 mt-1">5-Card Draw vs Haus</div>
+              <div className="mt-3 text-xs font-bold px-4 py-1.5 rounded-lg inline-block" style={{ background: "rgba(220,38,38,0.2)", color: "#f87171" }}>Spielen</div>
+            </button>
             {/* Over/Under */}
             <button onClick={() => setActiveMinigame("overunder" as any)} className="rounded-2xl p-5 text-center transition-all hover:scale-105" style={{ background: "linear-gradient(180deg, rgba(34,211,238,0.12), rgba(0,0,0,0.3))", border: "1px solid rgba(34,211,238,0.3)" }}>
               <div className="text-4xl mb-2">🎯</div>
@@ -2312,6 +2327,110 @@ export function CasinoPage() {
                 🔄 Nochmal
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Poker Modal */}
+      {activeMinigame === ("poker" as any) && (
+        <div className="fixed inset-0 z-[35] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-6 text-center max-w-md w-full mx-4" style={{ background: "linear-gradient(180deg, #1a0a0a, #000)", border: "2px solid rgba(220,38,38,0.4)" }}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-black text-lg text-red-400">🃏 Poker vs Haus</h3>
+              <button onClick={() => { setActiveMinigame(null); setPokerHand(null); setPokerResult(null); }} className="text-gray-500 hover:text-white text-lg">✕</button>
+            </div>
+            {pokerMsg && <p className={`text-sm mb-2 font-bold ${pokerMsg.includes("Gewonnen") || pokerMsg.includes("+") ? "text-green-400" : pokerMsg.includes("verliert") || pokerMsg.includes("Haus") ? "text-red-400" : "text-yellow-400"}`}>{pokerMsg}</p>}
+
+            {!pokerHand && !pokerResult ? (
+              <div>
+                <p className="text-gray-400 text-sm mb-3">5-Card Draw Poker gegen das Haus. Bis zu 3 Karten tauschen!</p>
+                <div className="text-xs text-gray-600 mb-3 grid grid-cols-2 gap-1">
+                  <span>Royal Flush: x101</span><span>Straight Flush: x51</span>
+                  <span>Vierling: x26</span><span>Full House: x10</span>
+                  <span>Flush: x7</span><span>Straße: x5</span>
+                  <span>Drilling: x4</span><span>Zwei Paare: x3</span>
+                  <span>Ein Paar: x2</span><span>Höchste Karte: Haus muss schlagen</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span className="text-gray-500 text-sm">Einsatz:</span>
+                  <input type="number" min={10} value={pokerBet} onChange={e => setPokerBet(Math.max(10, +e.target.value))} className="w-24 bg-black/40 border border-red-500/30 rounded-lg px-2 py-1 text-center text-white" />
+                </div>
+                <button onClick={async () => {
+                  const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/poker/start`, { bet: pokerBet }) as any;
+                  if (res.success) { setPokerHand(res.data.playerHand); setPokerSelected(new Set()); setPokerMsg(null); casinoSounds.reveal(); }
+                  else setPokerMsg(res.error ?? "Fehler!");
+                }} className="casino-btn px-8 py-3 rounded-xl font-black text-lg text-white" style={{ background: "linear-gradient(135deg, #dc2626, #991b1b)" }}>
+                  🃏 Austeilen ({formatNumber(pokerBet)} Pts)
+                </button>
+              </div>
+            ) : pokerHand && !pokerResult ? (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Klicke Karten zum Tauschen (max 3):</p>
+                <div className="flex justify-center gap-2 mb-4">
+                  {pokerHand.map((c: any, i: number) => (
+                    <button key={i} onClick={() => {
+                      const s = new Set(pokerSelected);
+                      if (s.has(i)) s.delete(i); else if (s.size < 3) s.add(i);
+                      setPokerSelected(s);
+                    }} className={`w-14 h-20 rounded-lg flex flex-col items-center justify-center text-lg font-black transition-all ${pokerSelected.has(i) ? "ring-2 ring-yellow-400 scale-95 opacity-50" : ""}`}
+                      style={{
+                        background: (c.suit === "♥" || c.suit === "♦") ? "linear-gradient(180deg, #fff, #fee)" : "linear-gradient(180deg, #fff, #eef)",
+                        color: (c.suit === "♥" || c.suit === "♦") ? "#dc2626" : "#1a1a1a",
+                      }}>
+                      <span className="text-sm">{c.rank}</span>
+                      <span className="text-lg">{c.suit}</span>
+                    </button>
+                  ))}
+                </div>
+                {pokerSelected.size > 0 && <p className="text-xs text-yellow-400 mb-2">{pokerSelected.size} Karte(n) zum Tauschen markiert</p>}
+                <button onClick={async () => {
+                  casinoSounds.reveal();
+                  const res = await api.post<any>(`/viewer/${channelName}/casino/minigame/poker/draw`, { discardIndices: [...pokerSelected] }) as any;
+                  if (res.success) {
+                    setPokerResult(res.data);
+                    setPokerHand(null);
+                    if (res.data.playerWins) { setPokerMsg(`✅ Gewonnen! x${res.data.multiplier} → +${formatNumber(res.data.payout)} Pts!`); casinoSounds.bigWin(); }
+                    else { setPokerMsg(`❌ Haus gewinnt!`); casinoSounds.loss(); }
+                    fetchPoints();
+                  } else setPokerMsg(res.error ?? "Fehler!");
+                }} className="casino-btn px-8 py-3 rounded-xl font-black text-black" style={{ background: "linear-gradient(135deg, #ffd700, #ff8c00)" }}>
+                  {pokerSelected.size > 0 ? `🔄 ${pokerSelected.size} Tauschen` : "✋ Behalten"}
+                </button>
+              </div>
+            ) : pokerResult ? (
+              <div>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Deine Hand:</p>
+                    <div className="flex justify-center gap-1">
+                      {pokerResult.playerHand.map((c: any, i: number) => (
+                        <div key={i} className="w-10 h-14 rounded flex flex-col items-center justify-center text-xs font-bold"
+                          style={{ background: "#fff", color: (c.suit === "♥" || c.suit === "♦") ? "#dc2626" : "#1a1a1a" }}>
+                          <span>{c.rank}</span><span>{c.suit}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className={`text-sm font-bold mt-1 ${pokerResult.playerWins ? "text-green-400" : "text-gray-400"}`}>{pokerResult.playerRank}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Haus:</p>
+                    <div className="flex justify-center gap-1">
+                      {pokerResult.houseHand.map((c: any, i: number) => (
+                        <div key={i} className="w-10 h-14 rounded flex flex-col items-center justify-center text-xs font-bold"
+                          style={{ background: "#fff", color: (c.suit === "♥" || c.suit === "♦") ? "#dc2626" : "#1a1a1a" }}>
+                          <span>{c.rank}</span><span>{c.suit}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className={`text-sm font-bold mt-1 ${!pokerResult.playerWins ? "text-red-400" : "text-gray-400"}`}>{pokerResult.houseRank}</p>
+                  </div>
+                </div>
+                <button onClick={() => { setPokerHand(null); setPokerResult(null); setPokerMsg(null); setPokerSelected(new Set()); }}
+                  className="casino-btn px-6 py-2 rounded-xl font-bold text-sm text-white" style={{ background: "rgba(220,38,38,0.2)", border: "1px solid rgba(220,38,38,0.4)" }}>
+                  🔄 Nochmal
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

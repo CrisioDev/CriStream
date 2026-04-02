@@ -1280,6 +1280,36 @@ export async function viewerRoutes(app: FastifyInstance) {
     }
   );
 
+  // ── Poker ──
+  app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
+    "/:channelName/casino/minigame/poker/start",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { startPoker } = await import("../casino/minigames.js");
+      const result = await startPoker(channel.id, user.twitchId, request.body.bet);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      return { success: true, data: result };
+    }
+  );
+
+  app.post<{ Params: { channelName: string }; Body: { discardIndices: number[] } }>(
+    "/:channelName/casino/minigame/poker/draw",
+    async (request, reply) => {
+      const user = getUser(request);
+      if (!user) return reply.status(401).send({ success: false, error: "Login required" });
+      const channel = await viewerService.resolveChannel(request.params.channelName);
+      if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+      const { drawPoker } = await import("../casino/minigames.js");
+      const result = await drawPoker(channel.id, user.twitchId, request.body.discardIndices ?? []);
+      if ("error" in result) return reply.status(400).send({ success: false, error: result.error });
+      broadcastCasinoUpdate(channel.id, user.twitchId, { feed: true, points: true }).catch(() => {});
+      return { success: true, data: result };
+    }
+  );
+
   // ── Dice 21 ──
   app.post<{ Params: { channelName: string }; Body: { bet: number } }>(
     "/:channelName/casino/minigame/dice21/start",

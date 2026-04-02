@@ -715,3 +715,172 @@ export async function submit9x9Sudoku(
   await redis.lpush(`casino:feed:${channelId}`, entry); await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
   return { points: pts };
 }
+
+// ── Poker vs House (5-Card Draw) ──
+
+const SUITS = ["♠", "♥", "♦", "♣"] as const;
+const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"] as const;
+
+interface Card { rank: string; suit: string; value: number; }
+
+function createDeck(): Card[] {
+  const deck: Card[] = [];
+  for (const suit of SUITS) {
+    for (let i = 0; i < RANKS.length; i++) {
+      deck.push({ rank: RANKS[i]!, suit, value: i + 2 }); // 2-14 (A=14)
+    }
+  }
+  return deck.sort(() => Math.random() - 0.5);
+}
+
+type HandRank = "royal_flush" | "straight_flush" | "four_kind" | "full_house" | "flush" | "straight" | "three_kind" | "two_pair" | "pair" | "high_card";
+
+const HAND_VALUES: Record<HandRank, number> = {
+  royal_flush: 10, straight_flush: 9, four_kind: 8, full_house: 7,
+  flush: 6, straight: 5, three_kind: 4, two_pair: 3, pair: 2, high_card: 1,
+};
+
+const HAND_NAMES: Record<HandRank, string> = {
+  royal_flush: "Royal Flush!", straight_flush: "Straight Flush!", four_kind: "Vierling!",
+  full_house: "Full House!", flush: "Flush!", straight: "Straße!",
+  three_kind: "Drilling!", two_pair: "Zwei Paare!", pair: "Ein Paar!", high_card: "Höchste Karte",
+};
+
+const HAND_PAYOUTS: Record<HandRank, number> = {
+  royal_flush: 100, straight_flush: 50, four_kind: 25, full_house: 9,
+  flush: 6, straight: 4, three_kind: 3, two_pair: 2, pair: 1, high_card: 0,
+};
+
+function evaluateHand(cards: Card[]): { rank: HandRank; score: number; kickers: number[] } {
+  const sorted = [...cards].sort((a, b) => b.value - a.value);
+  const values = sorted.map(c => c.value);
+  const suits = sorted.map(c => c.suit);
+
+  const counts = new Map<number, number>();
+  for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+  const groups = [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]);
+
+  const isFlush = new Set(suits).size === 1;
+  const isStraight = values[0]! - values[4]! === 4 && new Set(values).size === 5;
+  const isAceLowStraight = values[0] === 14 && values[1] === 5 && values[2] === 4 && values[3] === 3 && values[4] === 2;
+
+  if (isFlush && isStraight && values[0] === 14) return { rank: "royal_flush", score: 10000, kickers: values };
+  if (isFlush && (isStraight || isAceLowStraight)) return { rank: "straight_flush", score: 9000 + values[0]!, kickers: values };
+  if (groups[0]![1] === 4) return { rank: "four_kind", score: 8000 + groups[0]![0], kickers: values };
+  if (groups[0]![1] === 3 && groups[1]![1] === 2) return { rank: "full_house", score: 7000 + groups[0]![0] * 15 + groups[1]![0], kickers: values };
+  if (isFlush) return { rank: "flush", score: 6000 + values[0]!, kickers: values };
+  if (isStraight || isAceLowStraight) return { rank: "straight", score: 5000 + (isAceLowStraight ? 5 : values[0]!), kickers: values };
+  if (groups[0]![1] === 3) return { rank: "three_kind", score: 4000 + groups[0]![0], kickers: values };
+  if (groups[0]![1] === 2 && groups[1]![1] === 2) return { rank: "two_pair", score: 3000 + groups[0]![0] * 15 + groups[1]![0], kickers: values };
+  if (groups[0]![1] === 2) return { rank: "pair", score: 2000 + groups[0]![0], kickers: values };
+  return { rank: "high_card", score: 1000 + values[0]!, kickers: values };
+}
+
+function formatCard(c: Card): string { return `${c.rank}${c.suit}`; }
+function formatHand(cards: Card[]): string { return cards.map(formatCard).join(" "); }
+
+interface PokerState {
+  playerHand: Card[];
+  houseHand: Card[];
+  deck: Card[];
+  bet: number;
+  phase: "draw" | "done";
+}
+
+function pokerKey(channelId: string, userId: string): string {
+  return `casino:poker:${channelId}:${userId}`;
+}
+
+export async function startPoker(
+  channelId: string, userId: string, bet: number,
+): Promise<{ playerHand: Card[]; bet: number } | { error: string }> {
+  if (bet < 10) return { error: "Mindesteinsatz: 10 Punkte!" };
+
+  const existing = await redis.get(pokerKey(channelId, userId));
+  if (existing) {
+    const state = JSON.parse(existing) as PokerState;
+    if (state.phase !== "done") return { error: "Du hast noch ein laufendes Spiel!" };
+  }
+
+  const cu = await prisma.channelUser.findUnique({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+  });
+  if (!cu || cu.points < bet) return { error: `Nicht genug Punkte! Brauchst ${bet}.` };
+
+  await prisma.channelUser.update({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+    data: { points: { decrement: bet } },
+  });
+
+  const deck = createDeck();
+  const playerHand = deck.splice(0, 5);
+  const houseHand = deck.splice(0, 5);
+
+  const state: PokerState = { playerHand, houseHand, deck, bet, phase: "draw" };
+  await redis.set(pokerKey(channelId, userId), JSON.stringify(state), "EX", 300);
+
+  return { playerHand, bet };
+}
+
+export async function drawPoker(
+  channelId: string, userId: string, discardIndices: number[],
+): Promise<{
+  playerHand: Card[]; houseHand: Card[];
+  playerRank: string; houseRank: string;
+  playerWins: boolean; payout: number; multiplier: number;
+} | { error: string }> {
+  const raw = await redis.get(pokerKey(channelId, userId));
+  if (!raw) return { error: "Kein laufendes Spiel!" };
+  const state = JSON.parse(raw) as PokerState;
+  if (state.phase !== "draw") return { error: "Spiel bereits beendet!" };
+
+  // Validate discard indices (max 3 cards)
+  const valid = discardIndices.filter(i => i >= 0 && i < 5);
+  if (valid.length > 3) return { error: "Maximal 3 Karten tauschen!" };
+
+  // Replace discarded cards
+  for (const idx of valid) {
+    if (state.deck.length > 0) {
+      state.playerHand[idx] = state.deck.shift()!;
+    }
+  }
+
+  state.phase = "done";
+
+  // Evaluate hands
+  const playerEval = evaluateHand(state.playerHand);
+  const houseEval = evaluateHand(state.houseHand);
+
+  const playerWins = playerEval.score > houseEval.score;
+  const multiplier = playerWins ? Math.max(HAND_PAYOUTS[playerEval.rank], 1) : 0;
+  const payout = playerWins ? Math.round(state.bet * (1 + multiplier)) : 0;
+
+  if (payout > 0) {
+    await prisma.channelUser.update({
+      where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+      data: { points: { increment: payout } },
+    });
+  }
+
+  await redis.set(pokerKey(channelId, userId), JSON.stringify(state), "EX", 60);
+
+  // Feed
+  const cu = await prisma.channelUser.findUnique({
+    where: { channelId_twitchUserId: { channelId, twitchUserId: userId } },
+  });
+  const entry = JSON.stringify({
+    user: cu?.displayName ?? userId, game: "poker", payout, profit: payout - state.bet,
+    detail: playerWins
+      ? `🃏 ${HAND_NAMES[playerEval.rank]} vs ${HAND_NAMES[houseEval.rank]} → x${multiplier + 1} → ${payout}`
+      : `🃏 ${HAND_NAMES[playerEval.rank]} vs ${HAND_NAMES[houseEval.rank]} → Haus gewinnt!`,
+    time: Date.now(),
+  });
+  await redis.lpush(`casino:feed:${channelId}`, entry);
+  await redis.ltrim(`casino:feed:${channelId}`, 0, 29);
+
+  return {
+    playerHand: state.playerHand, houseHand: state.houseHand,
+    playerRank: HAND_NAMES[playerEval.rank], houseRank: HAND_NAMES[houseEval.rank],
+    playerWins, payout, multiplier: multiplier + 1,
+  };
+}

@@ -395,15 +395,21 @@ export async function standDice21(
 
   state.finished = true;
 
+  // Must roll at least 3 times before standing
+  if (state.rolls.length < 3) {
+    return { error: "Mindestens 3 Würfe nötig bevor du stoppen kannst!" };
+  }
+
   // Payout based on how close to 21:
-  // 20-21: x3, 18-19: x2.5, 16-17: x2, 14-15: x1.5, 12-13: x1.2, <12: x1 (get bet back)
+  // 20-21: x3, 18-19: x2.5, 16-17: x2, 14-15: x1.5
+  // Below 14: LOSS (you played it too safe)
   let multiplier: number;
   if (state.total >= 20) multiplier = 3;
   else if (state.total >= 18) multiplier = 2.5;
   else if (state.total >= 16) multiplier = 2;
   else if (state.total >= 14) multiplier = 1.5;
-  else if (state.total >= 12) multiplier = 1.2;
-  else multiplier = 1;
+  else if (state.total >= 12) multiplier = 0.5; // loss: get half back
+  else multiplier = 0.2; // big loss: played too safe
 
   const payout = Math.round(state.bet * multiplier);
   await prisma.channelUser.update({

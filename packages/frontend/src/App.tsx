@@ -20,7 +20,7 @@ import { SandboxPage } from "@/pages/Sandbox";
 import { CountersPage } from "@/pages/Counters";
 import { LootboxPage } from "@/pages/Lootbox";
 import { StatusPage } from "@/pages/Status";
-import { CasinoPage } from "@/pages/Casino";
+import { CasinoPage } from "@/pages/casino";
 import { StopwatchPage } from "@/pages/Stopwatch";
 import { ViewerLayout } from "@/pages/viewer/ViewerLayout";
 import { ViewerProfilePage } from "@/pages/viewer/ViewerProfile";

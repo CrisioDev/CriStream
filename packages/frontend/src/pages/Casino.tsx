@@ -2786,7 +2786,21 @@ export function CasinoPage() {
                   const freeRewards = rewards.filter((r: SeasonReward) => !r.premium);
                   const premiumRewards = rewards.filter((r: SeasonReward) => r.premium);
                   const rewardIcon = (r: SeasonReward) => r.type === "points" ? "💰" : r.type === "title" ? "🏷️" : r.type === "autoflip" ? "🤖" : "📦";
-                  const rewardText = (r: SeasonReward) => r.type === "points" ? `${r.value} Pts` : r.type === "title" ? `"${r.value}"` : r.type === "autoflip" ? `${r.value}` : `${r.value}x Lootbox`;
+                  const prestigeLevel = autoFlip?.prestige ?? 0;
+                  const seasonMult = Math.pow(10, prestigeLevel);
+                  const rewardText = (r: SeasonReward) => {
+                    if (r.type === "points") {
+                      const scaled = Math.round(Number(r.value) * seasonMult);
+                      return seasonMult > 1 ? `${formatNumber(scaled)} Pts (x${formatNumber(seasonMult)})` : `${formatNumber(Number(r.value))} Pts`;
+                    }
+                    if (r.type === "title") return `"${r.value}"`;
+                    if (r.type === "autoflip") return `${r.value}`;
+                    if (r.type === "lootbox") {
+                      const scaled = Math.round(Number(r.value) * 50 * seasonMult);
+                      return seasonMult > 1 ? `${formatNumber(scaled)} Pts (x${formatNumber(seasonMult)})` : `${r.value}x Lootbox`;
+                    }
+                    return String(r.value);
+                  };
                   return (
                     <div key={level} className={`flex-shrink-0 w-28 text-center rounded-xl p-2 ${canClaim ? "bp-unclaimed" : ""}`}
                       style={{

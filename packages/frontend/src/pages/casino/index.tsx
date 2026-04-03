@@ -593,16 +593,35 @@ export function CasinoPage() {
     return () => es.close();
   }, [user, channelName]);
 
-  // ── Win/Loss helpers ──
+  // ── Win/Loss helpers (GOTY enhanced) ──
+  const [screenFlash, setScreenFlash] = useState<"win" | "loss" | "mega" | null>(null);
+  const [screenShake, setScreenShake] = useState(false);
+
   const showWin = (profit: number) => {
     setStreak(s => { const n = s + 1; if (n > maxStreak) setMaxStreak(n); return n; });
     setTotalWon(t => t + profit);
     if (profit >= 100 && confettiRef.current) spawnConfetti(confettiRef.current, Math.min(profit, 200));
-    if (profit >= 200) showMultiplier("MEGA WIN!");
-    else if (profit >= 50) showMultiplier("BIG WIN!");
-    else if (profit >= 10) showMultiplier("WIN!");
+    if (profit >= 500) {
+      showMultiplier("MEGA WIN!");
+      setScreenFlash("mega"); setTimeout(() => setScreenFlash(null), 800);
+      setScreenShake(true); setTimeout(() => setScreenShake(false), 500);
+    } else if (profit >= 200) {
+      showMultiplier("MEGA WIN!");
+      setScreenFlash("win"); setTimeout(() => setScreenFlash(null), 600);
+      setScreenShake(true); setTimeout(() => setScreenShake(false), 400);
+    } else if (profit >= 50) {
+      showMultiplier("BIG WIN!");
+      setScreenFlash("win"); setTimeout(() => setScreenFlash(null), 400);
+    } else if (profit >= 10) {
+      showMultiplier("WIN!");
+    }
   };
-  const showLoss = (loss: number) => { setStreak(0); setTotalLost(t => t + loss); };
+  const showLoss = (loss: number) => {
+    setStreak(0); setTotalLost(t => t + loss);
+    if (loss >= 100) {
+      setScreenFlash("loss"); setTimeout(() => setScreenFlash(null), 300);
+    }
+  };
   const showMultiplier = (text: string) => { setMultiplierAnim(text); setTimeout(() => setMultiplierAnim(null), 2000); };
 
   // ── Double or Nothing ──
@@ -874,9 +893,18 @@ export function CasinoPage() {
   };
 
   return (
-    <div className={`min-h-screen text-white overflow-hidden relative ${allInShake ? "allin-shake" : ""}`} style={{
+    <div className={`min-h-screen text-white overflow-hidden relative ${allInShake || screenShake ? "allin-shake" : ""}`} style={{
       background: "radial-gradient(ellipse at center top, #1a0533 0%, #0a0a1a 40%, #000 100%)",
     }}>
+      {/* Screen flash overlay */}
+      {screenFlash && (
+        <div className="fixed inset-0 pointer-events-none z-[80] transition-opacity" style={{
+          background: screenFlash === "mega" ? "rgba(255,215,0,0.15)"
+            : screenFlash === "win" ? "rgba(74,222,128,0.1)"
+            : "rgba(239,68,68,0.08)",
+          animation: "boss-hp-drain 0.5s ease-out forwards",
+        }} />
+      )}
       <style>{CSS_ANIMATIONS}</style>
 
       {/* GOTY: Particle Background */}

@@ -422,6 +422,7 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
                   <span className="text-xs text-gray-500">Stufe {casinoRun.stage + 1}/5 · Multiplikator x{STAGE_MULTIPLIERS[casinoRun.stage]}</span>
                 </div>
                 <StoryGameEmbed
+                  key={`run-stage-${casinoRun.stage}`}
                   gameType={casinoRun.games[casinoRun.stage]}
                   channelName={channelName}
                   description={`Casino Run Stufe ${casinoRun.stage + 1}`}

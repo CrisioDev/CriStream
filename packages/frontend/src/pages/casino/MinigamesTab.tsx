@@ -855,12 +855,37 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
               <button onClick={() => setActiveMinigame(null)} className="text-gray-500 hover:text-white text-lg">✕</button>
             </div>
             {rouletteMsg && <p className={`text-sm mb-2 font-bold ${rouletteMsg.includes("+") ? "text-green-400" : "text-red-400"}`}>{rouletteMsg}</p>}
+            {/* Visual Roulette Wheel */}
+            <div className="relative w-48 h-48 mx-auto mb-4">
+              <div className="w-full h-full rounded-full border-4 border-yellow-500/60 relative overflow-hidden"
+                style={{
+                  background: "conic-gradient(#dc2626 0deg 9.7deg, #111 9.7deg 19.4deg, #dc2626 19.4deg 29.1deg, #111 29.1deg 38.8deg, #dc2626 38.8deg 48.5deg, #111 48.5deg 58.2deg, #dc2626 58.2deg 67.9deg, #111 67.9deg 77.6deg, #dc2626 77.6deg 87.3deg, #111 87.3deg 97deg, #dc2626 97deg 106.7deg, #111 106.7deg 116.4deg, #dc2626 116.4deg 126.1deg, #111 126.1deg 135.8deg, #dc2626 135.8deg 145.5deg, #111 145.5deg 155.2deg, #dc2626 155.2deg 164.9deg, #111 164.9deg 174.6deg, #16a34a 174.6deg 184.3deg, #dc2626 184.3deg 194deg, #111 194deg 203.7deg, #dc2626 203.7deg 213.4deg, #111 213.4deg 223.1deg, #dc2626 223.1deg 232.8deg, #111 232.8deg 242.5deg, #dc2626 242.5deg 252.2deg, #111 252.2deg 261.9deg, #dc2626 261.9deg 271.6deg, #111 271.6deg 281.3deg, #dc2626 281.3deg 291deg, #111 291deg 300.7deg, #dc2626 300.7deg 310.4deg, #111 310.4deg 320.1deg, #dc2626 320.1deg 329.8deg, #111 329.8deg 339.5deg, #dc2626 339.5deg 349.2deg, #111 349.2deg 360deg)",
+                  animation: rouletteSpinning ? "wheel-spin 2s cubic-bezier(0.2, 0.8, 0.3, 1) forwards" : undefined,
+                  boxShadow: "inset 0 0 30px rgba(0,0,0,0.6), 0 0 20px rgba(255,215,0,0.2)",
+                }}>
+                {/* Center */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-b from-yellow-600 to-yellow-800 border-2 border-yellow-400/50 flex items-center justify-center shadow-lg">
+                    {rouletteResult ? (
+                      <span className={`text-lg font-black ${rouletteResult.color === "red" ? "text-red-300" : rouletteResult.color === "black" ? "text-white" : "text-green-300"}`}>
+                        {rouletteResult.result}
+                      </span>
+                    ) : (
+                      <span className="text-yellow-300 text-sm font-black">?</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {/* Ball indicator */}
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-white shadow-lg" style={{ boxShadow: "0 0 10px rgba(255,255,255,0.8)" }} />
+            </div>
+
             {rouletteResult && (
               <div className="mb-3">
-                <div className={`text-5xl font-black mb-1 ${rouletteResult.color === "red" ? "text-red-500" : rouletteResult.color === "black" ? "text-white" : "text-green-500"}`}>
+                <div className={`text-3xl font-black mb-1 ${rouletteResult.color === "red" ? "text-red-500" : rouletteResult.color === "black" ? "text-white" : "text-green-500"}`}>
                   {rouletteResult.result}
                 </div>
-                <div className="text-lg">{rouletteResult.color === "red" ? "\uD83D\uDD34 Rot" : rouletteResult.color === "black" ? "⚫ Schwarz" : "\uD83D\uDFE2 Grun (0)"}</div>
+                <div className="text-sm">{rouletteResult.color === "red" ? "🔴 Rot" : rouletteResult.color === "black" ? "⚫ Schwarz" : "🟢 Grün (0)"}</div>
               </div>
             )}
             <div className="flex items-center justify-center gap-2 mb-3">

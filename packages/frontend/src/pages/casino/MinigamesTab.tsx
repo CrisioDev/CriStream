@@ -990,10 +990,12 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
                       const s = new Set(pokerSelected);
                       if (s.has(i)) s.delete(i); else if (s.size < 3) s.add(i);
                       setPokerSelected(s);
-                    }} className={`w-14 h-20 rounded-lg flex flex-col items-center justify-center text-lg font-black transition-all ${pokerSelected.has(i) ? "ring-2 ring-yellow-400 scale-95 opacity-50" : ""}`}
+                    }} className={`w-14 h-20 rounded-lg flex flex-col items-center justify-center text-lg font-black transition-all hover:scale-105 ${pokerSelected.has(i) ? "ring-2 ring-yellow-400 scale-95 opacity-50" : ""}`}
                       style={{
                         background: (c.suit === "♥" || c.suit === "♦") ? "linear-gradient(180deg, #fff, #fee)" : "linear-gradient(180deg, #fff, #eef)",
                         color: (c.suit === "♥" || c.suit === "♦") ? "#dc2626" : "#1a1a1a",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.2)",
+                        animation: `scratch-reveal 0.3s ease-out ${i * 0.1}s both`,
                       }}>
                       <span className="text-sm">{c.rank}</span>
                       <span className="text-lg">{c.suit}</span>
@@ -1085,11 +1087,19 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
               <div>
                 <p className="text-xs text-gray-500 mb-2">Deine Wurfel:</p>
                 <div className="flex justify-center gap-2 mb-2">
-                  {d21.rolls.map((r, i) => (
-                    <div key={i} className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black" style={{ background: "rgba(251,146,60,0.2)", border: "1px solid rgba(251,146,60,0.4)" }}>
-                      {r}
-                    </div>
-                  ))}
+                  {d21.rolls.map((r, i) => {
+                    const DICE_FACES = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+                    return (
+                      <div key={`${i}-${r}`} className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black" style={{
+                        background: "linear-gradient(135deg, rgba(251,146,60,0.25), rgba(251,146,60,0.1))",
+                        border: "1px solid rgba(251,146,60,0.5)",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.1)",
+                        animation: `scratch-reveal 0.3s ease-out ${i * 0.08}s both`,
+                      }}>
+                        {DICE_FACES[r - 1] ?? r}
+                      </div>
+                    );
+                  })}
                 </div>
                 <p className={`text-4xl font-black mb-3 ${d21.total > 18 ? "text-orange-400" : d21.total > 14 ? "text-yellow-400" : "text-white"}`}>{d21.total} <span className="text-lg text-gray-500">/ 21</span></p>
                 <div className="flex justify-center gap-3">

@@ -1114,10 +1114,53 @@ export function CasinoPage() {
         <StoryTab user={user} channelName={channelName} />
       )}
 
+      {/* ── Session Stats Bar ── */}
+      {user && (totalWon > 0 || totalLost > 0) && (
+        <div className="max-w-4xl mx-auto px-6 pb-4">
+          <div className="rounded-2xl p-4" style={{
+            background: "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2))",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}>
+            <div className="text-center mb-2">
+              <span className="text-xs text-gray-500">SESSION STATS</span>
+            </div>
+            <div className="grid grid-cols-4 gap-3 text-center">
+              <div>
+                <div className="text-lg font-black text-green-400">+{formatNumber(totalWon)}</div>
+                <div className="text-[10px] text-gray-600">Gewonnen</div>
+              </div>
+              <div>
+                <div className="text-lg font-black text-red-400">-{formatNumber(totalLost)}</div>
+                <div className="text-[10px] text-gray-600">Verloren</div>
+              </div>
+              <div>
+                <div className={`text-lg font-black ${totalWon - totalLost >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {totalWon - totalLost >= 0 ? "+" : ""}{formatNumber(totalWon - totalLost)}
+                </div>
+                <div className="text-[10px] text-gray-600">Netto</div>
+              </div>
+              <div>
+                <div className="text-lg font-black text-yellow-400">{maxStreak}</div>
+                <div className="text-[10px] text-gray-600">Best Streak</div>
+              </div>
+            </div>
+            {/* Mini profit chart */}
+            <div className="mt-3 h-2 rounded-full overflow-hidden flex" style={{ background: "rgba(0,0,0,0.3)" }}>
+              <div className="h-full bg-green-500/60 transition-all" style={{ width: `${totalWon + totalLost > 0 ? (totalWon / (totalWon + totalLost)) * 100 : 50}%` }} />
+              <div className="h-full bg-red-500/60 transition-all flex-1" />
+            </div>
+            <div className="flex justify-between text-[9px] text-gray-600 mt-0.5">
+              <span>Win Rate: {totalWon + totalLost > 0 ? Math.round((totalWon / (totalWon + totalLost)) * 100) : 0}%</span>
+              <span>Loss Rate: {totalWon + totalLost > 0 ? Math.round((totalLost / (totalWon + totalLost)) * 100) : 0}%</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Footer ── */}
-      <div className="text-center pb-6 space-y-2">
+      <div className="text-center pb-6 space-y-2 relative z-10">
         <a href="/casino-guide.html" className="inline-block px-6 py-2 rounded-full text-sm font-bold" style={{ background: "linear-gradient(135deg, rgba(145,71,255,0.2), rgba(100,65,165,0.1))", border: "1px solid rgba(145,71,255,0.4)", color: "#c084fc" }}>
-          {"\uD83D\uDCD6"} Casino Guide — Alle Features erklart
+          📖 Casino Guide — Alle Features erklärt
         </a>
         <div className="text-xs text-gray-700">
           Kein echtes Geld · Verantwortungsvolles Fake-Gambling™

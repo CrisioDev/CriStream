@@ -254,20 +254,46 @@ function padVoice(freq: number, type: OscillatorType, gain: number, target: Gain
   g.gain.setValueAtTime(0, c.currentTime);
   g.gain.linearRampToValueAtTime(gain, c.currentTime + 6);
 
-  // Detune pair: ±4 cents for chorus width
+  // Detune pair: ±5 cents for chorus width
   const o1 = c.createOscillator();
   const o2 = c.createOscillator();
   o1.type = type; o2.type = type;
   o1.frequency.value = freq;
   o2.frequency.value = freq;
-  o1.detune.value = 4;
-  o2.detune.value = -4;
+  o1.detune.value = 5;
+  o2.detune.value = -5;
+
+  // Vibrato: slow random pitch drift so pads never feel static
+  const vib1 = c.createOscillator();
+  const vib1G = c.createGain();
+  vib1.type = "sine";
+  vib1.frequency.value = 0.15 + Math.random() * 0.2; // each voice drifts at different rate
+  vib1G.gain.value = 1.5; // ±1.5 cents — imperceptible but prevents "frozen" feel
+  vib1.connect(vib1G); vib1G.connect(o1.detune);
+  vib1.start(); managedNodes.push(vib1);
+
+  const vib2 = c.createOscillator();
+  const vib2G = c.createGain();
+  vib2.type = "sine";
+  vib2.frequency.value = 0.1 + Math.random() * 0.15;
+  vib2G.gain.value = 1.5;
+  vib2.connect(vib2G); vib2G.connect(o2.detune);
+  vib2.start(); managedNodes.push(vib2);
+
+  // Gain micro-swell: each voice breathes independently
+  const swell = c.createOscillator();
+  const swellG = c.createGain();
+  swell.type = "sine";
+  swell.frequency.value = 0.04 + Math.random() * 0.06; // 12-25s cycle per voice
+  swellG.gain.value = gain * 0.35; // ±35% volume variation
+  swell.connect(swellG); swellG.connect(g.gain);
+  swell.start(); managedNodes.push(swell);
 
   // Slight stereo spread
   const panL = c.createStereoPanner();
   const panR = c.createStereoPanner();
-  panL.pan.value = -0.3;
-  panR.pan.value = 0.3;
+  panL.pan.value = -0.25 - Math.random() * 0.15;
+  panR.pan.value = 0.25 + Math.random() * 0.15;
 
   o1.connect(panL); panL.connect(g);
   o2.connect(panR); panR.connect(g);
@@ -484,8 +510,8 @@ function startRhythm() {
 
     beatCount += 4;
 
-    // Chord change every 8 bars (32 beats)
-    if (beatCount % 32 === 0) {
+    // Chord change every 4 bars (16 beats) — more harmonic movement
+    if (beatCount % 16 === 0) {
       chordIndex++;
       updatePadChord();
     }
@@ -502,6 +528,55 @@ function startRhythm() {
 // ══════════════════════════════════════════════
 
 let arpTimer: any = null;
+
+// ══════════════════════════════════════════════
+// MICRO-LIFE: random tiny sounds that prevent "frozen" feel
+// ══════════════════════════════════════════════
+
+let lifeTimer: any = null;
+
+function scheduleLifeEvents() {
+  const tick = () => {
+    if (!running || !stingerBus) return;
+    const c = ac();
+    const now = c.currentTime;
+    const roll = Math.random();
+
+    if (roll < 0.3) {
+      // Faint single note — like a distant glass clink
+      const freq = PENTA.high[Math.floor(Math.random() * PENTA.high.length)]!;
+      playNote(freq, now, 0.3, 0.004, stingerBus, "sine");
+    } else if (roll < 0.5) {
+      // Tiny noise puff — like distant crowd murmur
+      const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.08), c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource(); src.buffer = buf;
+      const f = c.createBiquadFilter(); f.type = "bandpass";
+      f.frequency.value = 800 + Math.random() * 2000; f.Q.value = 0.5;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.003, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+      src.connect(f); f.connect(g); g.connect(stingerBus);
+      src.start(now); src.stop(now + 0.1);
+    } else if (roll < 0.65) {
+      // Two-note interval — brief harmonic motion
+      const base = PENTA.mid[Math.floor(Math.random() * PENTA.mid.length)]!;
+      playNote(base, now, 0.2, 0.003, stingerBus, "sine");
+      playNote(base * 1.5, now + 0.15, 0.2, 0.002, stingerBus, "sine"); // fifth above
+    }
+    // else: silence (35% chance) — not every tick produces sound
+
+    const nextDelay = 5000 + Math.random() * 12000; // every 5-17 seconds
+    lifeTimer = setTimeout(tick, nextDelay);
+  };
+
+  lifeTimer = setTimeout(tick, 3000 + Math.random() * 5000);
+}
+
+// ══════════════════════════════════════════════
+// ARPEGGIO ENGINE
+// ══════════════════════════════════════════════
 
 function scheduleArpeggio() {
   const playArp = () => {
@@ -765,6 +840,7 @@ export const casinoMusic = {
     buildAmbientBed();
     startRhythm();
     scheduleArpeggio();
+    scheduleLifeEvents();
   },
 
   stop() {
@@ -773,6 +849,7 @@ export const casinoMusic = {
     timers = [];
     if (rhythmTimer) { clearTimeout(rhythmTimer); rhythmTimer = null; }
     if (arpTimer) { clearTimeout(arpTimer); arpTimer = null; }
+    if (lifeTimer) { clearTimeout(lifeTimer); lifeTimer = null; }
     if (decayTimer) { clearTimeout(decayTimer); decayTimer = null; }
     if (padFilterLFO) try { padFilterLFO.stop(); } catch {}
     for (const n of managedNodes) try { n.stop(); } catch {}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 import { casinoSounds } from "@/lib/casino-sounds";
+import { casinoMusic } from "@/lib/casino-music";
 import { formatNumber } from "@/lib/format-number";
 
 import type { CasinoSpecial, Quest, Achievement, PlayerStats, SeasonData, HeistState, Progression } from "./types";
@@ -301,11 +302,14 @@ export function CasinoPage() {
   const [displayPoints, setDisplayPoints] = useState<number>(0);
   const displayPointsRef = useRef(0);
 
-  // Ambient music toggle
+  // Adaptive music system toggle
   useEffect(() => {
-    if (ambientOn && !soundMuted) casinoSounds.startAmbient();
-    else casinoSounds.stopAmbient();
-    return () => { casinoSounds.stopAmbient(); };
+    if (ambientOn && !soundMuted) {
+      casinoMusic.start();
+    } else {
+      casinoMusic.stop();
+    }
+    return () => { casinoMusic.stop(); };
   }, [ambientOn, soundMuted]);
 
   // ── Process specials queue ──
@@ -615,6 +619,7 @@ export function CasinoPage() {
   const showWin = (profit: number) => {
     setStreak(s => { const n = s + 1; if (n > maxStreak) setMaxStreak(n); return n; });
     setTotalWon(t => t + profit);
+    casinoMusic.onGameResult(true, profit);
     if (profit >= 100 && confettiRef.current) spawnConfetti(confettiRef.current, Math.min(profit, 200));
     if (profit >= 500) {
       showMultiplier("MEGA WIN!");
@@ -633,6 +638,7 @@ export function CasinoPage() {
   };
   const showLoss = (loss: number) => {
     setStreak(0); setTotalLost(t => t + loss);
+    casinoMusic.onGameResult(false, 0);
     if (loss >= 100) {
       setScreenFlash("loss"); setTimeout(() => setScreenFlash(null), 300);
     }
@@ -765,51 +771,61 @@ export function CasinoPage() {
     if (!user || allInPlaying || !points || points <= 0) return;
     setAllInPlaying(true); setAllInResult(null); setAllInShake(true);
     casinoSounds.allIn();
+    casinoMusic.onAllInStart();
+    const stopHeartbeat = casinoMusic.startHeartbeat();
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "allin" }) as any;
       setTimeout(() => {
+        stopHeartbeat();
         setAllInShake(false); setAllInPlaying(false);
-        if (!res.success) { setAllInResult({ text: res.error ?? "Fehler!", win: false }); return; }
+        if (!res.success) { setAllInResult({ text: res.error ?? "Fehler!", win: false }); casinoMusic.onAllInEnd(false); return; }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         processProgression(res.data.progression);
         if (res.data.win) {
           setAllInResult({ text: `ALL-IN GEWONNEN! +${res.data.payout} Punkte!`, win: true });
           showWin(res.data.payout);
           casinoSounds.jackpot();
+          casinoMusic.onAllInEnd(true);
           if (confettiRef.current) spawnConfetti(confettiRef.current, 200, true);
           showMultiplier("ALL-IN WIN!");
         } else {
           setAllInResult({ text: `ALL-IN VERLOREN! ${res.data.amount} Punkte weg!`, win: false });
           showLoss(res.data.amount || 0);
           casinoSounds.loss();
+          casinoMusic.onAllInEnd(false);
         }
         fetchPoints();
       }, 2500);
-    } catch { setAllInPlaying(false); setAllInShake(false); setAllInResult({ text: "Fehler!", win: false }); }
+    } catch { setAllInPlaying(false); setAllInShake(false); setAllInResult({ text: "Fehler!", win: false }); stopHeartbeat(); casinoMusic.onAllInEnd(false); }
   };
 
   const playDeadlyAllIn = async () => {
     if (!user || allInPlaying || !points || points <= 0) return;
     setAllInPlaying(true); setAllInResult(null); setAllInShake(true);
+    casinoMusic.onAllInStart();
+    const stopHeartbeat = casinoMusic.startHeartbeat();
     try {
       const res = await api.post<any>(`/viewer/${channelName}/gamble`, { game: "deadlyallin" }) as any;
       setTimeout(() => {
+        stopHeartbeat();
         setAllInShake(false); setAllInPlaying(false);
-        if (!res.success) { setAllInResult({ text: res.error ?? "Fehler!", win: false }); return; }
+        if (!res.success) { setAllInResult({ text: res.error ?? "Fehler!", win: false }); casinoMusic.onAllInEnd(false); return; }
         if (res.data.specials?.length) enqueueSpecials(res.data.specials);
         processProgression(res.data.progression);
         if (res.data.win) {
           setAllInResult({ text: `DEADLY WIN! x3! +${formatNumber(res.data.payout)}!`, win: true });
           showWin(res.data.payout);
+          casinoMusic.onAllInEnd(true);
           if (confettiRef.current) spawnConfetti(confettiRef.current, 300, true);
           showMultiplier("DEADLY WIN x3!");
         } else {
           setAllInResult({ text: `☠️ ALLES WEG! ${formatNumber(res.data.amount)} Punkte verloren!`, win: false });
           showLoss(res.data.amount || 0);
+          casinoMusic.onAllInEnd(false);
         }
         fetchPoints();
       }, 2500);
-    } catch { setAllInPlaying(false); setAllInShake(false); }
+    } catch { setAllInPlaying(false); setAllInShake(false); stopHeartbeat(); casinoMusic.onAllInEnd(false); }
   };
 
   const spinWheel = async () => {
@@ -937,12 +953,17 @@ export function CasinoPage() {
 
       <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-[60]" />
 
-      {/* GOTY: Ambient Music Toggle */}
+      {/* Adaptive Music Toggle */}
       <button
         onClick={() => setAmbientOn(a => !a)}
         className={`fixed ${(autoFlip as any)?.active ? "bottom-40" : "bottom-16"} left-4 z-[60] w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110`}
-        style={{ background: "rgba(20,20,40,0.85)", border: `1px solid ${ambientOn ? "rgba(168,85,247,0.6)" : "rgba(100,100,100,0.4)"}`, color: ambientOn ? "#c084fc" : "#666" }}
-        title={ambientOn ? "Ambient-Musik aus" : "Ambient-Musik an"}
+        style={{
+          background: ambientOn ? "rgba(168,85,247,0.3)" : "rgba(20,20,40,0.85)",
+          border: `1px solid ${ambientOn ? "rgba(168,85,247,0.6)" : "rgba(100,100,100,0.4)"}`,
+          color: ambientOn ? "#c084fc" : "#666",
+          boxShadow: ambientOn ? "0 0 15px rgba(168,85,247,0.3)" : "none",
+        }}
+        title={ambientOn ? "Adaptive Musik aus" : "Adaptive Musik an"}
       >
         {ambientOn ? "🎵" : "🎶"}
       </button>

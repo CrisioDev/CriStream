@@ -894,7 +894,14 @@ export function CasinoPage() {
 
   return (
     <div className={`min-h-screen text-white overflow-hidden relative ${allInShake || screenShake ? "allin-shake" : ""}`} style={{
-      background: "radial-gradient(ellipse at center top, #1a0533 0%, #0a0a1a 40%, #000 100%)",
+      background: (() => {
+        const hour = new Date().getHours();
+        // Dynamic casino atmosphere based on time of day
+        if (hour >= 6 && hour < 12) return "radial-gradient(ellipse at center top, #1a0533 0%, #0a0a1a 40%, #000 100%)"; // Morning: classic purple
+        if (hour >= 12 && hour < 18) return "radial-gradient(ellipse at center top, #1a1033 0%, #0d0a1a 40%, #000 100%)"; // Afternoon: warm
+        if (hour >= 18 && hour < 22) return "radial-gradient(ellipse at center top, #200a3a 0%, #0a0520 30%, #050208 100%)"; // Evening: deep purple
+        return "radial-gradient(ellipse at center top, #0a0020 0%, #050010 30%, #000005 100%)"; // Night: ultra dark
+      })(),
     }}>
       {/* Screen flash overlay */}
       {screenFlash && (

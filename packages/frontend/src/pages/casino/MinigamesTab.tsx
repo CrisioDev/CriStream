@@ -663,15 +663,20 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
               {memoryStartTime > 0 && !memoryComplete && <span className="ml-3">Zeit: <MemoryTimer start={memoryStartTime} /></span>}
               {memoryComplete && <span className="ml-3">Zeit: <span className="text-purple-400 font-bold">{((Date.now() - memoryStartTime) / 1000).toFixed(1)}s</span></span>}
             </div>
-            <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto mb-4">
+            <div className="grid grid-cols-4 gap-2 max-w-xs mx-auto mb-4" style={{ perspective: "600px" }}>
               {memoryCards.map((card, i) => (
-                <button key={i} onClick={() => flipMemoryCard(i)} className="aspect-square rounded-xl text-2xl flex items-center justify-center transition-all duration-300 font-bold" style={{
-                  background: card.matched ? "rgba(34,197,94,0.2)" : card.flipped ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)",
-                  border: card.matched ? "1px solid rgba(34,197,94,0.4)" : card.flipped ? "1px solid rgba(168,85,247,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                  transform: card.flipped || card.matched ? "rotateY(0deg)" : "rotateY(0deg)",
-                  cursor: card.flipped || card.matched || memoryComplete ? "default" : "pointer",
-                }}>
-                  {card.flipped || card.matched ? card.emoji : "❓"}
+                <button key={i} onClick={() => flipMemoryCard(i)}
+                  className="aspect-square rounded-xl text-2xl flex items-center justify-center font-bold hover:scale-105"
+                  style={{
+                    background: card.matched ? "rgba(34,197,94,0.2)" : card.flipped ? "rgba(168,85,247,0.2)" : "linear-gradient(135deg, rgba(145,71,255,0.15), rgba(100,65,165,0.08))",
+                    border: card.matched ? "1px solid rgba(34,197,94,0.5)" : card.flipped ? "1px solid rgba(168,85,247,0.5)" : "1px solid rgba(145,71,255,0.2)",
+                    transform: card.flipped || card.matched ? "rotateY(0deg) scale(1)" : "rotateY(180deg) scale(1)",
+                    transition: "transform 0.4s ease-out, background 0.3s, border-color 0.3s",
+                    transformStyle: "preserve-3d",
+                    boxShadow: card.matched ? "0 0 15px rgba(34,197,94,0.3)" : card.flipped ? "0 0 10px rgba(168,85,247,0.3)" : "0 2px 8px rgba(0,0,0,0.3)",
+                    cursor: card.flipped || card.matched || memoryComplete ? "default" : "pointer",
+                  }}>
+                  {card.flipped || card.matched ? card.emoji : "🎴"}
                 </button>
               ))}
             </div>
@@ -1156,16 +1161,32 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
             </div>
             <p className="text-gray-400 text-xs mb-3">2 Wurfel (2-12) — ist die Summe uber oder unter 7?</p>
             {ouMsg && <p className={`text-sm mb-2 font-bold ${ouMsg.includes("+") ? "text-green-400" : "text-red-400"}`}>{ouMsg}</p>}
-            {ouResult && (
-              <div className="mb-3">
-                <div className="flex justify-center gap-3 mb-2">
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black" style={{ background: "rgba(34,211,238,0.2)", border: "1px solid rgba(34,211,238,0.4)" }}>{ouResult.dice[0]}</div>
-                  <div className="text-2xl font-black text-gray-500 self-center">+</div>
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-black" style={{ background: "rgba(34,211,238,0.2)", border: "1px solid rgba(34,211,238,0.4)" }}>{ouResult.dice[1]}</div>
-                  <div className="text-2xl font-black text-cyan-300 self-center">= {ouResult.total}</div>
+            {ouResult && (() => {
+              const DICE = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+              return (
+                <div className="mb-3">
+                  <div className="flex justify-center gap-3 mb-2 items-center">
+                    <div className="w-16 h-16 rounded-xl flex items-center justify-center text-4xl" style={{
+                      background: "linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,211,238,0.05))",
+                      border: "1px solid rgba(34,211,238,0.4)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                      animation: "scratch-reveal 0.3s ease-out",
+                    }}>{DICE[ouResult.dice[0] - 1]}</div>
+                    <div className="text-2xl font-black text-gray-500">+</div>
+                    <div className="w-16 h-16 rounded-xl flex items-center justify-center text-4xl" style={{
+                      background: "linear-gradient(135deg, rgba(34,211,238,0.2), rgba(34,211,238,0.05))",
+                      border: "1px solid rgba(34,211,238,0.4)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                      animation: "scratch-reveal 0.3s ease-out 0.15s both",
+                    }}>{DICE[ouResult.dice[1] - 1]}</div>
+                    <div className="text-2xl font-black text-cyan-300">=</div>
+                    <div className={`text-4xl font-black ${ouResult.win ? "text-green-400" : "text-red-400"}`} style={{ animation: "scratch-reveal 0.4s ease-out 0.3s both" }}>
+                      {ouResult.total}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="text-gray-500 text-sm">Einsatz:</span>
               <input type="number" min={1} value={ouBet} onChange={e => setOuBet(Math.max(1, +e.target.value))} className="w-20 bg-black/40 border border-cyan-500/30 rounded-lg px-2 py-1 text-center text-white" />

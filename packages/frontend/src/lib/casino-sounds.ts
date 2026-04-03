@@ -7,6 +7,8 @@
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let muted = false;
+let ambientPlaying = false;
+let ambientNodes: { oscs: OscillatorNode[]; gains: GainNode[]; noiseSource?: AudioBufferSourceNode } | null = null;
 
 function ac(): AudioContext {
   if (!ctx) { ctx = new AudioContext(); master = ctx.createGain(); master.gain.value = 0.4; master.connect(ctx.destination); }
@@ -322,6 +324,65 @@ export const casinoSounds = {
     noise(0.08, 0.12, 0, 1000);
     osc(80, "sine", 0.15, 0.1, 0.05);
   },
+
+  // ── Ambient Casino Music ──
+  startAmbient() {
+    if (muted || ambientPlaying) return;
+    const c = ac();
+    ambientPlaying = true;
+    const oscs: OscillatorNode[] = [];
+    const gains: GainNode[] = [];
+
+    // Deep bass pad
+    const bass = c.createOscillator();
+    const bassG = c.createGain();
+    bass.type = "sine"; bass.frequency.value = 55;
+    bassG.gain.value = 0.03;
+    bass.connect(bassG); bassG.connect(mg());
+    bass.start(); oscs.push(bass); gains.push(bassG);
+
+    // Warm pad chord (Cm7 — C Eb G Bb)
+    const padFreqs = [130.81, 155.56, 196.00, 233.08];
+    for (const freq of padFreqs) {
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = "sine"; o.frequency.value = freq;
+      g.gain.value = 0.012;
+      // Slow LFO on gain for gentle swell
+      const lfo = c.createOscillator();
+      const lfoG = c.createGain();
+      lfo.type = "sine"; lfo.frequency.value = 0.1 + Math.random() * 0.15;
+      lfoG.gain.value = 0.005;
+      lfo.connect(lfoG); lfoG.connect(g.gain);
+      lfo.start();
+      o.connect(g); g.connect(mg());
+      o.start(); oscs.push(o, lfo); gains.push(g, lfoG);
+    }
+
+    // Soft filtered noise (like distant crowd/chips)
+    const noiseBuf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+    const noiseData = noiseBuf.getChannelData(0);
+    for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1;
+    const noiseSource = c.createBufferSource();
+    noiseSource.buffer = noiseBuf; noiseSource.loop = true;
+    const noiseFilter = c.createBiquadFilter();
+    noiseFilter.type = "bandpass"; noiseFilter.frequency.value = 800; noiseFilter.Q.value = 0.5;
+    const noiseG = c.createGain(); noiseG.gain.value = 0.008;
+    noiseSource.connect(noiseFilter); noiseFilter.connect(noiseG); noiseG.connect(mg());
+    noiseSource.start(); gains.push(noiseG);
+
+    ambientNodes = { oscs, gains, noiseSource };
+  },
+
+  stopAmbient() {
+    if (!ambientNodes) return;
+    ambientPlaying = false;
+    for (const o of ambientNodes.oscs) try { o.stop(); } catch {}
+    if (ambientNodes.noiseSource) try { ambientNodes.noiseSource.stop(); } catch {}
+    ambientNodes = null;
+  },
+
+  get isAmbientPlaying() { return ambientPlaying; },
 
   // ── Challenge complete ──
   challengeComplete() {

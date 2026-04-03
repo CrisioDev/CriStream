@@ -16,6 +16,8 @@ import { StoryTab } from "./StoryTab";
 import { CasinoOverlays } from "./CasinoOverlays";
 import { BonusSidebar } from "./BonusSidebar";
 import { AutoFlipWidget } from "./AutoFlipWidget";
+import { ParticleBackground } from "./ParticleBackground";
+import { ToastSystem, useToasts } from "./ToastSystem";
 
 // ── Helpers ──
 function spawnConfetti(container: HTMLDivElement, count = 60, goldOnly = false) {
@@ -103,6 +105,12 @@ const CSS_ANIMATIONS = `
 .challenge-shimmer { background: linear-gradient(90deg, transparent 0%, rgba(255,215,0,0.1) 50%, transparent 100%); background-size: 200% 100%; animation: challenge-shimmer 3s ease-in-out infinite; }
 @keyframes boss-hp-drain { 0% { filter: brightness(1.5); } 100% { filter: brightness(1); } }
 .boss-hp-drain { animation: boss-hp-drain 0.5s ease-out; }
+@keyframes combo-fire-glow { 0%,100% { box-shadow: 0 0 10px rgba(255,100,0,0.3), 0 0 20px rgba(255,0,0,0.15); } 50% { box-shadow: 0 0 20px rgba(255,100,0,0.6), 0 0 40px rgba(255,0,0,0.3), 0 0 60px rgba(255,50,0,0.15); } }
+.combo-fire { animation: combo-fire-glow 0.8s ease-in-out infinite; }
+@keyframes jackpot-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+@keyframes toast-slide-in { 0% { transform: translateX(120%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+@keyframes points-count { 0% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.points-counting { animation: points-count 0.3s ease-out; }
 `;
 
 export function CasinoPage() {
@@ -142,6 +150,31 @@ export function CasinoPage() {
   };
 
   const [points, setPoints] = useState<number | null>(null);
+
+  // Animated points counter — smoothly count up/down
+  useEffect(() => {
+    if (points === null) return;
+    const target = points;
+    const current = displayPointsRef.current;
+    if (current === target) { setDisplayPoints(target); return; }
+    const diff = target - current;
+    const steps = Math.min(20, Math.abs(diff));
+    const stepSize = diff / steps;
+    let step = 0;
+    const iv = setInterval(() => {
+      step++;
+      if (step >= steps) {
+        displayPointsRef.current = target;
+        setDisplayPoints(target);
+        clearInterval(iv);
+      } else {
+        const v = Math.round(current + stepSize * step);
+        displayPointsRef.current = v;
+        setDisplayPoints(v);
+      }
+    }, 30);
+    return () => clearInterval(iv);
+  }, [points]);
 
   // Slots
   const [slotReels, setSlotReels] = useState(["❓", "❓", "❓"]);
@@ -256,6 +289,24 @@ export function CasinoPage() {
   const [weeklyRanking, setWeeklyRanking] = useState<any[]>([]);
   const [guildQuests, setGuildQuests] = useState<any[]>([]);
   const [guildBoss, setGuildBoss] = useState<any>(null);
+
+  // GOTY: Jackpot, Combo, Lucky Hour
+  const [jackpot, setJackpot] = useState<{ amount: number; lastWinner: any } | null>(null);
+  const [combo, setCombo] = useState<{ chain: number; maxChain: number; multiplier: number } | null>(null);
+  const [luckyHour, setLuckyHour] = useState<any>(null);
+  const [ambientOn, setAmbientOn] = useState(false);
+  const { toasts, addToast, removeToast } = useToasts();
+
+  // Animated points counter
+  const [displayPoints, setDisplayPoints] = useState<number>(0);
+  const displayPointsRef = useRef(0);
+
+  // Ambient music toggle
+  useEffect(() => {
+    if (ambientOn && !soundMuted) casinoSounds.startAmbient();
+    else casinoSounds.stopAmbient();
+    return () => { casinoSounds.stopAmbient(); };
+  }, [ambientOn, soundMuted]);
 
   // ── Process specials queue ──
   const processSpecial = useCallback((special: CasinoSpecial) => {
@@ -408,10 +459,14 @@ export function CasinoPage() {
           setNewAchievementPopup({ name: ach.name, reward: ach.reward });
           casinoSounds.achievement();
           if (confettiRef.current) spawnConfetti(confettiRef.current, 50, true);
+          addToast({ type: "achievement", title: "Achievement!", message: `${ach.name} — +${ach.reward} Pts`, emoji: "🏆" });
           setTimeout(() => setNewAchievementPopup(null), 3000);
         }, i * 3500);
       }
       fetchAchievements();
+    }
+    if (progression.levelUp) {
+      addToast({ type: "levelup", title: `Level ${progression.newLevel}!`, message: "Du bist aufgestiegen!", emoji: "⬆️", duration: 5000 });
     }
     if (progression.xpGained && season) {
       setSeason(prev => {
@@ -430,6 +485,29 @@ export function CasinoPage() {
       if (confettiRef.current) spawnConfetti(confettiRef.current, drop.type === "pet" ? 200 : 100, true);
       setTimeout(() => setLootboxDropAnim(null), 5000);
       fetchSeason();
+    }
+    // GOTY: Jackpot win
+    if ((progression as any).jackpotWin?.won) {
+      const jp = (progression as any).jackpotWin;
+      addToast({ type: "jackpot", title: "JACKPOT!!!", message: `Du hast ${formatNumber(jp.amount)} Punkte gewonnen!`, emoji: "💰", duration: 8000 });
+      casinoSounds.jackpot();
+      if (confettiRef.current) spawnConfetti(confettiRef.current, 300, true);
+      setJackpot(prev => prev ? { ...prev, amount: 100 } : prev);
+    }
+    // GOTY: Combo update
+    if ((progression as any).combo) {
+      const c = (progression as any).combo;
+      setCombo(c);
+      if (c.chain === 5) addToast({ type: "combo", title: "5er COMBO!", message: `+${Math.round((c.multiplier - 1) * 100)}% Bonus aktiv!`, emoji: "🔥" });
+      if (c.chain === 10) addToast({ type: "combo", title: "10er COMBO!!", message: "Maximaler Bonus! Du bist on fire!", emoji: "🔥🔥", duration: 5000 });
+    }
+    // GOTY: Lucky Hour
+    if ((progression as any).luckyHour?.active) {
+      const lh = (progression as any).luckyHour;
+      if (!luckyHour?.active) {
+        addToast({ type: "luckyhour", title: lh.label, message: `Lucky Hour gestartet! ${Math.ceil((lh.endsAt - Date.now()) / 60000)} Minuten!`, emoji: lh.emoji, duration: 6000 });
+      }
+      setLuckyHour(lh);
     }
   }, [season]);
 
@@ -496,6 +574,9 @@ export function CasinoPage() {
       if (data.weeklyRanking) setWeeklyRanking(data.weeklyRanking);
       if (data.guildQuests) setGuildQuests(data.guildQuests);
       if (data.guildBoss !== undefined) setGuildBoss(data.guildBoss);
+      if (data.jackpot) setJackpot(data.jackpot);
+      if (data.combo) setCombo(data.combo);
+      if (data.luckyHour) setLuckyHour(data.luckyHour);
       fetchTierSlots();
     });
     es.addEventListener("feed", (e) => setFeed(JSON.parse(e.data)));
@@ -798,7 +879,23 @@ export function CasinoPage() {
     }}>
       <style>{CSS_ANIMATIONS}</style>
 
+      {/* GOTY: Particle Background */}
+      <ParticleBackground />
+
+      {/* GOTY: Toast Notification System */}
+      <ToastSystem toasts={toasts} removeToast={removeToast} />
+
       <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-[60]" />
+
+      {/* GOTY: Ambient Music Toggle */}
+      <button
+        onClick={() => setAmbientOn(a => !a)}
+        className={`fixed ${(autoFlip as any)?.active ? "bottom-40" : "bottom-16"} left-4 z-[60] w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110`}
+        style={{ background: "rgba(20,20,40,0.85)", border: `1px solid ${ambientOn ? "rgba(168,85,247,0.6)" : "rgba(100,100,100,0.4)"}`, color: ambientOn ? "#c084fc" : "#666" }}
+        title={ambientOn ? "Ambient-Musik aus" : "Ambient-Musik an"}
+      >
+        {ambientOn ? "🎵" : "🎶"}
+      </button>
 
       <CasinoOverlays
         sirenActive={sirenActive} petWalkAnim={petWalkAnim} pet={pet}
@@ -820,10 +917,68 @@ export function CasinoPage() {
       />
 
       <CasinoHeader
-        user={user} points={points} channelInput={channelInput} setChannelInput={setChannelInput}
+        user={user} points={displayPoints} channelInput={channelInput} setChannelInput={setChannelInput}
         loginStreak={loginStreak} streak={streak} maxStreak={maxStreak}
         totalWon={totalWon} totalLost={totalLost} message={message}
       />
+
+      {/* GOTY: Lucky Hour Banner */}
+      {luckyHour?.active && (
+        <div className="max-w-4xl mx-auto px-6 pb-2">
+          <div className="rounded-xl px-4 py-2 text-center" style={{
+            background: "linear-gradient(90deg, rgba(34,211,238,0.15), rgba(168,85,247,0.15), rgba(34,211,238,0.15))",
+            border: "1px solid rgba(34,211,238,0.4)",
+            animation: "challenge-shimmer 2s ease-in-out infinite",
+          }}>
+            <span className="text-lg mr-2">{luckyHour.emoji}</span>
+            <span className="font-black text-cyan-300">{luckyHour.label}</span>
+            <span className="text-xs text-gray-400 ml-2">
+              Endet in {Math.max(0, Math.ceil((luckyHour.endsAt - Date.now()) / 60000))}min
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* GOTY: Jackpot Ticker + Combo Chain */}
+      <div className="max-w-4xl mx-auto px-6 pb-2 flex items-center justify-center gap-4">
+        {jackpot && (
+          <div className="rounded-xl px-4 py-2 flex items-center gap-2" style={{
+            background: "linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,100,0,0.05))",
+            border: "1px solid rgba(255,215,0,0.3)",
+          }}>
+            <span className="text-lg">💰</span>
+            <div>
+              <div className="text-[10px] text-gray-500 leading-none">COMMUNITY JACKPOT</div>
+              <div className="text-lg font-black text-yellow-300 leading-none">{formatNumber(jackpot.amount)} PTS</div>
+            </div>
+            {jackpot.lastWinner && (
+              <div className="text-[10px] text-gray-500 ml-2">
+                Letzter: {jackpot.lastWinner.displayName} ({formatNumber(jackpot.lastWinner.amount)})
+              </div>
+            )}
+          </div>
+        )}
+        {combo && combo.chain > 0 && (
+          <div className={`rounded-xl px-4 py-2 flex items-center gap-2 ${combo.chain >= 5 ? "combo-fire" : ""}`} style={{
+            background: combo.chain >= 10 ? "linear-gradient(135deg, rgba(255,0,0,0.2), rgba(255,100,0,0.15))"
+              : combo.chain >= 5 ? "linear-gradient(135deg, rgba(255,100,0,0.15), rgba(255,200,0,0.1))"
+              : "linear-gradient(135deg, rgba(255,200,0,0.1), rgba(255,255,255,0.03))",
+            border: `1px solid ${combo.chain >= 10 ? "rgba(255,0,0,0.5)" : combo.chain >= 5 ? "rgba(255,100,0,0.4)" : "rgba(255,200,0,0.3)"}`,
+            animation: combo.chain >= 5 ? "streak-pulse 0.5s ease-in-out infinite" : undefined,
+          }}>
+            <span className="text-lg">{combo.chain >= 10 ? "🔥🔥" : combo.chain >= 5 ? "🔥" : "⚡"}</span>
+            <div>
+              <div className="text-[10px] text-gray-500 leading-none">COMBO</div>
+              <div className="text-lg font-black leading-none" style={{ color: combo.chain >= 10 ? "#ff4444" : combo.chain >= 5 ? "#ff8c00" : "#fbbf24" }}>
+                x{combo.chain}
+              </div>
+            </div>
+            {combo.multiplier > 1 && (
+              <span className="text-xs text-green-400 font-bold">+{Math.round((combo.multiplier - 1) * 100)}%</span>
+            )}
+          </div>
+        )}
+      </div>
 
       <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
 

@@ -422,6 +422,34 @@ export async function viewerRoutes(app: FastifyInstance) {
           if (opts?.isTriple) await contributeToDailyChallenge(channel.id, user.twitchId, "triple", 1);
         } catch {}
 
+        // ── Progressive Jackpot ──
+        let jackpotWin: { won: boolean; amount?: number } | undefined;
+        try {
+          const { contributeToJackpot } = await import("../casino/jackpot.js");
+          jackpotWin = await contributeToJackpot(channel.id, user.twitchId, channelUser.displayName, cost);
+          if (jackpotWin?.won && jackpotWin.amount) {
+            await prisma.channelUser.update({
+              where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
+              data: { points: { increment: jackpotWin.amount } },
+            });
+          }
+        } catch {}
+
+        // ── Combo Chain ──
+        let comboState: any;
+        try {
+          const { recordComboResult } = await import("../casino/combo.js");
+          comboState = await recordComboResult(channel.id, user.twitchId, win);
+        } catch {}
+
+        // ── Lucky Hour Check ──
+        let luckyHourState: any;
+        try {
+          const { checkAndStartLuckyHour, getLuckyHour } = await import("../casino/lucky-hour.js");
+          await checkAndStartLuckyHour(channel.id);
+          luckyHourState = await getLuckyHour(channel.id);
+        } catch {}
+
         // ── Guild War: Quest + Boss ──
         try {
           const { contributeToGuildQuest, hitGuildBoss, addWeeklyXp } = await import("../casino/guilds.js");
@@ -445,6 +473,9 @@ export async function viewerRoutes(app: FastifyInstance) {
           loginStreak,
           lootboxDrop,
           tournamentPoints,
+          jackpotWin,
+          combo: comboState,
+          luckyHour: luckyHourState,
         };
         } catch (err) {
           // Progression is non-critical — don't break the game

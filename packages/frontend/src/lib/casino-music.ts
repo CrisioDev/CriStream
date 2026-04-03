@@ -26,6 +26,8 @@ let activeBus: GainNode | null = null;
 let intenseBus: GainNode | null = null;
 let stingerBus: GainNode | null = null;
 let dryBus: GainNode | null = null; // bypasses reverb for transients
+let padFilter: BiquadFilterNode | null = null; // shared LP filter for pad warmth
+let padFilterLFO: OscillatorNode | null = null;
 
 // Managed resources
 let managedNodes: (OscillatorNode | AudioBufferSourceNode)[] = [];
@@ -68,6 +70,7 @@ const ARP_PATTERNS = [
 const BPM = 75; // Slower, more atmospheric
 const BEAT_SEC = 60 / BPM;
 const BAR_SEC = BEAT_SEC * 4;
+const SWING = 0.12; // Swing amount: off-beats pushed 12% late (subtle groove)
 
 // ══════════════════════════════════════════════
 // MASTER CHAIN SETUP
@@ -131,36 +134,104 @@ function ac(): AudioContext {
     compressor.connect(master);
     master.connect(ctx.destination);
 
-    // Layer buses → reverb send + dry + delay send
+    // Warm saturation (subtle analog-style harmonic distortion)
+    const saturator = ctx.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) {
+      const x = (i / 512) - 1; // -1 to +1
+      // Soft-clip tanh-like curve: adds even harmonics for warmth
+      curve[i] = Math.tanh(x * 1.5) * 0.9;
+    }
+    saturator.curve = curve;
+    saturator.oversample = "2x";
+
+    // Shared pad lowpass filter (breathes via LFO)
+    padFilter = ctx.createBiquadFilter();
+    padFilter.type = "lowpass";
+    padFilter.frequency.value = 800; // Start warm/dark
+    padFilter.Q.value = 0.7; // Gentle resonance
+    // LFO on filter cutoff for breathing movement
+    padFilterLFO = ctx.createOscillator();
+    const padFilterLFOG = ctx.createGain();
+    padFilterLFO.type = "sine";
+    padFilterLFO.frequency.value = 0.06; // Very slow: ~16s cycle
+    padFilterLFOG.gain.value = 400; // Sweep 400-1200Hz
+    padFilterLFO.connect(padFilterLFOG);
+    padFilterLFOG.connect(padFilter.frequency);
+    padFilterLFO.start();
+
+    // Layer buses → pad filter → saturator → reverb/dry/delay
     chillBus = ctx.createGain(); chillBus.gain.value = 1;
     activeBus = ctx.createGain(); activeBus.gain.value = 0;
     intenseBus = ctx.createGain(); intenseBus.gain.value = 0;
     stingerBus = ctx.createGain(); stingerBus.gain.value = 1;
 
-    for (const bus of [chillBus, activeBus, intenseBus, stingerBus]) {
-      bus.connect(reverbSend);
-      bus.connect(dryBus);
-      bus.connect(delaySend);
-    }
+    // Pad buses go through filter + saturation
+    chillBus.connect(padFilter);
+    activeBus.connect(padFilter);
+    padFilter.connect(saturator);
+    saturator.connect(reverbSend);
+    saturator.connect(dryBus);
+    saturator.connect(delaySend);
+
+    // Intense + stinger bypass the pad filter (need to stay bright)
+    intenseBus.connect(reverbSend);
+    intenseBus.connect(dryBus);
+    intenseBus.connect(delaySend);
+    stingerBus.connect(reverbSend);
+    stingerBus.connect(dryBus);
+    stingerBus.connect(delaySend);
   }
   if (ctx.state === "suspended") ctx.resume();
   return ctx;
 }
 
-/** Generate impulse response for convolution reverb */
+/** Generate realistic impulse response for convolution reverb */
 function createReverbIR(duration: number, decay: number): AudioBuffer {
   const c = ac();
-  const len = Math.floor(c.sampleRate * duration);
-  const buf = c.createBuffer(2, len, c.sampleRate);
+  const sr = c.sampleRate;
+  const len = Math.floor(sr * duration);
+  const buf = c.createBuffer(2, len, sr);
+
+  // Pre-delay (15ms gap before reverb starts — simulates room size)
+  const preDelaySamples = Math.floor(sr * 0.015);
+
+  // Early reflection tap times (in seconds) — simulates wall bounces
+  const earlyTaps = [0.017, 0.023, 0.031, 0.041, 0.053, 0.067, 0.079, 0.091];
+  const earlyGains = [0.7, 0.55, 0.5, 0.4, 0.35, 0.28, 0.22, 0.18];
+
   for (let ch = 0; ch < 2; ch++) {
     const data = buf.getChannelData(ch);
-    for (let i = 0; i < len; i++) {
-      // Exponential decay with early reflections
-      const t = i / c.sampleRate;
-      const earlyReflection = t < 0.05 ? 0.8 : 1;
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay) * earlyReflection;
-      // Add some diffusion
-      if (i > 0) data[i] += data[i - 1]! * 0.02;
+
+    // 1. Pre-delay: silence
+    for (let i = 0; i < preDelaySamples && i < len; i++) data[i] = 0;
+
+    // 2. Early reflections: discrete taps with slight stereo offset
+    for (let t = 0; t < earlyTaps.length; t++) {
+      const tapOffset = ch === 1 ? 0.003 : 0; // 3ms stereo offset on R channel
+      const tapSample = Math.floor(sr * (earlyTaps[t]! + tapOffset)) + preDelaySamples;
+      const tapGain = earlyGains[t]!;
+      // Each tap = short burst of filtered noise (3-5ms)
+      const burstLen = Math.floor(sr * (0.003 + Math.random() * 0.002));
+      for (let j = 0; j < burstLen && tapSample + j < len; j++) {
+        data[tapSample + j] = (Math.random() * 2 - 1) * tapGain * (1 - j / burstLen);
+      }
+    }
+
+    // 3. Late diffuse tail: frequency-dependent decay
+    const lateStart = Math.floor(sr * 0.1) + preDelaySamples;
+    for (let i = lateStart; i < len; i++) {
+      const t = (i - lateStart) / (len - lateStart); // 0→1 progress
+      // High frequencies decay faster (realistic air absorption)
+      const hfDecay = Math.pow(1 - t, decay * 1.8);
+      const lfDecay = Math.pow(1 - t, decay * 0.8);
+      // Mix of frequency bands
+      const noise = Math.random() * 2 - 1;
+      data[i] = noise * (hfDecay * 0.6 + lfDecay * 0.4) * 0.5;
+      // Allpass diffusion: feed-forward from earlier samples
+      if (i > lateStart + 137) data[i] += (data[i - 137]! * 0.3);
+      if (i > lateStart + 281) data[i] += (data[i - 281]! * 0.2);
+      if (i > lateStart + 419) data[i] += (data[i - 419]! * 0.15);
     }
   }
   return buf;
@@ -367,13 +438,15 @@ function startRhythm() {
     const now = c.currentTime;
     if (nextBeat <= now) nextBeat = now + 0.05;
 
-    // Schedule next 4 beats
+    // Schedule next 4 beats with swing
+    const swingOffset = BEAT_SEC * SWING; // off-beat push
     for (let i = 0; i < 4; i++) {
       const t = nextBeat + i * BEAT_SEC;
+      const tSwung = t + swingOffset; // swung 8th note position
       const beat = (beatCount + i) % 4;
 
       if (currentIntensity !== "chill") {
-        // Kick on beats 1 and 3
+        // Kick on beats 1 and 3 (on-beat, no swing)
         if (beat === 0 || beat === 2) {
           const vel = beat === 0 ? 0.9 : 0.6;
           playKick(t, currentIntensity === "intense" ? vel : vel * 0.5);
@@ -381,18 +454,26 @@ function startRhythm() {
       }
 
       if (currentIntensity === "active") {
-        // Closed hat on every beat, open on 2 and 4
+        // Hats with swing groove
         playHat(t, beat === 1 || beat === 3, 0.3);
-        // Ghost hat on off-beats
-        playHat(t + BEAT_SEC * 0.5, false, 0.15);
+        playHat(tSwung + BEAT_SEC * 0.5, false, 0.18); // swung ghost note
       }
 
       if (currentIntensity === "intense") {
-        // Full pattern
+        // Full pattern with swing on off-beats
         playHat(t, beat === 1 || beat === 3, 0.5);
         playHat(t + BEAT_SEC * 0.25, false, 0.2);
-        playHat(t + BEAT_SEC * 0.5, false, 0.35);
-        playHat(t + BEAT_SEC * 0.75, false, 0.15);
+        playHat(tSwung + BEAT_SEC * 0.5, false, 0.38); // swung
+        playHat(tSwung + BEAT_SEC * 0.75, false, 0.15); // swung
+      }
+
+      // Walking bass on active/intense (plays chord tones in rhythm)
+      if (currentIntensity !== "chill" && stingerBus) {
+        const chord = PROGRESSION[chordIndex % PROGRESSION.length]!;
+        const bassNotes = [chord.bass, chord.bass * 1.5, chord.bass * 1.25, chord.bass * 1.5]; // root, 5th, ~3rd, 5th
+        const bassNote = bassNotes[beat]!;
+        const bassVel = beat === 0 ? 0.04 : 0.025;
+        if (dryBus) playNote(bassNote, t, BEAT_SEC * 0.8, bassVel, dryBus, "triangle");
       }
     }
 
@@ -441,10 +522,13 @@ function scheduleArpeggio() {
       const t = now + i * noteLen;
       const vel = i === 0 ? gain * 1.4 : gain; // accent
 
-      playNote(freq, t, noteLen * 0.8, vel, stingerBus, "sine");
-      // Octave shimmer on high intensity
+      // Triangle for warmth, add sub octave on intense
+      playNote(freq, t, noteLen * 0.8, vel, stingerBus, "triangle");
       if (currentIntensity === "intense" && i % 2 === 0) {
-        playNote(freq * 2, t, noteLen * 0.5, vel * 0.25, stingerBus, "sine");
+        playNote(freq * 2, t, noteLen * 0.5, vel * 0.2, stingerBus, "sine"); // octave shimmer
+      }
+      if (currentIntensity !== "chill" && i === 0) {
+        playNote(freq * 0.5, t, noteLen * 1.2, vel * 0.3, stingerBus, "sine"); // sub on accent
       }
     }
 
@@ -515,6 +599,15 @@ function setIntensity(target: Intensity, dur = 2.5) {
     bus.gain.cancelScheduledValues(now);
     bus.gain.setValueAtTime(bus.gain.value, now);
     bus.gain.linearRampToValueAtTime(val, now + dur);
+  }
+
+  // Open/close pad filter based on intensity (warmth control)
+  if (padFilter) {
+    padFilter.frequency.cancelScheduledValues(now);
+    padFilter.frequency.setValueAtTime(padFilter.frequency.value, now);
+    padFilter.frequency.linearRampToValueAtTime(
+      target === "intense" ? 2500 : target === "active" ? 1400 : 800, now + dur
+    );
   }
 
   // Adjust reverb/delay sends based on intensity
@@ -661,9 +754,12 @@ export const casinoMusic = {
     if (rhythmTimer) { clearTimeout(rhythmTimer); rhythmTimer = null; }
     if (arpTimer) { clearTimeout(arpTimer); arpTimer = null; }
     if (decayTimer) { clearTimeout(decayTimer); decayTimer = null; }
+    if (padFilterLFO) try { padFilterLFO.stop(); } catch {}
     for (const n of managedNodes) try { n.stop(); } catch {}
     managedNodes = [];
     padOscillators = [];
+    padFilter = null;
+    padFilterLFO = null;
   },
 
   setVolume(v: number) {

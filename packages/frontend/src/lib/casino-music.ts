@@ -88,9 +88,9 @@ function ac(): AudioContext {
     compressor.attack.value = 0.005;
     compressor.release.value = 0.15;
 
-    // Master gain
+    // Master gain — deliberately quiet, background texture not foreground music
     master = ctx.createGain();
-    master.gain.value = 0.30;
+    master.gain.value = 0.12;
 
     // Reverb with pre-EQ (highpass to remove mud)
     const reverbPreEQ = ctx.createBiquadFilter();
@@ -101,17 +101,17 @@ function ac(): AudioContext {
     reverbSend.buffer = createReverbIR(3.0, 2.5);
     reverbPreEQ.connect(reverbSend);
     reverbGain = ctx.createGain();
-    reverbGain.gain.value = 0.35;
+    reverbGain.gain.value = 0.2; // subtle room, not obvious reverb
 
     // Stereo ping-pong delay
     delaySend = ctx.createGain();
-    delaySend.gain.value = 0.2;
+    delaySend.gain.value = 0.08; // barely there — just enough for subtle space
     delayL = ctx.createDelay(1);
     delayL.delayTime.value = BEAT_SEC * 0.75; // dotted 8th
     delayR = ctx.createDelay(1);
     delayR.delayTime.value = BEAT_SEC * 0.5; // 8th note
     delayFeedback = ctx.createGain();
-    delayFeedback.gain.value = 0.3;
+    delayFeedback.gain.value = 0.15; // less repeats
 
     // Delay routing: send → delayL → delayR → feedback → delayL
     const panL = ctx.createStereoPanner();
@@ -153,14 +153,14 @@ function ac(): AudioContext {
     // Shared pad lowpass filter (breathes via LFO)
     padFilter = ctx.createBiquadFilter();
     padFilter.type = "lowpass";
-    padFilter.frequency.value = 800; // Start warm/dark
-    padFilter.Q.value = 0.7; // Gentle resonance
-    // LFO on filter cutoff for breathing movement
+    padFilter.frequency.value = 600; // Start darker
+    padFilter.Q.value = 0.5; // No resonance peak — invisible filtering
+    // LFO on filter cutoff — glacially slow breathing
     padFilterLFO = ctx.createOscillator();
     const padFilterLFOG = ctx.createGain();
     padFilterLFO.type = "sine";
-    padFilterLFO.frequency.value = 0.06; // Very slow: ~16s cycle
-    padFilterLFOG.gain.value = 400; // Sweep 400-1200Hz
+    padFilterLFO.frequency.value = 0.025; // ~40s cycle — almost imperceptible
+    padFilterLFOG.gain.value = 250; // Sweep 350-850Hz — narrow, subtle
     padFilterLFO.connect(padFilterLFOG);
     padFilterLFOG.connect(padFilter.frequency);
     padFilterLFO.start();
@@ -250,9 +250,9 @@ function padVoice(freq: number, type: OscillatorType, gain: number, target: Gain
   const c = ac();
   const g = c.createGain();
   g.gain.value = 0;
-  // Slow attack for pad feel
+  // Very slow attack — fades in like fog, not like a synth turning on
   g.gain.setValueAtTime(0, c.currentTime);
-  g.gain.linearRampToValueAtTime(gain, c.currentTime + 2);
+  g.gain.linearRampToValueAtTime(gain, c.currentTime + 6);
 
   // Detune pair: ±4 cents for chorus width
   const o1 = c.createOscillator();
@@ -407,13 +407,13 @@ function buildPadLayer() {
 
   // Low voices → chill bus (warm sine pairs)
   for (const freq of chord.low) {
-    const pair = padVoice(freq, "sine", 0.015, chillBus);
+    const pair = padVoice(freq, "sine", 0.008, chillBus);
     padOscillators.push(...pair);
   }
 
   // Mid voices → active bus (triangle for brightness)
   for (const freq of chord.mid) {
-    const pair = padVoice(freq, "triangle", 0.008, activeBus);
+    const pair = padVoice(freq, "triangle", 0.005, activeBus);
     padOscillators.push(...pair);
   }
 
@@ -422,7 +422,7 @@ function buildPadLayer() {
   const subG = ac().createGain();
   sub.type = "sine";
   sub.frequency.value = chord.bass;
-  subG.gain.value = 0.05;
+  subG.gain.value = 0.025; // felt, not heard
   sub.connect(subG); subG.connect(chillBus);
   sub.start();
   padOscillators.push(sub);
@@ -452,25 +452,24 @@ function startRhythm() {
       const beat = (beatCount + i) % 4;
 
       if (currentIntensity !== "chill") {
-        // Kick on beats 1 and 3 (on-beat, no swing)
+        // Subtle pulse, not a drum beat — felt in the chest, not heard with ears
         if (beat === 0 || beat === 2) {
-          const vel = beat === 0 ? 0.9 : 0.6;
-          playKick(t, currentIntensity === "intense" ? vel : vel * 0.5);
+          const vel = beat === 0 ? 0.5 : 0.3;
+          playKick(t, currentIntensity === "intense" ? vel : vel * 0.35);
         }
       }
 
       if (currentIntensity === "active") {
-        // Hats with swing groove
-        playHat(t, beat === 1 || beat === 3, 0.3);
-        playHat(tSwung + BEAT_SEC * 0.5, false, 0.18); // swung ghost note
+        // Barely there hats — texture, not rhythm
+        playHat(t, beat === 1 || beat === 3, 0.1);
+        playHat(tSwung + BEAT_SEC * 0.5, false, 0.05);
       }
 
       if (currentIntensity === "intense") {
-        // Full pattern with swing on off-beats
-        playHat(t, beat === 1 || beat === 3, 0.5);
-        playHat(t + BEAT_SEC * 0.25, false, 0.2);
-        playHat(tSwung + BEAT_SEC * 0.5, false, 0.38); // swung
-        playHat(tSwung + BEAT_SEC * 0.75, false, 0.15); // swung
+        // Still restrained — more present but not dominating
+        playHat(t, beat === 1 || beat === 3, 0.2);
+        playHat(tSwung + BEAT_SEC * 0.5, false, 0.12);
+        playHat(tSwung + BEAT_SEC * 0.75, false, 0.06);
       }
 
       // Walking bass on active/intense (plays chord tones in rhythm)
@@ -478,7 +477,7 @@ function startRhythm() {
         const chord = PROGRESSION[chordIndex % PROGRESSION.length]!;
         const bassNotes = [chord.bass, chord.bass * 1.5, chord.bass * 1.25, chord.bass * 1.5]; // root, 5th, ~3rd, 5th
         const bassNote = bassNotes[beat]!;
-        const bassVel = beat === 0 ? 0.04 : 0.025;
+        const bassVel = beat === 0 ? 0.018 : 0.01; // subliminal bass movement
         if (dryBus) playNote(bassNote, t, BEAT_SEC * 0.8, bassVel, dryBus, "triangle");
       }
     }
@@ -518,8 +517,8 @@ function scheduleArpeggio() {
     const pattern = ARP_PATTERNS[Math.floor(Math.random() * ARP_PATTERNS.length)]!;
     const noteLen = currentIntensity === "intense" ? BEAT_SEC * 0.25
       : currentIntensity === "active" ? BEAT_SEC * 0.5 : BEAT_SEC;
-    const gain = currentIntensity === "intense" ? 0.035
-      : currentIntensity === "active" ? 0.025 : 0.018;
+    const gain = currentIntensity === "intense" ? 0.02
+      : currentIntensity === "active" ? 0.012 : 0.008; // whisper-quiet
 
     // Play pattern with velocity accent on first note
     for (let i = 0; i < pattern.length; i++) {
@@ -539,13 +538,14 @@ function scheduleArpeggio() {
     }
 
     // Schedule next
-    const nextDelay = currentIntensity === "intense" ? 6000 + Math.random() * 8000
-      : currentIntensity === "active" ? 12000 + Math.random() * 15000
-      : 20000 + Math.random() * 30000;
+    // Long gaps — arpeggios are rare glimmers, not a constant feature
+    const nextDelay = currentIntensity === "intense" ? 10000 + Math.random() * 15000
+      : currentIntensity === "active" ? 25000 + Math.random() * 30000
+      : 40000 + Math.random() * 50000; // chill: every 40-90 seconds
     arpTimer = setTimeout(playArp, nextDelay);
   };
 
-  arpTimer = setTimeout(playArp, 4000 + Math.random() * 8000);
+  arpTimer = setTimeout(playArp, 15000 + Math.random() * 20000); // first one after 15-35s
 }
 
 // ══════════════════════════════════════════════
@@ -556,15 +556,11 @@ function buildAmbientBed() {
   if (!chillBus || !activeBus || !intenseBus) return;
 
   // Chill: warm low-pass filtered noise (distant casino crowd)
-  noiseLayer(400, 0.3, 0.005, chillBus);
-  // Chill: high shimmer (very subtle)
-  noiseLayer(6000, 1, 0.002, chillBus);
+  noiseLayer(400, 0.3, 0.002, chillBus); // barely-there warmth
+  noiseLayer(6000, 1, 0.001, chillBus); // hint of air
 
-  // Active: mid-range presence
-  noiseLayer(1000, 0.5, 0.006, activeBus);
-
-  // Intense: broadband energy
-  noiseLayer(2000, 0.3, 0.008, intenseBus);
+  noiseLayer(1000, 0.5, 0.003, activeBus); // slight presence
+  noiseLayer(2000, 0.3, 0.004, intenseBus); // subtle energy
 
   // Intense: sub rumble
   const c = ac();
@@ -573,9 +569,9 @@ function buildAmbientBed() {
   const rumbleLFO = c.createOscillator();
   const rumbleLFOG = c.createGain();
   rumble.type = "sine"; rumble.frequency.value = 25;
-  rumbleG.gain.value = 0.03;
-  rumbleLFO.type = "sine"; rumbleLFO.frequency.value = 0.1;
-  rumbleLFOG.gain.value = 0.02;
+  rumbleG.gain.value = 0.012; // barely felt
+  rumbleLFO.type = "sine"; rumbleLFO.frequency.value = 0.08;
+  rumbleLFOG.gain.value = 0.008;
   rumbleLFO.connect(rumbleLFOG); rumbleLFOG.connect(rumbleG.gain);
   rumble.connect(rumbleG); rumbleG.connect(intenseBus);
   rumble.start(); rumbleLFO.start();
@@ -608,7 +604,7 @@ function playTransitionFX(goingUp: boolean) {
   }
   const g = c.createGain();
   g.gain.setValueAtTime(0, now);
-  g.gain.linearRampToValueAtTime(goingUp ? 0.04 : 0.025, now + 0.3);
+  g.gain.linearRampToValueAtTime(goingUp ? 0.015 : 0.01, now + 0.3);
   g.gain.linearRampToValueAtTime(0, now + (goingUp ? 1.2 : 1.0));
   src.connect(filter); filter.connect(g); g.connect(stingerBus);
   src.start(now); src.stop(now + 1.5);
@@ -678,40 +674,25 @@ function playWinStinger(size: "small" | "medium" | "big") {
   const now = c.currentTime;
 
   if (size === "big") {
-    // Triumphant fanfare: I-V-I with full harmony
-    const fanfare = [
-      { freq: 261.63, t: 0, dur: 0.3 },     // C4
-      { freq: 329.63, t: 0.08, dur: 0.3 },   // E4
-      { freq: 392.00, t: 0.16, dur: 0.3 },   // G4
-      { freq: 523.25, t: 0.28, dur: 0.5 },   // C5
-      { freq: 659.26, t: 0.36, dur: 0.5 },   // E5
-      { freq: 783.99, t: 0.44, dur: 0.6 },   // G5
-      { freq: 1046.50, t: 0.55, dur: 0.8 },  // C6 — peak
-    ];
-    for (const n of fanfare) {
-      playNote(n.freq, now + n.t, n.dur, 0.05, stingerBus);
-      playNote(n.freq * 2, now + n.t, n.dur * 0.6, 0.012, stingerBus); // harmonic
+    // Gentle ascending shimmer — lets the SFX engine handle the celebration
+    const notes = [523.25, 659.26, 783.99, 1046.50];
+    for (let i = 0; i < notes.length; i++) {
+      playNote(notes[i]!, now + i * 0.12, 0.4, 0.02, stingerBus);
     }
-    // Sparkle tail
-    for (let i = 0; i < 12; i++) {
-      const t = now + 0.8 + i * 0.05;
-      playNote(
-        1000 + Math.random() * 4000, t, 0.1,
-        0.012 * (1 - i / 12), stingerBus
-      );
+    // A few quiet sparkles
+    for (let i = 0; i < 5; i++) {
+      playNote(1500 + Math.random() * 2500, now + 0.5 + i * 0.08, 0.12, 0.006, stingerBus);
     }
   } else if (size === "medium") {
-    // Bright ascending triad
-    const notes = [329.63, 392, 523.25, 659.26];
+    // Soft 3-note rise
+    const notes = [392, 523.25, 659.26];
     for (let i = 0; i < notes.length; i++) {
-      playNote(notes[i]!, now + i * 0.09, 0.25, 0.04, stingerBus);
+      playNote(notes[i]!, now + i * 0.1, 0.3, 0.015, stingerBus);
     }
   } else {
-    // Quick 3-note chime
-    const notes = [523.25, 659.26, 783.99];
-    for (let i = 0; i < notes.length; i++) {
-      playNote(notes[i]!, now + i * 0.07, 0.15, 0.025, stingerBus);
-    }
+    // Single quiet chime — barely there
+    playNote(783.99, now, 0.2, 0.01, stingerBus);
+    playNote(1046.50, now + 0.06, 0.15, 0.006, stingerBus);
   }
 }
 
@@ -726,7 +707,7 @@ function startHeartbeat(): () => void {
     const now = c.currentTime;
 
     // Lub-dub
-    for (const [offset, freq, vel] of [[0, 55, 0.1], [0.12, 45, 0.07]] as [number, number, number][]) {
+    for (const [offset, freq, vel] of [[0, 55, 0.05], [0.12, 45, 0.03]] as [number, number, number][]) {
       const o = c.createOscillator();
       const g = c.createGain();
       o.type = "sine";
@@ -754,13 +735,11 @@ function dramaticPause() {
   const now = c.currentTime;
   master.gain.cancelScheduledValues(now);
   master.gain.setValueAtTime(master.gain.value, now);
-  // Quick dip to near silence
-  master.gain.linearRampToValueAtTime(0.03, now + 0.2);
-  // Hold silence briefly
-  master.gain.setValueAtTime(0.03, now + 0.8);
-  // Slowly rebuild with swell
-  master.gain.linearRampToValueAtTime(0.15, now + 2.0);
-  master.gain.linearRampToValueAtTime(0.30, now + 3.5);
+  // Gentle dip — not silence, just a breath
+  master.gain.linearRampToValueAtTime(0.04, now + 0.3);
+  master.gain.setValueAtTime(0.04, now + 0.6);
+  // Slow rebuild
+  master.gain.linearRampToValueAtTime(0.12, now + 3.0);
 }
 
 // ══════════════════════════════════════════════

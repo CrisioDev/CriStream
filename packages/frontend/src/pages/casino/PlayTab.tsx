@@ -170,7 +170,7 @@ export function PlayTab(props: PlayTabProps) {
       {/* ── GAME MACHINES ── */}
       <div className="max-w-6xl mx-auto px-6 pb-4 grid grid-cols-1 md:grid-cols-3 gap-8 relative z-0">
         {/* SLOT MACHINE */}
-        <div className="slot-machine rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
+        <div className="slot-machine rounded-3xl p-1 relative transition-transform duration-200 hover:scale-[1.02] hover:-translate-y-1" style={{ background: "linear-gradient(135deg,#9146ff,#6441a5,#9146ff)" }}>
           {pet?.careState?.needsPoop && <div className="absolute -top-3 -right-3 text-3xl z-10" style={{ animation: "poop-wobble 1s ease-in-out infinite" }}>{"\uD83D\uDCA9"}</div>}
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1a2e,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-purple-300 mb-1">{"\uD83C\uDFB0"} SLOTS</h2>
@@ -185,7 +185,7 @@ export function PlayTab(props: PlayTabProps) {
         </div>
 
         {/* RUBBELLOS */}
-        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
+        <div className="rounded-3xl p-1 relative transition-transform duration-200 hover:scale-[1.02] hover:-translate-y-1" style={{ background: "linear-gradient(135deg,#00cc88,#009966,#00cc88)" }}>
           {pet?.careState?.needsPoop && <div className="absolute -top-2 left-1/2 text-2xl z-10" style={{ animation: "poop-wobble 1.2s ease-in-out infinite" }}>{"\uD83D\uDCA9"}</div>}
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#0a1a15,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-emerald-300 mb-1">{"\uD83C\uDF9F️"} RUBBELLOS</h2>
@@ -208,7 +208,7 @@ export function PlayTab(props: PlayTabProps) {
         </div>
 
         {/* MUNZWURF */}
-        <div className="rounded-3xl p-1 relative" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
+        <div className="rounded-3xl p-1 relative transition-transform duration-200 hover:scale-[1.02] hover:-translate-y-1" style={{ background: "linear-gradient(135deg,#ffd700,#ff8c00,#ffd700)" }}>
           {pet?.careState?.needsPoop && <div className="absolute -top-3 -left-2 text-2xl z-10" style={{ animation: "poop-wobble 0.8s ease-in-out infinite", animationDelay: "0.3s" }}>{"\uD83D\uDCA9"}</div>}
           <div className="rounded-3xl p-6" style={{ background: "linear-gradient(180deg,#1a1508,#0d0d1a)" }}>
             <h2 className="text-center text-2xl font-black text-yellow-300 mb-1">{"\uD83E\uDE99"} MUNZWURF</h2>

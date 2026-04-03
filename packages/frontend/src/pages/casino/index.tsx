@@ -578,6 +578,21 @@ export function CasinoPage() {
       if (data.combo) setCombo(data.combo);
       if (data.luckyHour) setLuckyHour(data.luckyHour);
       fetchTierSlots();
+      // Welcome back toast
+      if (data.loginStreak?.streak > 1) {
+        setTimeout(() => addToast({
+          type: "info", title: `Willkommen zurück!`,
+          message: `${data.loginStreak.streak} Tage in Folge! 🔥`,
+          emoji: "👋", duration: 4000,
+        }), 1500);
+      }
+      if (data.jackpot?.amount > 1000) {
+        setTimeout(() => addToast({
+          type: "jackpot", title: "Jackpot wächst!",
+          message: `${formatNumber(data.jackpot.amount)} Pts im Pot!`,
+          emoji: "💰", duration: 5000,
+        }), 3000);
+      }
     });
     es.addEventListener("feed", (e) => setFeed(JSON.parse(e.data)));
     es.addEventListener("leaderboard", (e) => setLeaderboard(JSON.parse(e.data)));

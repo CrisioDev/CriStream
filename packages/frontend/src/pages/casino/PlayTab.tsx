@@ -192,13 +192,28 @@ export function PlayTab(props: PlayTabProps) {
             <p className="text-center text-xs text-gray-500 mb-1">40 Punkte + Specials</p>
             {freePlays && <p className="text-center text-xs mb-4">{freePlays.scratch > 0 ? <span className="text-green-400 font-bold">{freePlays.scratch} Gratis-Lose</span> : <span className="text-gray-600">Gratis aufgebraucht</span>}</p>}
             <div className="flex justify-center gap-3 mb-4">
-              {scratchCards.map((sym, i) => (
-                <div key={i} className={`w-20 h-24 rounded-xl flex items-center justify-center text-3xl ${sym !== "❓" ? "scratch-pop" : ""}`} style={{
-                  background: sym === "❓" ? "repeating-linear-gradient(45deg,#1a3a2a,#1a3a2a 10px,#1f4535 10px,#1f4535 20px)" : "linear-gradient(180deg,#0a2a1a,#050f0a)",
-                  border: `2px solid ${sym !== "❓" ? "rgba(0,204,136,0.6)" : "rgba(0,204,136,0.3)"}`,
-                  boxShadow: sym !== "❓" ? "0 0 20px rgba(0,204,136,0.3)" : "none",
-                }}>{sym}</div>
-              ))}
+              {scratchCards.map((sym, i) => {
+                const revealed = sym !== "❓";
+                const isTriple = revealed && scratchCards.every(s => s === sym && s !== "❓");
+                return (
+                  <div key={i} className={`w-20 h-24 rounded-xl flex items-center justify-center text-3xl relative overflow-hidden ${revealed ? "scratch-pop" : ""} ${isTriple ? "win-line-pulse" : ""}`} style={{
+                    background: revealed ? "linear-gradient(180deg,#0a2a1a,#050f0a)" : "repeating-linear-gradient(45deg,#1a3a2a,#1a3a2a 10px,#1f4535 10px,#1f4535 20px)",
+                    border: `2px solid ${revealed ? (isTriple ? "rgba(255,215,0,0.7)" : "rgba(0,204,136,0.6)") : "rgba(0,204,136,0.3)"}`,
+                    boxShadow: isTriple ? "0 0 25px rgba(255,215,0,0.4)" : revealed ? "0 0 20px rgba(0,204,136,0.3)" : "none",
+                    transition: "all 0.3s ease-out",
+                  }}>
+                    {sym}
+                    {/* Shimmer overlay on unrevealed */}
+                    {!revealed && (
+                      <div className="absolute inset-0 opacity-30" style={{
+                        background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
+                        backgroundSize: "200% 100%",
+                        animation: "challenge-shimmer 2s ease-in-out infinite",
+                      }} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
             {scratchResult && <div className={`text-center mb-3 text-sm font-bold rounded-lg py-2 px-3 ${resultClass(scratchResult)}`}>{scratchResult.text}</div>}
             <button onClick={playScratch} disabled={!user} className="casino-btn w-full py-3 rounded-xl font-black text-lg text-black" style={{ background: "linear-gradient(135deg,#00cc88,#009966)" }}>

@@ -92,9 +92,14 @@ function ac(): AudioContext {
     master = ctx.createGain();
     master.gain.value = 0.30;
 
-    // Reverb (convolution)
+    // Reverb with pre-EQ (highpass to remove mud)
+    const reverbPreEQ = ctx.createBiquadFilter();
+    reverbPreEQ.type = "highpass";
+    reverbPreEQ.frequency.value = 150; // Cut bass from reverb input
+    reverbPreEQ.Q.value = 0.5;
     reverbSend = ctx.createConvolver();
     reverbSend.buffer = createReverbIR(3.0, 2.5);
+    reverbPreEQ.connect(reverbSend);
     reverbGain = ctx.createGain();
     reverbGain.gain.value = 0.35;
 
@@ -166,19 +171,20 @@ function ac(): AudioContext {
     intenseBus = ctx.createGain(); intenseBus.gain.value = 0;
     stingerBus = ctx.createGain(); stingerBus.gain.value = 1;
 
-    // Pad buses go through filter + saturation
+    // Pad buses go through filter + saturation → reverb (via pre-EQ) + dry
     chillBus.connect(padFilter);
     activeBus.connect(padFilter);
     padFilter.connect(saturator);
-    saturator.connect(reverbSend);
+    saturator.connect(reverbPreEQ); // pads → highpass → reverb (no mud)
     saturator.connect(dryBus);
-    saturator.connect(delaySend);
+    // NOTE: pads do NOT go to delay (would be muddy)
 
-    // Intense + stinger bypass the pad filter (need to stay bright)
-    intenseBus.connect(reverbSend);
+    // Intense → reverb + dry (no delay, no pad filter)
+    intenseBus.connect(reverbPreEQ);
     intenseBus.connect(dryBus);
-    intenseBus.connect(delaySend);
-    stingerBus.connect(reverbSend);
+
+    // Stingers → reverb + dry + delay (arpeggios/stingers get delay for space)
+    stingerBus.connect(reverbPreEQ);
     stingerBus.connect(dryBus);
     stingerBus.connect(delaySend);
   }
@@ -577,13 +583,48 @@ function buildAmbientBed() {
 }
 
 // ══════════════════════════════════════════════
+// TRANSITION FX
+// ══════════════════════════════════════════════
+
+/** Noise riser/sweep when transitioning up, reverse sweep when going down */
+function playTransitionFX(goingUp: boolean) {
+  if (!stingerBus) return;
+  const c = ac();
+  const now = c.currentTime;
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate * 1.5), c.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = c.createBufferSource(); src.buffer = buf;
+  const filter = c.createBiquadFilter();
+  filter.type = "bandpass"; filter.Q.value = 3;
+  if (goingUp) {
+    // Rising sweep: 200Hz → 4000Hz
+    filter.frequency.setValueAtTime(200, now);
+    filter.frequency.exponentialRampToValueAtTime(4000, now + 1.2);
+  } else {
+    // Falling sweep: 3000Hz → 150Hz
+    filter.frequency.setValueAtTime(3000, now);
+    filter.frequency.exponentialRampToValueAtTime(150, now + 1.0);
+  }
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, now);
+  g.gain.linearRampToValueAtTime(goingUp ? 0.04 : 0.025, now + 0.3);
+  g.gain.linearRampToValueAtTime(0, now + (goingUp ? 1.2 : 1.0));
+  src.connect(filter); filter.connect(g); g.connect(stingerBus);
+  src.start(now); src.stop(now + 1.5);
+}
+
+// ══════════════════════════════════════════════
 // INTENSITY CROSSFADE
 // ══════════════════════════════════════════════
 
 function setIntensity(target: Intensity, dur = 2.5) {
   if (!running || !chillBus || !activeBus || !intenseBus) return;
   if (target === currentIntensity) return;
+  const goingUp = target === "intense" || (target === "active" && currentIntensity === "chill");
   currentIntensity = target;
+  // Transition sweep FX
+  playTransitionFX(goingUp);
 
   const c = ac();
   const now = c.currentTime;

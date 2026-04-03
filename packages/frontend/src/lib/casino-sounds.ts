@@ -1,34 +1,91 @@
 /**
- * Casino Sound Engine — Rich synthesized sounds via Web Audio API
- * Multiple layered oscillators, filters, envelopes for authentic casino feel.
- * No external files needed.
+ * CRISINO SFX Engine v2
+ *
+ * Professional synthesized casino sounds with:
+ * - SFX reverb bus (short room reverb for space)
+ * - Layered sounds (body + transient + tail)
+ * - Sub-bass impacts on big events
+ * - Proper ADSR envelopes
+ * - Metallic resonance on coin sounds
  */
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+let sfxReverb: ConvolverNode | null = null;
+let sfxReverbGain: GainNode | null = null;
+let sfxDry: GainNode | null = null;
 let muted = false;
-let ambientPlaying = false;
-let ambientNodes: { oscs: OscillatorNode[]; gains: GainNode[]; noiseSource?: AudioBufferSourceNode } | null = null;
 
 function ac(): AudioContext {
-  if (!ctx) { ctx = new AudioContext(); master = ctx.createGain(); master.gain.value = 0.4; master.connect(ctx.destination); }
+  if (!ctx) {
+    ctx = new AudioContext();
+    master = ctx.createGain();
+    master.gain.value = 0.45;
+
+    // SFX reverb (short room — 0.6s)
+    sfxReverb = ctx.createConvolver();
+    sfxReverb.buffer = createSfxReverbIR(0.6);
+    sfxReverbGain = ctx.createGain();
+    sfxReverbGain.gain.value = 0.25;
+    sfxReverb.connect(sfxReverbGain);
+    sfxReverbGain.connect(master);
+
+    // Dry path
+    sfxDry = ctx.createGain();
+    sfxDry.gain.value = 1;
+    sfxDry.connect(master);
+
+    master.connect(ctx.destination);
+  }
   if (ctx.state === "suspended") ctx.resume();
   return ctx;
 }
-function mg(): GainNode { ac(); return master!; }
 
-function osc(freq: number, type: OscillatorType, dur: number, gain: number, delay = 0, freqEnd?: number) {
+function createSfxReverbIR(duration: number): AudioBuffer {
+  const c = ac();
+  const len = Math.floor(c.sampleRate * duration);
+  const buf = c.createBuffer(2, len, c.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buf.getChannelData(ch);
+    const preDelay = Math.floor(c.sampleRate * 0.008);
+    for (let i = 0; i < preDelay; i++) data[i] = 0;
+    for (let i = preDelay; i < len; i++) {
+      const t = (i - preDelay) / (len - preDelay);
+      // Fast HF decay, slower LF
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 3) * 0.4;
+      if (i > preDelay + 97) data[i] += data[i - 97]! * 0.15;
+    }
+  }
+  return buf;
+}
+
+// ── Core: route through reverb + dry ──
+function sfx(): GainNode { ac(); return sfxDry!; }
+function wet(): ConvolverNode { ac(); return sfxReverb!; }
+
+// ── Primitives with reverb routing ──
+
+/** Oscillator → dry + reverb send */
+function tone(freq: number, type: OscillatorType, dur: number, gain: number, delay = 0, freqEnd?: number, reverbAmt = 0.3) {
   const c = ac(); const t = c.currentTime + delay;
   const o = c.createOscillator(); const g = c.createGain();
   o.type = type; o.frequency.setValueAtTime(freq, t);
-  if (freqEnd) o.frequency.linearRampToValueAtTime(freqEnd, t + dur);
-  g.gain.setValueAtTime(gain, t);
+  if (freqEnd) o.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), t + dur);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.003); // fast attack
+  g.gain.setValueAtTime(gain, t + dur * 0.6);
   g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  o.connect(g); g.connect(mg());
-  o.start(t); o.stop(t + dur);
+  o.connect(g);
+  // Split to dry + reverb
+  const dryG = c.createGain(); dryG.gain.value = 1 - reverbAmt;
+  const wetG = c.createGain(); wetG.gain.value = reverbAmt;
+  g.connect(dryG); dryG.connect(sfx());
+  g.connect(wetG); wetG.connect(wet());
+  o.start(t); o.stop(t + dur + 0.01);
 }
 
-function noise(dur: number, gain: number, delay = 0, filterFreq?: number) {
+/** Noise burst → dry + reverb */
+function noiseBurst(dur: number, gain: number, delay = 0, filterFreq?: number, filterType: BiquadFilterType = "bandpass", reverbAmt = 0.2) {
   const c = ac(); const t = c.currentTime + delay;
   const buf = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate);
   const d = buf.getChannelData(0);
@@ -37,16 +94,41 @@ function noise(dur: number, gain: number, delay = 0, filterFreq?: number) {
   const g = c.createGain();
   g.gain.setValueAtTime(gain, t);
   g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  let node: AudioNode = src;
   if (filterFreq) {
-    const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = filterFreq; f.Q.value = 2;
-    src.connect(f); f.connect(g);
-  } else { src.connect(g); }
-  g.connect(mg()); src.start(t); src.stop(t + dur);
+    const f = c.createBiquadFilter(); f.type = filterType; f.frequency.value = filterFreq; f.Q.value = 1.5;
+    src.connect(f); node = f;
+  }
+  node.connect(g);
+  const dryG = c.createGain(); dryG.gain.value = 1 - reverbAmt;
+  const wetG = c.createGain(); wetG.gain.value = reverbAmt;
+  g.connect(dryG); dryG.connect(sfx());
+  g.connect(wetG); wetG.connect(wet());
+  src.start(t); src.stop(t + dur + 0.01);
 }
 
-function chord(freqs: number[], type: OscillatorType, dur: number, gain: number, delay = 0) {
-  for (const f of freqs) osc(f, type, dur, gain / freqs.length, delay);
+/** Sub-bass impact (sine pitch drop) */
+function subImpact(gain = 0.15, delay = 0) {
+  tone(80, "sine", 0.25, gain, delay, 25, 0);
+  noiseBurst(0.06, gain * 0.4, delay, 200, "lowpass", 0);
 }
+
+/** Metallic ring (detuned high partials) */
+function metalRing(baseFreq: number, gain: number, dur: number, delay = 0) {
+  const partials = [1, 1.34, 1.67, 2.01, 2.83]; // inharmonic = metallic
+  for (const p of partials) {
+    tone(baseFreq * p, "sine", dur * (1 / p), gain / partials.length, delay, undefined, 0.4);
+  }
+}
+
+/** Chord with reverb */
+function chordWet(freqs: number[], type: OscillatorType, dur: number, gain: number, delay = 0, reverb = 0.5) {
+  for (const f of freqs) tone(f, type, dur, gain / freqs.length, delay, undefined, reverb);
+}
+
+// ══════════════════════════════════════════════
+// PUBLIC API
+// ══════════════════════════════════════════════
 
 export const casinoSounds = {
   init() { ac(); },
@@ -56,341 +138,300 @@ export const casinoSounds = {
   // ── UI ──
   click() {
     if (muted) return;
-    osc(800, "square", 0.04, 0.08);
-    osc(1200, "sine", 0.03, 0.05, 0.01);
+    tone(1200, "sine", 0.03, 0.06, 0, undefined, 0.1);
+    tone(1800, "sine", 0.02, 0.03, 0.008, undefined, 0.1);
   },
 
   toggle() {
     if (muted) return;
-    osc(1000, "sine", 0.06, 0.1);
-    osc(1500, "sine", 0.04, 0.06, 0.03);
+    tone(1000, "sine", 0.06, 0.08);
+    tone(1500, "sine", 0.04, 0.05, 0.025);
+  },
+
+  // ── Whoosh (tab switch, UI transitions) ──
+  whoosh() {
+    if (muted) return;
+    noiseBurst(0.15, 0.06, 0, 3000, "bandpass", 0.3);
+    tone(400, "sine", 0.1, 0.02, 0, 1200, 0.2);
   },
 
   // ── Slot Machine ──
   spin() {
     if (muted) return;
-    // Rapid mechanical ticker — like a reel spinning
-    for (let i = 0; i < 12; i++) {
-      osc(600 + Math.random() * 200, "square", 0.025, 0.06, i * 0.035);
-      noise(0.015, 0.03, i * 0.035, 3000);
+    for (let i = 0; i < 10; i++) {
+      tone(500 + Math.random() * 300, "square", 0.02, 0.04, i * 0.035, undefined, 0.15);
+      noiseBurst(0.012, 0.025, i * 0.035, 4000, "highpass", 0.1);
     }
+  },
+
+  reelStop() {
+    if (muted) return;
+    // Mechanical thunk with body
+    subImpact(0.06);
+    tone(250, "square", 0.04, 0.1, 0, undefined, 0.2);
+    metalRing(800, 0.04, 0.08, 0.01);
+    noiseBurst(0.03, 0.08, 0, 2500, "bandpass", 0.15);
+  },
+
+  winLine() {
+    if (muted) return;
+    // Bright ascending with reverb tail
+    const notes = [784, 988, 1175, 1568];
+    for (let i = 0; i < notes.length; i++) {
+      tone(notes[i]!, "sine", 0.3, 0.08, i * 0.06, undefined, 0.5);
+      tone(notes[i]! * 2, "sine", 0.2, 0.02, i * 0.06, undefined, 0.6); // shimmer
+    }
+    noiseBurst(0.25, 0.03, 0.2, 8000, "highpass", 0.5); // sparkle tail
   },
 
   // ── Coin Flip ──
   coinFlip() {
     if (muted) return;
-    // Metallic coin toss + ring
-    osc(2400, "triangle", 0.08, 0.15);
-    osc(3600, "sine", 0.12, 0.08, 0.02);
-    osc(1800, "triangle", 0.06, 0.06, 0.05);
-    noise(0.04, 0.08, 0, 5000);
+    // Metallic coin with proper ring
+    metalRing(2400, 0.08, 0.15);
+    tone(3600, "sine", 0.1, 0.04, 0.02, undefined, 0.3);
+    noiseBurst(0.03, 0.06, 0, 6000, "highpass", 0.2);
+    // Spinning whoosh
+    tone(800, "sine", 0.08, 0.02, 0.01, 2000, 0.15);
   },
 
   // ── Scratch Card ──
   scratch() {
     if (muted) return;
-    noise(0.25, 0.12, 0, 2000);
-    noise(0.15, 0.06, 0.05, 4000);
+    noiseBurst(0.2, 0.1, 0, 2500, "bandpass", 0.15);
+    noiseBurst(0.12, 0.04, 0.04, 5000, "bandpass", 0.1);
   },
 
   reveal() {
     if (muted) return;
-    // Quick sparkle reveal
-    osc(1200, "sine", 0.08, 0.12);
-    osc(1800, "sine", 0.06, 0.08, 0.03);
-    osc(2400, "sine", 0.05, 0.05, 0.06);
+    // Sparkle reveal with shimmer
+    tone(1200, "sine", 0.1, 0.1, 0, undefined, 0.4);
+    tone(1800, "sine", 0.08, 0.06, 0.025, undefined, 0.4);
+    tone(2400, "sine", 0.06, 0.04, 0.05, undefined, 0.5);
+    metalRing(3000, 0.02, 0.06, 0.06);
   },
 
-  // ── Win Sounds ──
+  // ── Win (small) ──
   win() {
     if (muted) return;
-    // Classic casino win — ascending bright chime
-    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    const notes = [523, 659, 784, 1047];
     for (let i = 0; i < notes.length; i++) {
-      osc(notes[i]!, "sine", 0.2 - i * 0.02, 0.15, i * 0.08);
-      osc(notes[i]! * 2, "sine", 0.15, 0.04, i * 0.08); // harmonic
+      tone(notes[i]!, "sine", 0.25, 0.1, i * 0.07, undefined, 0.4);
+      tone(notes[i]! * 2, "sine", 0.15, 0.025, i * 0.07, undefined, 0.5);
     }
-    // Shimmer
-    noise(0.1, 0.03, 0.25, 6000);
+    // Subtle sub thump on landing
+    subImpact(0.04, 0.28);
+    noiseBurst(0.12, 0.025, 0.28, 7000, "highpass", 0.5);
   },
 
+  // ── Big Win ──
   bigWin() {
     if (muted) return;
-    // Triumphant fanfare with rich harmonics
-    const notes = [523, 587, 659, 784, 880, 1047]; // C5 D5 E5 G5 A5 C6
+    // Fanfare with sub bass + rich harmonics
+    const notes = [523, 587, 659, 784, 880, 1047];
     for (let i = 0; i < notes.length; i++) {
-      osc(notes[i]!, "sine", 0.35 - i * 0.03, 0.12, i * 0.07);
-      osc(notes[i]! * 1.5, "sine", 0.25, 0.04, i * 0.07); // fifth
-      osc(notes[i]! * 2, "triangle", 0.2, 0.03, i * 0.07); // octave
+      tone(notes[i]!, "sine", 0.4, 0.09, i * 0.065, undefined, 0.45);
+      tone(notes[i]! * 1.5, "sine", 0.3, 0.03, i * 0.065, undefined, 0.5); // 5th
+      tone(notes[i]! * 2, "triangle", 0.25, 0.02, i * 0.065, undefined, 0.5); // octave
     }
-    // Sparkle shower
-    for (let i = 0; i < 8; i++) {
-      osc(2000 + Math.random() * 3000, "sine", 0.08, 0.03, 0.3 + i * 0.05);
+    // Sub impact
+    subImpact(0.12, 0.1);
+    // Sparkle shower with reverb
+    for (let i = 0; i < 10; i++) {
+      const t = 0.3 + i * 0.045;
+      tone(2000 + Math.random() * 3000, "sine", 0.1, 0.025, t, undefined, 0.6);
+      noiseBurst(0.04, 0.012, t, 8000 + Math.random() * 4000, "highpass", 0.5);
     }
-    noise(0.3, 0.04, 0.4, 8000);
   },
 
   // ── Loss ──
   loss() {
     if (muted) return;
-    // Sad descending tones
-    osc(400, "sine", 0.3, 0.12, 0, 180);
-    osc(350, "triangle", 0.25, 0.06, 0.05, 120);
-    osc(300, "sine", 0.2, 0.04, 0.1, 100);
+    // Sad descending with weight
+    tone(400, "sine", 0.35, 0.09, 0, 150, 0.35);
+    tone(350, "triangle", 0.3, 0.04, 0.04, 100, 0.3);
+    tone(300, "sine", 0.25, 0.03, 0.08, 80, 0.25);
+    // Low thud
+    tone(60, "sine", 0.2, 0.06, 0.1, 30, 0);
   },
 
-  // ── Jackpot! ──
+  // ── Jackpot ──
   jackpot() {
     if (muted) return;
-    // EPIC siren + coin rain + fanfare
+    // MASSIVE sub impact
+    subImpact(0.2);
     // Siren
-    for (let i = 0; i < 6; i++) {
-      osc(800, "sawtooth", 0.15, 0.08, i * 0.2, 1600);
-      osc(1600, "sawtooth", 0.15, 0.08, i * 0.2 + 0.1, 800);
+    for (let i = 0; i < 5; i++) {
+      tone(800, "sawtooth", 0.15, 0.05, i * 0.2, 1600, 0.3);
+      tone(1600, "sawtooth", 0.15, 0.05, i * 0.2 + 0.1, 800, 0.3);
     }
-    // Fanfare chord
-    chord([523, 659, 784, 1047], "sine", 0.8, 0.25, 0.1);
-    chord([587, 740, 880, 1175], "sine", 0.6, 0.2, 0.5);
-    chord([659, 784, 988, 1319], "sine", 1.0, 0.25, 0.8);
-    // Coin shower
+    // Fanfare chords with reverb
+    chordWet([523, 659, 784, 1047], "sine", 0.8, 0.2, 0.1, 0.6);
+    chordWet([587, 740, 880, 1175], "sine", 0.6, 0.15, 0.5, 0.6);
+    chordWet([659, 784, 988, 1319], "sine", 1.0, 0.2, 0.8, 0.7);
+    // Coin rain
     for (let i = 0; i < 20; i++) {
-      const t = 0.2 + i * 0.08;
-      osc(2000 + Math.random() * 4000, "triangle", 0.06, 0.04, t);
-      noise(0.03, 0.02, t, 6000 + Math.random() * 4000);
+      const t = 0.2 + i * 0.07;
+      metalRing(2000 + Math.random() * 4000, 0.02, 0.05, t);
     }
   },
 
   // ── Double or Nothing ──
   double() {
     if (muted) return;
-    // Suspenseful heartbeat bass
-    osc(55, "sine", 0.15, 0.25);
-    osc(55, "sine", 0.12, 0.2, 0.2);
-    osc(110, "sine", 0.08, 0.08, 0.0);
-    osc(110, "sine", 0.06, 0.06, 0.2);
-    // Tension riser
-    osc(200, "sawtooth", 0.5, 0.04, 0, 600);
+    subImpact(0.1);
+    tone(55, "sine", 0.12, 0.15, 0.15, undefined, 0);
+    tone(200, "sawtooth", 0.5, 0.03, 0, 600, 0.25);
   },
 
   // ── All-In ──
   allIn() {
     if (muted) return;
-    // Dramatic rising tension sweep
-    osc(80, "sawtooth", 0.8, 0.1, 0, 500);
-    osc(60, "sawtooth", 0.9, 0.06, 0, 400);
-    // Timpani rolls
+    // Rising tension with filtered sweep
+    tone(60, "sawtooth", 0.9, 0.06, 0, 400, 0.2);
+    tone(50, "sawtooth", 1.0, 0.04, 0, 350, 0.15);
+    // Timpani hits
     for (let i = 0; i < 8; i++) {
-      osc(80 + i * 10, "sine", 0.08, 0.1 + i * 0.01, i * 0.09);
+      subImpact(0.04 + i * 0.008, i * 0.09);
     }
-    // Final hit
-    osc(60, "sine", 0.3, 0.2, 0.75);
-    noise(0.15, 0.08, 0.75, 200);
+    // Final slam
+    subImpact(0.15, 0.75);
+    noiseBurst(0.12, 0.06, 0.75, 300, "lowpass", 0.1);
   },
 
   // ── Special Event ──
   special() {
     if (muted) return;
-    // Magical sparkle sweep
-    osc(1500, "sine", 0.4, 0.1, 0, 4000);
-    osc(2000, "sine", 0.35, 0.06, 0.05, 5000);
-    // Twinkle particles
+    tone(1500, "sine", 0.4, 0.07, 0, 4000, 0.5);
+    tone(2000, "sine", 0.35, 0.04, 0.04, 5000, 0.6);
     for (let i = 0; i < 6; i++) {
-      osc(3000 + Math.random() * 3000, "sine", 0.06, 0.04, i * 0.06);
+      tone(3000 + Math.random() * 3000, "sine", 0.08, 0.03, i * 0.05, undefined, 0.5);
     }
-    noise(0.15, 0.03, 0.1, 8000);
+    noiseBurst(0.15, 0.02, 0.1, 8000, "highpass", 0.5);
   },
 
   // ── Quest Complete ──
   questComplete() {
     if (muted) return;
-    // RPG level-up: quick ascending arpeggio
-    const notes = [523, 659, 784, 1047, 1319]; // C5 E5 G5 C6 E6
+    const notes = [523, 659, 784, 1047, 1319];
     for (let i = 0; i < notes.length; i++) {
-      osc(notes[i]!, "sine", 0.15, 0.12, i * 0.06);
-      osc(notes[i]! * 2, "sine", 0.1, 0.03, i * 0.06);
+      tone(notes[i]!, "sine", 0.18, 0.1, i * 0.055, undefined, 0.45);
+      tone(notes[i]! * 2, "sine", 0.12, 0.025, i * 0.055, undefined, 0.5);
     }
-    // Final shimmer
-    chord([1047, 1319, 1568], "sine", 0.4, 0.12, 0.3);
-    noise(0.1, 0.02, 0.35, 6000);
+    chordWet([1047, 1319, 1568], "sine", 0.5, 0.1, 0.28, 0.6);
+    subImpact(0.04, 0.28);
   },
 
   // ── Achievement ──
   achievement() {
     if (muted) return;
-    // Triumphant brass chord with drum hit
-    noise(0.08, 0.15, 0, 300); // drum hit
-    chord([262, 330, 392, 523], "sawtooth", 1.0, 0.15, 0.05); // C4 E4 G4 C5
-    chord([330, 392, 523, 659], "sine", 0.8, 0.1, 0.3); // resolve up
-    // Sparkle trail
-    for (let i = 0; i < 5; i++) {
-      osc(2000 + i * 500, "sine", 0.08, 0.03, 0.5 + i * 0.08);
-    }
-  },
-
-  // ── Pet Sounds ──
-  walk() {
-    if (muted) return;
-    // Quick paw patter
+    subImpact(0.1);
+    noiseBurst(0.06, 0.1, 0, 400, "lowpass", 0.15); // drum
+    chordWet([262, 330, 392, 523], "sawtooth", 1.0, 0.1, 0.04, 0.55);
+    chordWet([330, 392, 523, 659], "sine", 0.8, 0.08, 0.3, 0.6);
     for (let i = 0; i < 6; i++) {
-      noise(0.025, 0.08, i * 0.06, 3000 + Math.random() * 2000);
-      osc(300 + Math.random() * 100, "sine", 0.02, 0.04, i * 0.06);
+      tone(2000 + i * 400, "sine", 0.1, 0.025, 0.5 + i * 0.07, undefined, 0.5);
     }
-  },
-
-  feed() {
-    if (muted) return;
-    // Chomp chomp
-    for (let i = 0; i < 3; i++) {
-      osc(180, "square", 0.04, 0.12, i * 0.12);
-      osc(120, "sine", 0.06, 0.08, i * 0.12 + 0.02);
-      noise(0.03, 0.05, i * 0.12, 1500);
-    }
-  },
-
-  poop() {
-    if (muted) return;
-    // Comic splat
-    noise(0.12, 0.15, 0, 800);
-    osc(80, "sine", 0.15, 0.12, 0.02, 40);
-    osc(200, "square", 0.05, 0.06);
-    // Wet squish
-    noise(0.08, 0.06, 0.1, 1200);
   },
 
   // ── Points / Cash ──
   points() {
     if (muted) return;
-    // Cash register cha-ching
-    osc(2200, "sine", 0.05, 0.1);
-    osc(2800, "sine", 0.05, 0.1, 0.06);
-    osc(3200, "triangle", 0.08, 0.06, 0.1);
-    noise(0.04, 0.04, 0.05, 5000);
+    metalRing(2200, 0.06, 0.04);
+    metalRing(2800, 0.06, 0.04, 0.05);
+    tone(3200, "triangle", 0.06, 0.04, 0.09, undefined, 0.3);
+  },
+
+  // ── Pet Sounds ──
+  walk() {
+    if (muted) return;
+    for (let i = 0; i < 6; i++) {
+      noiseBurst(0.02, 0.06, i * 0.06, 3000 + Math.random() * 2000, "bandpass", 0.15);
+      tone(300 + Math.random() * 100, "sine", 0.018, 0.03, i * 0.06, undefined, 0.1);
+    }
+  },
+
+  feed() {
+    if (muted) return;
+    for (let i = 0; i < 3; i++) {
+      tone(180, "square", 0.035, 0.08, i * 0.11, undefined, 0.1);
+      tone(120, "sine", 0.05, 0.06, i * 0.11 + 0.015, undefined, 0.05);
+      noiseBurst(0.025, 0.04, i * 0.11, 1500, "bandpass", 0.1);
+    }
+  },
+
+  poop() {
+    if (muted) return;
+    noiseBurst(0.1, 0.1, 0, 800, "bandpass", 0.1);
+    tone(80, "sine", 0.12, 0.08, 0.015, 35, 0);
+    noiseBurst(0.06, 0.04, 0.08, 1200, "bandpass", 0.1);
   },
 
   // ── Error ──
   error() {
     if (muted) return;
-    osc(150, "sawtooth", 0.25, 0.12);
-    osc(140, "square", 0.2, 0.06, 0.05);
+    tone(150, "sawtooth", 0.2, 0.08, 0, undefined, 0.2);
+    tone(140, "square", 0.15, 0.04, 0.04, undefined, 0.15);
   },
 
-  // ── Slot Reel Stop (mechanical thunk + click) ──
-  reelStop() {
-    if (muted) return;
-    osc(200, "square", 0.06, 0.15);
-    osc(400, "triangle", 0.04, 0.08, 0.02);
-    noise(0.04, 0.1, 0, 2000);
-  },
-
-  // ── Win Line (bright sparkle sweep for matching reels) ──
-  winLine() {
-    if (muted) return;
-    const notes = [784, 988, 1175, 1568]; // G5 B5 D6 G6
-    for (let i = 0; i < notes.length; i++) {
-      osc(notes[i]!, "sine", 0.25, 0.1, i * 0.06);
-      osc(notes[i]! * 2, "sine", 0.15, 0.03, i * 0.06);
-    }
-    noise(0.2, 0.04, 0.2, 8000);
-  },
-
-  // ── Typewriter tick (for visual novel) ──
+  // ── Typewriter (visual novel) ──
   typewriterTick() {
     if (muted) return;
-    osc(1400 + Math.random() * 400, "square", 0.015, 0.03);
+    tone(1400 + Math.random() * 400, "square", 0.012, 0.02, 0, undefined, 0.05);
   },
 
-  // ── Casino Run: stage clear ──
+  // ── Casino Run ──
   stageClear() {
     if (muted) return;
-    osc(523, "sine", 0.12, 0.12);
-    osc(659, "sine", 0.12, 0.1, 0.08);
-    osc(784, "sine", 0.15, 0.12, 0.16);
-    osc(1047, "sine", 0.25, 0.15, 0.24);
-    noise(0.08, 0.03, 0.3, 6000);
+    const notes = [523, 659, 784, 1047];
+    for (let i = 0; i < notes.length; i++) {
+      tone(notes[i]!, "sine", 0.15, 0.1, i * 0.07, undefined, 0.45);
+    }
+    subImpact(0.05, 0.28);
+    noiseBurst(0.1, 0.025, 0.28, 6000, "highpass", 0.4);
   },
 
-  // ── Casino Run: game over ──
   runGameOver() {
     if (muted) return;
-    osc(300, "sawtooth", 0.4, 0.1, 0, 100);
-    osc(250, "sine", 0.35, 0.08, 0.1, 80);
-    noise(0.2, 0.06, 0.2, 400);
+    tone(300, "sawtooth", 0.4, 0.07, 0, 80, 0.3);
+    tone(250, "sine", 0.35, 0.05, 0.08, 60, 0.25);
+    subImpact(0.08, 0.15);
   },
 
-  // ── Guild Boss hit ──
+  // ── Guild Boss ──
   bossHit() {
     if (muted) return;
-    osc(100, "sawtooth", 0.12, 0.15);
-    noise(0.08, 0.12, 0, 1000);
-    osc(80, "sine", 0.15, 0.1, 0.05);
+    subImpact(0.1);
+    noiseBurst(0.06, 0.08, 0, 1200, "bandpass", 0.2);
+    tone(80, "sine", 0.12, 0.07, 0.03, undefined, 0.1);
   },
-
-  // ── Ambient Casino Music ──
-  startAmbient() {
-    if (muted || ambientPlaying) return;
-    const c = ac();
-    ambientPlaying = true;
-    const oscs: OscillatorNode[] = [];
-    const gains: GainNode[] = [];
-
-    // Deep bass pad
-    const bass = c.createOscillator();
-    const bassG = c.createGain();
-    bass.type = "sine"; bass.frequency.value = 55;
-    bassG.gain.value = 0.03;
-    bass.connect(bassG); bassG.connect(mg());
-    bass.start(); oscs.push(bass); gains.push(bassG);
-
-    // Warm pad chord (Cm7 — C Eb G Bb)
-    const padFreqs = [130.81, 155.56, 196.00, 233.08];
-    for (const freq of padFreqs) {
-      const o = c.createOscillator();
-      const g = c.createGain();
-      o.type = "sine"; o.frequency.value = freq;
-      g.gain.value = 0.012;
-      // Slow LFO on gain for gentle swell
-      const lfo = c.createOscillator();
-      const lfoG = c.createGain();
-      lfo.type = "sine"; lfo.frequency.value = 0.1 + Math.random() * 0.15;
-      lfoG.gain.value = 0.005;
-      lfo.connect(lfoG); lfoG.connect(g.gain);
-      lfo.start();
-      o.connect(g); g.connect(mg());
-      o.start(); oscs.push(o, lfo); gains.push(g, lfoG);
-    }
-
-    // Soft filtered noise (like distant crowd/chips)
-    const noiseBuf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
-    const noiseData = noiseBuf.getChannelData(0);
-    for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1;
-    const noiseSource = c.createBufferSource();
-    noiseSource.buffer = noiseBuf; noiseSource.loop = true;
-    const noiseFilter = c.createBiquadFilter();
-    noiseFilter.type = "bandpass"; noiseFilter.frequency.value = 800; noiseFilter.Q.value = 0.5;
-    const noiseG = c.createGain(); noiseG.gain.value = 0.008;
-    noiseSource.connect(noiseFilter); noiseFilter.connect(noiseG); noiseG.connect(mg());
-    noiseSource.start(); gains.push(noiseG);
-
-    ambientNodes = { oscs, gains, noiseSource };
-  },
-
-  stopAmbient() {
-    if (!ambientNodes) return;
-    ambientPlaying = false;
-    for (const o of ambientNodes.oscs) try { o.stop(); } catch {}
-    if (ambientNodes.noiseSource) try { ambientNodes.noiseSource.stop(); } catch {}
-    ambientNodes = null;
-  },
-
-  get isAmbientPlaying() { return ambientPlaying; },
 
   // ── Challenge complete ──
   challengeComplete() {
     if (muted) return;
-    chord([523, 659, 784], "sine", 0.3, 0.15);
-    chord([659, 784, 1047], "sine", 0.4, 0.15, 0.2);
+    subImpact(0.06);
+    chordWet([523, 659, 784], "sine", 0.35, 0.12, 0, 0.5);
+    chordWet([659, 784, 1047], "sine", 0.45, 0.12, 0.18, 0.55);
     for (let i = 0; i < 6; i++) {
-      osc(2000 + Math.random() * 3000, "sine", 0.06, 0.04, 0.3 + i * 0.05);
+      tone(2000 + Math.random() * 3000, "sine", 0.08, 0.03, 0.3 + i * 0.04, undefined, 0.5);
     }
   },
+
+  // ── Impact (for screen shake moments) ──
+  impact() {
+    if (muted) return;
+    subImpact(0.18);
+    noiseBurst(0.08, 0.12, 0, 500, "lowpass", 0.1);
+  },
+
+  // ── Count Up (for animated points) ──
+  countTick() {
+    if (muted) return;
+    tone(1800 + Math.random() * 200, "sine", 0.01, 0.02, 0, undefined, 0);
+  },
+
+  // ── Legacy stubs (ambient replaced by casino-music.ts) ──
+  startAmbient() {},
+  stopAmbient() {},
+  get isAmbientPlaying() { return false; },
 };

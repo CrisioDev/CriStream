@@ -2074,8 +2074,8 @@ export async function viewerRoutes(app: FastifyInstance) {
     const { reportRunStage } = await import("../casino/casino-run.js");
     try {
       const result = await reportRunStage(channel.id, user.twitchId, cu?.displayName ?? "Anon", !!won);
-      // On victory, award score as points
-      if (result.status === "victory" && result.score) {
+      // On game over with score > 100, award points
+      if (result.status === "gameover" && result.score && result.score > 100) {
         await prisma.channelUser.update({
           where: { channelId_twitchUserId: { channelId: channel.id, twitchUserId: user.twitchId } },
           data: { points: { increment: result.score } },

@@ -129,26 +129,34 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
       const res = await api.post<any>(`/viewer/${channelName}/casino/run/report`, { won }) as any;
       if (res.success) {
         const d = res.data;
-        if (d.status === "victory") {
-          casinoSounds.stageClear();
-          setRunMsg(`🏆 VICTORY! Score: ${d.score} Pts (Rang #${d.leaderboardRank})`);
+        if (d.status === "gameover") {
+          casinoSounds.runGameOver();
+          const stagesWon = d.run.results.filter((r: boolean) => r).length;
+          if (d.score && d.score > 100) {
+            setRunMsg(`💀 GAME OVER nach Stufe ${stagesWon}! Score: ${formatNumber(d.score)} Pts${d.leaderboardRank ? ` (Rang #${d.leaderboardRank})` : ""}`);
+            fetchPoints();
+          } else {
+            setRunMsg(`💀 GAME OVER nach Stufe ${stagesWon}! Besser nächstes Mal.`);
+          }
           setCasinoRun(null);
           fetchRunLb();
-          fetchPoints();
-        } else if (d.status === "gameover") {
-          casinoSounds.runGameOver();
-          setRunMsg("💀 GAME OVER! Besser nächstes Mal.");
-          setCasinoRun(null);
         } else {
           casinoSounds.stageClear();
           setCasinoRun(d.run);
+          if (d.score) setCasinoRun((prev: any) => prev ? { ...prev, score: d.score } : prev);
         }
       } else { setRunMsg(res.error ?? "Fehler!"); }
     } catch { setRunMsg("Fehler!"); }
     setRunLoading(false);
   };
 
-  const STAGE_MULTIPLIERS = [1, 1.5, 2, 3, 5];
+  const getMultiplier = (stage: number) => {
+    if (stage <= 2) return (1 + stage * 0.1).toFixed(1);
+    if (stage <= 5) return (1 + (stage - 2) * 0.5).toFixed(1);
+    if (stage <= 8) return (3 + (stage - 5)).toFixed(0);
+    if (stage <= 12) return (6 + (stage - 8) * 2.5).toFixed(1);
+    return (16 + (stage - 12) * 5).toFixed(0);
+  };
   const GAME_EMOJIS: Record<string, string> = {
     flip: "🪙", slots: "🎰", scratch: "🎟️", dice21: "🎲",
     poker: "🃏", roulette: "🎰", memory: "🧠",
@@ -377,7 +385,7 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
           border: "2px solid rgba(255,100,0,0.4)",
         }}>
           <h3 className="font-black text-lg text-orange-400 mb-2">🎲 CASINO RUN</h3>
-          <p className="text-xs text-gray-500 mb-3">5 zufällige Games · Gewinne alle für den Highscore! · 50 Pts Einsatz</p>
+          <p className="text-xs text-gray-500 mb-3">Endlos-Run · Je weiter du kommst, desto höher der Score! · 50 Pts Einsatz</p>
 
           {runMsg && (
             <div className={`text-sm font-bold rounded-lg px-3 py-2 mb-3 ${runMsg.includes("VICTORY") ? "text-green-400 bg-green-500/10 border border-green-500/20" : runMsg.includes("GAME OVER") ? "text-red-400 bg-red-500/10 border border-red-500/20" : "text-yellow-400 bg-yellow-500/10 border border-yellow-500/20"}`}>
@@ -395,35 +403,41 @@ export function MinigamesTab({ user, channelName, fetchPoints }: MinigamesTabPro
             </div>
           ) : (
             <div className="run-stage-enter">
-              {/* Stage progress */}
-              <div className="flex justify-center gap-2 mb-4">
-                {casinoRun.games.map((game: string, i: number) => {
-                  const isDone = i < casinoRun.results.length;
-                  const isCurrent = i === casinoRun.stage;
-                  const won = casinoRun.results[i];
-                  return (
-                    <div key={i} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${isCurrent ? "scale-110" : ""}`}
-                      style={{
-                        background: isDone ? (won ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)") : isCurrent ? "rgba(255,100,0,0.15)" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${isDone ? (won ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.4)") : isCurrent ? "rgba(255,100,0,0.5)" : "rgba(255,255,255,0.08)"}`,
-                      }}>
-                      <span className="text-2xl">{GAME_EMOJIS[game] ?? "🎮"}</span>
-                      <span className="text-[10px] text-gray-500">x{STAGE_MULTIPLIERS[i]}</span>
-                      {isDone && <span className="text-xs">{won ? "✅" : "❌"}</span>}
-                      {isCurrent && <span className="text-[10px] text-orange-400 font-bold">JETZT</span>}
-                    </div>
-                  );
-                })}
+              {/* Stage counter + score */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-black text-orange-400">{casinoRun.stage + 1}</span>
+                  <div>
+                    <div className="text-[10px] text-gray-500 leading-none">STUFE</div>
+                    <div className="text-xs text-orange-300 font-bold leading-none">x{getMultiplier(casinoRun.stage)}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-gray-500 leading-none">SCORE</div>
+                  <div className="text-lg font-black text-yellow-400 leading-none">{formatNumber(casinoRun.score ?? 0)}</div>
+                </div>
               </div>
+
+              {/* Won stages trail */}
+              {casinoRun.results.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3 justify-center">
+                  {casinoRun.results.map((won: boolean, i: number) => (
+                    <span key={i} className={`text-xs px-1.5 py-0.5 rounded ${won ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                      {i + 1}{won ? "✓" : "✗"}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Current stage game */}
               <div className="rounded-xl p-4" style={{ background: "rgba(255,100,0,0.05)", border: "1px solid rgba(255,100,0,0.2)" }}>
                 <div className="text-center mb-2">
-                  <span className="text-xs text-gray-500">Stufe {casinoRun.stage + 1}/5 · Multiplikator x{STAGE_MULTIPLIERS[casinoRun.stage]}</span>
+                  <span className="text-2xl mr-2">{GAME_EMOJIS[casinoRun.currentGame] ?? "🎮"}</span>
+                  <span className="text-xs text-gray-500">Stufe {casinoRun.stage + 1} · x{getMultiplier(casinoRun.stage)} Multiplikator</span>
                 </div>
                 <StoryGameEmbed
                   key={`run-stage-${casinoRun.stage}`}
-                  gameType={casinoRun.games[casinoRun.stage]}
+                  gameType={casinoRun.currentGame}
                   channelName={channelName}
                   description={`Casino Run Stufe ${casinoRun.stage + 1}`}
                   onComplete={(won) => reportRunResult(won)}

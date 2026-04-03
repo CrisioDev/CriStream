@@ -4,12 +4,11 @@ import { prisma } from "../../lib/prisma.js";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface CasinoRun {
-  stage: number;          // 0-4 (5 stages total)
-  games: string[];        // sequence of 5 random games
+  stage: number;          // current stage (0-based, endless)
+  currentGame: string;    // the game to play now
   results: boolean[];     // win/loss per completed stage
-  multipliers: number[];  // [1, 1.5, 2, 3, 5]
   startedAt: number;
-  points: number;         // initial 50
+  points: number;         // initial cost
 }
 
 export interface RunStageResult {
@@ -31,10 +30,24 @@ export interface LeaderboardEntry {
 // ── Constants ──────────────────────────────────────────────────────────────
 
 const GAME_POOL = ["flip", "slots", "scratch", "dice21", "poker", "roulette", "memory"];
-const STAGE_MULTIPLIERS = [1, 1.5, 2, 3, 5];
 const RUN_COST = 50;
 const RUN_TTL = 3600; // 1 hour
-const NUM_STAGES = 5;
+
+/** Multiplier for each stage — escalates endlessly */
+function getMultiplier(stage: number): number {
+  // 1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 7, 10, 15, 20, ...
+  if (stage <= 2) return 1 + stage * 0.1;
+  if (stage <= 5) return 1 + (stage - 2) * 0.5;
+  if (stage <= 8) return 3 + (stage - 5);
+  if (stage <= 12) return 6 + (stage - 8) * 2.5;
+  return 16 + (stage - 12) * 5; // beyond stage 12: gets crazy
+}
+
+/** Pick the next game — avoids repeating the last game */
+function pickNextGame(lastGame?: string): string {
+  const pool = lastGame ? GAME_POOL.filter(g => g !== lastGame) : GAME_POOL;
+  return pool[Math.floor(Math.random() * pool.length)]!;
+}
 
 // ── Redis Key Helpers ──────────────────────────────────────────────────────
 
@@ -48,13 +61,6 @@ function lbKey(channelId: string) {
 
 function lbDataKey(channelId: string) {
   return `casino:run:lb:data:${channelId}`;
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-function pickRandomGames(count: number): string[] {
-  const shuffled = [...GAME_POOL].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
 }
 
 // ── Exported Functions ─────────────────────────────────────────────────────
@@ -102,9 +108,8 @@ export async function startRun(
 
   const run: CasinoRun = {
     stage: 0,
-    games: pickRandomGames(NUM_STAGES),
+    currentGame: pickNextGame(),
     results: [],
-    multipliers: STAGE_MULTIPLIERS,
     startedAt: Date.now(),
     points: RUN_COST,
   };
@@ -116,9 +121,8 @@ export async function startRun(
 
 /**
  * Reports the result of the current stage.
- * - Won + not last stage → advance (continue)
- * - Won + last stage → calculate score, save to leaderboard (victory)
- * - Lost → game over, no score (gameover)
+ * Endless mode: won → advance, lost → game over + save score to leaderboard.
+ * Score = sum of multipliers for all won stages.
  */
 export async function reportRunStage(
   channelId: string,
@@ -132,50 +136,47 @@ export async function reportRunStage(
   }
 
   const run = JSON.parse(raw) as CasinoRun;
-
-  // Record result
   run.results.push(won);
 
+  // Calculate score = 100 × sum of all multipliers earned
+  const calcScore = () => {
+    let total = 0;
+    for (let i = 0; i < run.results.length; i++) {
+      if (run.results[i]) total += getMultiplier(i);
+    }
+    return Math.round(100 * Math.max(1, total));
+  };
+
   if (!won) {
-    // Game over — remove run
+    // Game over — save score to leaderboard
     await redis.del(runKey(channelId, userId));
-    return { status: "gameover", run };
+    const score = calcScore();
+    const stagesWon = run.results.filter(Boolean).length;
+
+    if (stagesWon > 0) {
+      // Only save if they won at least 1 stage
+      const existingScore = await redis.zscore(lbKey(channelId), userId);
+      // Keep their best score
+      if (!existingScore || score > parseInt(existingScore)) {
+        await redis.zadd(lbKey(channelId), score, userId);
+        await redis.hset(lbDataKey(channelId), userId, JSON.stringify({
+          displayName,
+          stagesWon,
+          timestamp: Date.now(),
+        }));
+      }
+    }
+
+    const rank = await redis.zrevrank(lbKey(channelId), userId);
+    return { status: "gameover", run, score, leaderboardRank: rank !== null ? rank + 1 : undefined };
   }
 
-  // Won this stage
-  const isLastStage = run.stage >= NUM_STAGES - 1;
+  // Won — advance to next stage
+  run.stage += 1;
+  run.currentGame = pickNextGame(run.currentGame);
+  await redis.set(runKey(channelId, userId), JSON.stringify(run), "EX", RUN_TTL);
 
-  if (!isLastStage) {
-    // Advance to next stage
-    run.stage += 1;
-    await redis.set(runKey(channelId, userId), JSON.stringify(run), "EX", RUN_TTL);
-    return { status: "continue", run };
-  }
-
-  // Victory — all 5 stages won
-  await redis.del(runKey(channelId, userId));
-
-  // Score = 100 × product of all multipliers
-  const score = Math.round(
-    100 * run.multipliers.reduce((acc, m) => acc * m, 1),
-  );
-
-  // Save to leaderboard sorted set
-  await redis.zadd(lbKey(channelId), score, userId);
-
-  // Save entry details in hash
-  const entryData = JSON.stringify({
-    displayName,
-    games: run.games,
-    timestamp: Date.now(),
-  });
-  await redis.hset(lbDataKey(channelId), userId, entryData);
-
-  // Determine rank (ZREVRANK is 0-based, top score = rank 0)
-  const rank = await redis.zrevrank(lbKey(channelId), userId);
-  const leaderboardRank = rank !== null ? rank + 1 : 1;
-
-  return { status: "victory", run, score, leaderboardRank };
+  return { status: "continue", run, score: calcScore() };
 }
 
 /**

@@ -1,538 +1,715 @@
 /**
- * CRISINO Adaptive Music Engine
+ * CRISINO Adaptive Music Engine v2
  *
- * 3 intensity layers that crossfade based on game state:
- * - Chill: default ambient, soft pads, occasional arpeggios
- * - Active: rhythmic elements, brighter, during active gameplay
- * - Intense: driving bass, fast arpeggios, combo chains / all-in
- *
- * Plus event-driven stingers that layer on top.
+ * Professional-grade generative casino soundtrack.
+ * Features: Reverb, Stereo Delay, Detuned Pads, Chord Progressions,
+ * Synthesized Drums, Musical Arpeggios, Dynamic Mixing.
  */
 
 type Intensity = "chill" | "active" | "intense";
 
+// ── Audio Context & Master Chain ──
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+let compressor: DynamicsCompressorNode | null = null;
+let reverbSend: ConvolverNode | null = null;
+let reverbGain: GainNode | null = null;
+let delayL: DelayNode | null = null;
+let delayR: DelayNode | null = null;
+let delayFeedback: GainNode | null = null;
+let delaySend: GainNode | null = null;
 let running = false;
 
-// Layer gain nodes
-let chillGain: GainNode | null = null;
-let activeGain: GainNode | null = null;
-let intenseGain: GainNode | null = null;
-let stingerGain: GainNode | null = null;
+// Layer buses
+let chillBus: GainNode | null = null;
+let activeBus: GainNode | null = null;
+let intenseBus: GainNode | null = null;
+let stingerBus: GainNode | null = null;
+let dryBus: GainNode | null = null; // bypasses reverb for transients
 
-// All managed nodes for cleanup
-let allNodes: (OscillatorNode | AudioBufferSourceNode)[] = [];
-let allGains: GainNode[] = [];
-let arpeggioTimer: any = null;
-let pulseTimer: any = null;
+// Managed resources
+let managedNodes: (OscillatorNode | AudioBufferSourceNode)[] = [];
+let timers: any[] = [];
 
-// Current state
+// State
 let currentIntensity: Intensity = "chill";
 let comboLevel = 0;
+let chordIndex = 0;
+let beatCount = 0;
 
-// ── Scales & Harmony ──
-// Cm pentatonic: C Eb F G Bb
-const PENTA_C = [130.81, 155.56, 174.61, 196.00, 233.08]; // octave 3
-const PENTA_C_HIGH = PENTA_C.map(f => f * 2); // octave 4
-const PENTA_C_HIGHER = PENTA_C.map(f => f * 4); // octave 5
+// ── Musical Constants ──
 
-// Chord voicings
-const CM7_LOW = [65.41, 77.78, 98.00, 116.54]; // C2 Eb2 G2 Bb2
-const CM7_MID = [130.81, 155.56, 196.00, 233.08]; // C3 Eb3 G3 Bb3
-const CM_POWER = [65.41, 98.00, 130.81, 196.00]; // C2 G2 C3 G3
+// Chord progression: Cm9 → Abmaj7 → Fm9 → G7(#9)
+// Each chord = array of frequencies for multiple voicings
+const PROGRESSION = [
+  { name: "Cm9",    low: [65.41, 77.78, 98, 116.54],   mid: [261.63, 311.13, 392, 466.16, 587.33], bass: 32.70 },
+  { name: "Abmaj7", low: [51.91, 65.41, 77.78, 98],     mid: [207.65, 261.63, 311.13, 392],         bass: 51.91 },
+  { name: "Fm9",    low: [43.65, 52.00, 65.41, 77.78],  mid: [174.61, 207.65, 261.63, 311.13, 392], bass: 43.65 },
+  { name: "G7",     low: [49.00, 61.74, 73.42, 87.31],  mid: [196.00, 246.94, 293.66, 349.23],      bass: 49.00 },
+];
+
+// Pentatonic scales for arpeggios (Cm pentatonic across octaves)
+const PENTA = {
+  low:  [130.81, 155.56, 174.61, 196.00, 233.08],
+  mid:  [261.63, 311.13, 349.23, 392.00, 466.16],
+  high: [523.25, 622.25, 698.46, 783.99, 932.33],
+};
+
+// Arpeggio patterns (index-based)
+const ARP_PATTERNS = [
+  [0, 1, 2, 3, 4],              // ascending
+  [4, 3, 2, 1, 0],              // descending
+  [0, 2, 1, 3, 2, 4, 3],        // pendulum
+  [0, 2, 4, 3, 1],              // broken
+  [0, 4, 1, 3, 2],              // scattered
+  [0, 1, 2, 4, 3, 2, 1, 0],    // wave
+];
+
+const BPM = 75; // Slower, more atmospheric
+const BEAT_SEC = 60 / BPM;
+const BAR_SEC = BEAT_SEC * 4;
+
+// ══════════════════════════════════════════════
+// MASTER CHAIN SETUP
+// ══════════════════════════════════════════════
 
 function ac(): AudioContext {
   if (!ctx) {
     ctx = new AudioContext();
+
+    // Master compressor
+    compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -18;
+    compressor.knee.value = 12;
+    compressor.ratio.value = 4;
+    compressor.attack.value = 0.005;
+    compressor.release.value = 0.15;
+
+    // Master gain
     master = ctx.createGain();
-    master.gain.value = 0.25; // Overall music volume
+    master.gain.value = 0.30;
+
+    // Reverb (convolution)
+    reverbSend = ctx.createConvolver();
+    reverbSend.buffer = createReverbIR(3.0, 2.5);
+    reverbGain = ctx.createGain();
+    reverbGain.gain.value = 0.35;
+
+    // Stereo ping-pong delay
+    delaySend = ctx.createGain();
+    delaySend.gain.value = 0.2;
+    delayL = ctx.createDelay(1);
+    delayL.delayTime.value = BEAT_SEC * 0.75; // dotted 8th
+    delayR = ctx.createDelay(1);
+    delayR.delayTime.value = BEAT_SEC * 0.5; // 8th note
+    delayFeedback = ctx.createGain();
+    delayFeedback.gain.value = 0.3;
+
+    // Delay routing: send → delayL → delayR → feedback → delayL
+    const panL = ctx.createStereoPanner();
+    panL.pan.value = -0.6;
+    const panR = ctx.createStereoPanner();
+    panR.pan.value = 0.6;
+    delaySend.connect(delayL);
+    delayL.connect(panL);
+    delayL.connect(delayR);
+    delayR.connect(panR);
+    delayR.connect(delayFeedback);
+    delayFeedback.connect(delayL);
+    panL.connect(compressor);
+    panR.connect(compressor);
+
+    // Reverb routing
+    reverbSend.connect(reverbGain);
+    reverbGain.connect(compressor);
+
+    // Dry bus (bypasses reverb for percussive elements)
+    dryBus = ctx.createGain();
+    dryBus.gain.value = 1;
+    dryBus.connect(compressor);
+
+    compressor.connect(master);
     master.connect(ctx.destination);
+
+    // Layer buses → reverb send + dry + delay send
+    chillBus = ctx.createGain(); chillBus.gain.value = 1;
+    activeBus = ctx.createGain(); activeBus.gain.value = 0;
+    intenseBus = ctx.createGain(); intenseBus.gain.value = 0;
+    stingerBus = ctx.createGain(); stingerBus.gain.value = 1;
+
+    for (const bus of [chillBus, activeBus, intenseBus, stingerBus]) {
+      bus.connect(reverbSend);
+      bus.connect(dryBus);
+      bus.connect(delaySend);
+    }
   }
   if (ctx.state === "suspended") ctx.resume();
   return ctx;
 }
 
-function mg(): GainNode {
-  ac();
-  return master!;
+/** Generate impulse response for convolution reverb */
+function createReverbIR(duration: number, decay: number): AudioBuffer {
+  const c = ac();
+  const len = Math.floor(c.sampleRate * duration);
+  const buf = c.createBuffer(2, len, c.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buf.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      // Exponential decay with early reflections
+      const t = i / c.sampleRate;
+      const earlyReflection = t < 0.05 ? 0.8 : 1;
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay) * earlyReflection;
+      // Add some diffusion
+      if (i > 0) data[i] += data[i - 1]! * 0.02;
+    }
+  }
+  return buf;
 }
 
-// ── Helper: create oscillator with gain ──
-function makeOsc(freq: number, type: OscillatorType, gain: number, target: GainNode): OscillatorNode {
+// ── Sound Primitives ──
+
+/** Detuned oscillator pair for rich pads */
+function padVoice(freq: number, type: OscillatorType, gain: number, target: GainNode): OscillatorNode[] {
+  const c = ac();
+  const g = c.createGain();
+  g.gain.value = 0;
+  // Slow attack for pad feel
+  g.gain.setValueAtTime(0, c.currentTime);
+  g.gain.linearRampToValueAtTime(gain, c.currentTime + 2);
+
+  // Detune pair: ±4 cents for chorus width
+  const o1 = c.createOscillator();
+  const o2 = c.createOscillator();
+  o1.type = type; o2.type = type;
+  o1.frequency.value = freq;
+  o2.frequency.value = freq;
+  o1.detune.value = 4;
+  o2.detune.value = -4;
+
+  // Slight stereo spread
+  const panL = c.createStereoPanner();
+  const panR = c.createStereoPanner();
+  panL.pan.value = -0.3;
+  panR.pan.value = 0.3;
+
+  o1.connect(panL); panL.connect(g);
+  o2.connect(panR); panR.connect(g);
+  g.connect(target);
+
+  o1.start(); o2.start();
+  managedNodes.push(o1, o2);
+  return [o1, o2];
+}
+
+/** Filtered noise with envelope */
+function noiseLayer(freq: number, q: number, gain: number, target: GainNode): AudioBufferSourceNode {
+  const c = ac();
+  const buf = c.createBuffer(2, c.sampleRate * 4, c.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const src = c.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const filter = c.createBiquadFilter();
+  filter.type = "bandpass"; filter.frequency.value = freq; filter.Q.value = q;
+  const g = c.createGain(); g.gain.value = gain;
+  src.connect(filter); filter.connect(g); g.connect(target);
+  src.start();
+  managedNodes.push(src);
+  return src;
+}
+
+/** Synthesized kick drum */
+function playKick(time: number, velocity = 0.8) {
+  if (!dryBus) return;
+  const c = ac();
+  // Pitch-swept sine
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(150, time);
+  o.frequency.exponentialRampToValueAtTime(35, time + 0.12);
+  g.gain.setValueAtTime(0, time);
+  g.gain.linearRampToValueAtTime(0.12 * velocity, time + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+  o.connect(g); g.connect(dryBus);
+  o.start(time); o.stop(time + 0.3);
+
+  // Transient click
+  const click = c.createOscillator();
+  const clickG = c.createGain();
+  click.type = "square";
+  click.frequency.value = 800;
+  clickG.gain.setValueAtTime(0.05 * velocity, time);
+  clickG.gain.exponentialRampToValueAtTime(0.001, time + 0.015);
+  click.connect(clickG); clickG.connect(dryBus);
+  click.start(time); click.stop(time + 0.02);
+}
+
+/** Synthesized hi-hat */
+function playHat(time: number, open = false, velocity = 0.5) {
+  if (!dryBus) return;
+  const c = ac();
+  const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.1), c.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const hp = c.createBiquadFilter();
+  hp.type = "highpass"; hp.frequency.value = open ? 5000 : 8000; hp.Q.value = 1;
+  const g = c.createGain();
+  const dur = open ? 0.12 : 0.04;
+  g.gain.setValueAtTime(0.06 * velocity, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  // Stereo variation
+  const pan = c.createStereoPanner();
+  pan.pan.value = (Math.random() - 0.5) * 0.4;
+  src.connect(hp); hp.connect(g); g.connect(pan); pan.connect(dryBus);
+  src.start(time); src.stop(time + dur + 0.01);
+}
+
+/** Play a single note with ADSR envelope */
+function playNote(freq: number, time: number, duration: number, gain: number, target: GainNode, type: OscillatorType = "sine") {
   const c = ac();
   const o = c.createOscillator();
   const g = c.createGain();
   o.type = type;
   o.frequency.value = freq;
-  g.gain.value = gain;
-  o.connect(g);
-  g.connect(target);
-  allNodes.push(o);
-  allGains.push(g);
-  return o;
-}
 
-// ── Helper: create noise source ──
-function makeNoise(filterFreq: number, filterQ: number, gain: number, target: GainNode): AudioBufferSourceNode {
-  const c = ac();
-  const buf = c.createBuffer(1, c.sampleRate * 4, c.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  const src = c.createBufferSource();
-  src.buffer = buf;
-  src.loop = true;
-  const filter = c.createBiquadFilter();
-  filter.type = "bandpass";
-  filter.frequency.value = filterFreq;
-  filter.Q.value = filterQ;
-  const g = c.createGain();
-  g.gain.value = gain;
-  src.connect(filter);
-  filter.connect(g);
-  g.connect(target);
-  allNodes.push(src);
-  allGains.push(g);
-  return src;
-}
+  // ADSR
+  const attack = 0.01;
+  const decay = duration * 0.3;
+  const sustain = gain * 0.6;
+  const release = duration * 0.4;
 
-// ── Helper: LFO on a param ──
-function addLFO(param: AudioParam, rate: number, depth: number): OscillatorNode {
-  const c = ac();
-  const lfo = c.createOscillator();
-  const lfoG = c.createGain();
-  lfo.type = "sine";
-  lfo.frequency.value = rate;
-  lfoG.gain.value = depth;
-  lfo.connect(lfoG);
-  lfoG.connect(param);
-  allNodes.push(lfo);
-  allGains.push(lfoG);
-  return lfo;
+  g.gain.setValueAtTime(0, time);
+  g.gain.linearRampToValueAtTime(gain, time + attack);
+  g.gain.linearRampToValueAtTime(sustain, time + attack + decay);
+  g.gain.setValueAtTime(sustain, time + duration - release);
+  g.gain.linearRampToValueAtTime(0, time + duration);
+
+  o.connect(g); g.connect(target);
+  o.start(time); o.stop(time + duration + 0.01);
 }
 
 // ══════════════════════════════════════════════
-// LAYER: CHILL
+// CHORD PAD ENGINE
 // ══════════════════════════════════════════════
-function buildChillLayer() {
+
+let padOscillators: OscillatorNode[] = [];
+
+function updatePadChord() {
+  if (!chillBus || !activeBus) return;
   const c = ac();
-  chillGain = c.createGain();
-  chillGain.gain.value = 1;
-  chillGain.connect(mg());
+  const now = c.currentTime;
+  const chord = PROGRESSION[chordIndex % PROGRESSION.length]!;
 
-  // Deep sub bass — barely audible warmth
-  const sub = makeOsc(32.7, "sine", 0.06, chillGain); // C1
-  const subLFO = addLFO(sub.frequency, 0.05, 2);
-  sub.start(); subLFO.start();
+  // Crossfade existing pad voices to new frequencies
+  // Low pad voices on chill bus
+  const allOscs = padOscillators;
+  const chillFreqs = chord.low;
+  const midFreqs = chord.mid;
 
-  // Warm pad chord (Cm7, very quiet)
-  for (const freq of CM7_LOW) {
-    const o = makeOsc(freq, "sine", 0.015, chillGain);
-    const lfo = addLFO(o.frequency, 0.08 + Math.random() * 0.05, 0.5);
-    o.start(); lfo.start();
+  // Glide all oscillators to new chord (portamento)
+  for (let i = 0; i < allOscs.length; i++) {
+    const targetFreq = i < chillFreqs.length ? chillFreqs[i]!
+      : midFreqs[i - chillFreqs.length];
+    if (targetFreq) {
+      allOscs[i]!.frequency.cancelScheduledValues(now);
+      allOscs[i]!.frequency.setValueAtTime(allOscs[i]!.frequency.value, now);
+      allOscs[i]!.frequency.linearRampToValueAtTime(targetFreq, now + 2); // 2s glide
+    }
+  }
+}
+
+function buildPadLayer() {
+  if (!chillBus || !activeBus) return;
+  const chord = PROGRESSION[0]!;
+  padOscillators = [];
+
+  // Low voices → chill bus (warm sine pairs)
+  for (const freq of chord.low) {
+    const pair = padVoice(freq, "sine", 0.015, chillBus);
+    padOscillators.push(...pair);
   }
 
-  // Gentle filtered noise — distant casino ambience
-  const noise = makeNoise(600, 0.3, 0.006, chillGain);
-  noise.start();
-
-  // Subtle high shimmer
-  const shimmer = makeOsc(4186, "sine", 0.003, chillGain); // C8
-  const shimLFO = addLFO(shimmer.frequency, 0.03, 200);
-  shimmer.start(); shimLFO.start();
-}
-
-// ══════════════════════════════════════════════
-// LAYER: ACTIVE
-// ══════════════════════════════════════════════
-function buildActiveLayer() {
-  const c = ac();
-  activeGain = c.createGain();
-  activeGain.gain.value = 0;
-  activeGain.connect(mg());
-
-  // Brighter pad — mid voicing
-  for (const freq of CM7_MID) {
-    const o = makeOsc(freq, "triangle", 0.012, activeGain);
-    const lfo = addLFO(o.frequency, 0.1 + Math.random() * 0.08, 1);
-    o.start(); lfo.start();
+  // Mid voices → active bus (triangle for brightness)
+  for (const freq of chord.mid) {
+    const pair = padVoice(freq, "triangle", 0.008, activeBus);
+    padOscillators.push(...pair);
   }
 
-  // Rhythmic pulse — soft kick-like
-  const pulse = makeOsc(55, "sine", 0.04, activeGain);
-  pulse.start();
-  // Pulse the gain rhythmically
-  const pulseG = allGains[allGains.length - 1]!;
-  const pulseLFO = c.createOscillator();
-  const pulseLFOG = c.createGain();
-  pulseLFO.type = "square";
-  pulseLFO.frequency.value = 0.5; // 120 BPM feel (half-note pulse)
-  pulseLFOG.gain.value = 0.03;
-  pulseLFO.connect(pulseLFOG);
-  pulseLFOG.connect(pulseG.gain);
-  pulseLFO.start();
-  allNodes.push(pulseLFO);
-  allGains.push(pulseLFOG);
-
-  // Filtered noise — more presence
-  const noise = makeNoise(1200, 0.5, 0.008, activeGain);
-  noise.start();
-
-  // Walking bass hint
-  const bass = makeOsc(65.41, "triangle", 0.025, activeGain); // C2
-  const bassLFO = addLFO(bass.frequency, 0.25, 10); // gentle movement
-  bass.start(); bassLFO.start();
-}
-
-// ══════════════════════════════════════════════
-// LAYER: INTENSE
-// ══════════════════════════════════════════════
-function buildIntenseLayer() {
-  const c = ac();
-  intenseGain = c.createGain();
-  intenseGain.gain.value = 0;
-  intenseGain.connect(mg());
-
-  // Driving sub bass
-  const sub = makeOsc(32.7, "sawtooth", 0.04, intenseGain);
+  // Sub bass on chill (follows root)
+  const sub = ac().createOscillator();
+  const subG = ac().createGain();
+  sub.type = "sine";
+  sub.frequency.value = chord.bass;
+  subG.gain.value = 0.05;
+  sub.connect(subG); subG.connect(chillBus);
   sub.start();
-
-  // Power chords
-  for (const freq of CM_POWER) {
-    const o = makeOsc(freq, "sawtooth", 0.008, intenseGain);
-    o.start();
-  }
-
-  // Fast hi-hat noise
-  const hat = makeNoise(8000, 2, 0.01, intenseGain);
-  hat.start();
-  // Gate the hi-hat rhythmically
-  const hatG = allGains[allGains.length - 1]!;
-  const hatLFO = c.createOscillator();
-  const hatLFOG = c.createGain();
-  hatLFO.type = "square";
-  hatLFO.frequency.value = 2; // 16th note feel at 120bpm
-  hatLFOG.gain.value = 0.008;
-  hatLFO.connect(hatLFOG);
-  hatLFOG.connect(hatG.gain);
-  hatLFO.start();
-  allNodes.push(hatLFO);
-  allGains.push(hatLFOG);
-
-  // Aggressive filtered sweep
-  const sweep = makeOsc(98, "sawtooth", 0.015, intenseGain);
-  const sweepFilter = c.createBiquadFilter();
-  sweepFilter.type = "lowpass";
-  sweepFilter.frequency.value = 400;
-  sweepFilter.Q.value = 5;
-  const sweepLFO = addLFO(sweepFilter.frequency, 0.15, 300);
-  sweep.disconnect();
-  sweep.connect(sweepFilter);
-  const sg = c.createGain();
-  sg.gain.value = 0.015;
-  sweepFilter.connect(sg);
-  sg.connect(intenseGain);
-  sweep.start();
-  sweepLFO.start();
-  allGains.push(sg);
+  padOscillators.push(sub);
+  managedNodes.push(sub);
 }
 
 // ══════════════════════════════════════════════
-// STINGER BUS
+// RHYTHM ENGINE
 // ══════════════════════════════════════════════
-function buildStingerBus() {
-  stingerGain = ac().createGain();
-  stingerGain.gain.value = 1;
-  stingerGain.connect(mg());
-}
 
-// ══════════════════════════════════════════════
-// RANDOM ARPEGGIO SCHEDULER
-// ══════════════════════════════════════════════
-function scheduleArpeggios() {
-  const playArpeggio = () => {
-    if (!running || !stingerGain) return;
-    const c = ac();
-    const scale = currentIntensity === "intense" ? PENTA_C_HIGHER : currentIntensity === "active" ? PENTA_C_HIGH : PENTA_C_HIGH;
-    const numNotes = currentIntensity === "intense" ? 8 : currentIntensity === "active" ? 6 : 4;
-    const noteLength = currentIntensity === "intense" ? 0.08 : currentIntensity === "active" ? 0.12 : 0.2;
-    const gain = currentIntensity === "intense" ? 0.04 : currentIntensity === "active" ? 0.03 : 0.02;
+let rhythmTimer: any = null;
 
-    // Pick random pattern
-    const pattern: number[] = [];
-    for (let i = 0; i < numNotes; i++) {
-      pattern.push(scale[Math.floor(Math.random() * scale.length)]!);
-    }
+function startRhythm() {
+  const c = ac();
+  let nextBeat = c.currentTime + 0.1;
 
-    // Play pattern
+  const tick = () => {
+    if (!running) return;
     const now = c.currentTime;
-    for (let i = 0; i < pattern.length; i++) {
-      const t = now + i * noteLength;
-      const o = c.createOscillator();
-      const g = c.createGain();
-      o.type = "sine";
-      o.frequency.setValueAtTime(pattern[i]!, t);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(gain, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, t + noteLength * 0.9);
-      o.connect(g);
-      g.connect(stingerGain!);
-      o.start(t);
-      o.stop(t + noteLength);
+    if (nextBeat <= now) nextBeat = now + 0.05;
 
-      // Add harmonic
-      const h = c.createOscillator();
-      const hg = c.createGain();
-      h.type = "sine";
-      h.frequency.setValueAtTime(pattern[i]! * 2, t);
-      hg.gain.setValueAtTime(0, t);
-      hg.gain.linearRampToValueAtTime(gain * 0.2, t + 0.01);
-      hg.gain.exponentialRampToValueAtTime(0.001, t + noteLength * 0.7);
-      h.connect(hg);
-      hg.connect(stingerGain!);
-      h.start(t);
-      h.stop(t + noteLength);
+    // Schedule next 4 beats
+    for (let i = 0; i < 4; i++) {
+      const t = nextBeat + i * BEAT_SEC;
+      const beat = (beatCount + i) % 4;
+
+      if (currentIntensity !== "chill") {
+        // Kick on beats 1 and 3
+        if (beat === 0 || beat === 2) {
+          const vel = beat === 0 ? 0.9 : 0.6;
+          playKick(t, currentIntensity === "intense" ? vel : vel * 0.5);
+        }
+      }
+
+      if (currentIntensity === "active") {
+        // Closed hat on every beat, open on 2 and 4
+        playHat(t, beat === 1 || beat === 3, 0.3);
+        // Ghost hat on off-beats
+        playHat(t + BEAT_SEC * 0.5, false, 0.15);
+      }
+
+      if (currentIntensity === "intense") {
+        // Full pattern
+        playHat(t, beat === 1 || beat === 3, 0.5);
+        playHat(t + BEAT_SEC * 0.25, false, 0.2);
+        playHat(t + BEAT_SEC * 0.5, false, 0.35);
+        playHat(t + BEAT_SEC * 0.75, false, 0.15);
+      }
     }
 
-    // Schedule next arpeggio
-    const nextDelay = currentIntensity === "intense" ? 8000 + Math.random() * 12000
-      : currentIntensity === "active" ? 15000 + Math.random() * 20000
-      : 25000 + Math.random() * 35000;
-    arpeggioTimer = setTimeout(playArpeggio, nextDelay);
+    beatCount += 4;
+
+    // Chord change every 8 bars (32 beats)
+    if (beatCount % 32 === 0) {
+      chordIndex++;
+      updatePadChord();
+    }
+
+    nextBeat += BEAT_SEC * 4;
+    rhythmTimer = setTimeout(tick, (BEAT_SEC * 4 - 0.1) * 1000);
   };
 
-  // First arpeggio after 5-15 seconds
-  arpeggioTimer = setTimeout(playArpeggio, 5000 + Math.random() * 10000);
+  rhythmTimer = setTimeout(tick, 100);
 }
 
 // ══════════════════════════════════════════════
-// INTENSITY TRANSITIONS
+// ARPEGGIO ENGINE
 // ══════════════════════════════════════════════
-function setIntensity(target: Intensity, transitionTime = 2.5) {
-  if (!running || !chillGain || !activeGain || !intenseGain) return;
+
+let arpTimer: any = null;
+
+function scheduleArpeggio() {
+  const playArp = () => {
+    if (!running || !stingerBus) return;
+    const c = ac();
+    const now = c.currentTime;
+
+    // Choose scale register based on intensity
+    const scale = currentIntensity === "intense" ? PENTA.high
+      : currentIntensity === "active" ? PENTA.mid : PENTA.mid;
+
+    // Choose pattern
+    const pattern = ARP_PATTERNS[Math.floor(Math.random() * ARP_PATTERNS.length)]!;
+    const noteLen = currentIntensity === "intense" ? BEAT_SEC * 0.25
+      : currentIntensity === "active" ? BEAT_SEC * 0.5 : BEAT_SEC;
+    const gain = currentIntensity === "intense" ? 0.035
+      : currentIntensity === "active" ? 0.025 : 0.018;
+
+    // Play pattern with velocity accent on first note
+    for (let i = 0; i < pattern.length; i++) {
+      const noteIdx = pattern[i]! % scale.length;
+      const freq = scale[noteIdx]!;
+      const t = now + i * noteLen;
+      const vel = i === 0 ? gain * 1.4 : gain; // accent
+
+      playNote(freq, t, noteLen * 0.8, vel, stingerBus, "sine");
+      // Octave shimmer on high intensity
+      if (currentIntensity === "intense" && i % 2 === 0) {
+        playNote(freq * 2, t, noteLen * 0.5, vel * 0.25, stingerBus, "sine");
+      }
+    }
+
+    // Schedule next
+    const nextDelay = currentIntensity === "intense" ? 6000 + Math.random() * 8000
+      : currentIntensity === "active" ? 12000 + Math.random() * 15000
+      : 20000 + Math.random() * 30000;
+    arpTimer = setTimeout(playArp, nextDelay);
+  };
+
+  arpTimer = setTimeout(playArp, 4000 + Math.random() * 8000);
+}
+
+// ══════════════════════════════════════════════
+// AMBIENT BED
+// ══════════════════════════════════════════════
+
+function buildAmbientBed() {
+  if (!chillBus || !activeBus || !intenseBus) return;
+
+  // Chill: warm low-pass filtered noise (distant casino crowd)
+  noiseLayer(400, 0.3, 0.005, chillBus);
+  // Chill: high shimmer (very subtle)
+  noiseLayer(6000, 1, 0.002, chillBus);
+
+  // Active: mid-range presence
+  noiseLayer(1000, 0.5, 0.006, activeBus);
+
+  // Intense: broadband energy
+  noiseLayer(2000, 0.3, 0.008, intenseBus);
+
+  // Intense: sub rumble
+  const c = ac();
+  const rumble = c.createOscillator();
+  const rumbleG = c.createGain();
+  const rumbleLFO = c.createOscillator();
+  const rumbleLFOG = c.createGain();
+  rumble.type = "sine"; rumble.frequency.value = 25;
+  rumbleG.gain.value = 0.03;
+  rumbleLFO.type = "sine"; rumbleLFO.frequency.value = 0.1;
+  rumbleLFOG.gain.value = 0.02;
+  rumbleLFO.connect(rumbleLFOG); rumbleLFOG.connect(rumbleG.gain);
+  rumble.connect(rumbleG); rumbleG.connect(intenseBus);
+  rumble.start(); rumbleLFO.start();
+  managedNodes.push(rumble, rumbleLFO);
+}
+
+// ══════════════════════════════════════════════
+// INTENSITY CROSSFADE
+// ══════════════════════════════════════════════
+
+function setIntensity(target: Intensity, dur = 2.5) {
+  if (!running || !chillBus || !activeBus || !intenseBus) return;
   if (target === currentIntensity) return;
   currentIntensity = target;
 
   const c = ac();
   const now = c.currentTime;
-  const end = now + transitionTime;
 
-  const targets: Record<Intensity, [number, number, number]> = {
-    chill: [1, 0, 0],
-    active: [0.4, 1, 0],
-    intense: [0.15, 0.4, 1],
+  const levels: Record<Intensity, [number, number, number]> = {
+    chill:   [1.0, 0.0, 0.0],
+    active:  [0.35, 1.0, 0.0],
+    intense: [0.12, 0.35, 1.0],
   };
 
-  const [cg, ag, ig] = targets[target];
-  chillGain.gain.cancelScheduledValues(now);
-  activeGain.gain.cancelScheduledValues(now);
-  intenseGain.gain.cancelScheduledValues(now);
-  chillGain.gain.setValueAtTime(chillGain.gain.value, now);
-  activeGain.gain.setValueAtTime(activeGain.gain.value, now);
-  intenseGain.gain.setValueAtTime(intenseGain.gain.value, now);
-  chillGain.gain.linearRampToValueAtTime(cg, end);
-  activeGain.gain.linearRampToValueAtTime(ag, end);
-  intenseGain.gain.linearRampToValueAtTime(ig, end);
+  const [cl, al, il] = levels[target];
+  for (const [bus, val] of [[chillBus, cl], [activeBus, al], [intenseBus, il]] as [GainNode, number][]) {
+    bus.gain.cancelScheduledValues(now);
+    bus.gain.setValueAtTime(bus.gain.value, now);
+    bus.gain.linearRampToValueAtTime(val, now + dur);
+  }
+
+  // Adjust reverb/delay sends based on intensity
+  if (reverbGain) {
+    reverbGain.gain.cancelScheduledValues(now);
+    reverbGain.gain.setValueAtTime(reverbGain.gain.value, now);
+    reverbGain.gain.linearRampToValueAtTime(
+      target === "intense" ? 0.2 : target === "active" ? 0.3 : 0.4, now + dur
+    );
+  }
+  if (delaySend) {
+    delaySend.gain.cancelScheduledValues(now);
+    delaySend.gain.setValueAtTime(delaySend.gain.value, now);
+    delaySend.gain.linearRampToValueAtTime(
+      target === "intense" ? 0.1 : target === "active" ? 0.2 : 0.25, now + dur
+    );
+  }
 }
 
 // ══════════════════════════════════════════════
-// EVENT STINGERS
+// WIN STINGERS
 // ══════════════════════════════════════════════
 
-/** Short melodic flourish on win */
-function playWinStinger(size: "small" | "medium" | "big" = "small") {
-  if (!running || !stingerGain) return;
+function playWinStinger(size: "small" | "medium" | "big") {
+  if (!running || !stingerBus) return;
   const c = ac();
   const now = c.currentTime;
-  const notes = size === "big"
-    ? [261.63, 329.63, 392, 523.25, 659.26, 783.99] // C4 E4 G4 C5 E5 G5
-    : size === "medium"
-    ? [329.63, 392, 523.25, 659.26] // E4 G4 C5 E5
-    : [523.25, 659.26, 783.99]; // C5 E5 G5
 
-  const gain = size === "big" ? 0.06 : size === "medium" ? 0.045 : 0.03;
-  const noteLen = size === "big" ? 0.12 : 0.1;
-
-  for (let i = 0; i < notes.length; i++) {
-    const t = now + i * noteLen;
-    const o = c.createOscillator();
-    const g = c.createGain();
-    o.type = "sine";
-    o.frequency.value = notes[i]!;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(gain, t + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.001, t + noteLen * 2);
-    o.connect(g);
-    g.connect(stingerGain!);
-    o.start(t);
-    o.stop(t + noteLen * 2.5);
-  }
-
-  // Shimmer tail for big wins
   if (size === "big") {
-    for (let i = 0; i < 8; i++) {
-      const t = now + 0.5 + i * 0.06;
-      const o = c.createOscillator();
-      const g = c.createGain();
-      o.type = "sine";
-      o.frequency.value = 1000 + Math.random() * 3000;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.015, t + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-      o.connect(g);
-      g.connect(stingerGain!);
-      o.start(t);
-      o.stop(t + 0.2);
+    // Triumphant fanfare: I-V-I with full harmony
+    const fanfare = [
+      { freq: 261.63, t: 0, dur: 0.3 },     // C4
+      { freq: 329.63, t: 0.08, dur: 0.3 },   // E4
+      { freq: 392.00, t: 0.16, dur: 0.3 },   // G4
+      { freq: 523.25, t: 0.28, dur: 0.5 },   // C5
+      { freq: 659.26, t: 0.36, dur: 0.5 },   // E5
+      { freq: 783.99, t: 0.44, dur: 0.6 },   // G5
+      { freq: 1046.50, t: 0.55, dur: 0.8 },  // C6 — peak
+    ];
+    for (const n of fanfare) {
+      playNote(n.freq, now + n.t, n.dur, 0.05, stingerBus);
+      playNote(n.freq * 2, now + n.t, n.dur * 0.6, 0.012, stingerBus); // harmonic
+    }
+    // Sparkle tail
+    for (let i = 0; i < 12; i++) {
+      const t = now + 0.8 + i * 0.05;
+      playNote(
+        1000 + Math.random() * 4000, t, 0.1,
+        0.012 * (1 - i / 12), stingerBus
+      );
+    }
+  } else if (size === "medium") {
+    // Bright ascending triad
+    const notes = [329.63, 392, 523.25, 659.26];
+    for (let i = 0; i < notes.length; i++) {
+      playNote(notes[i]!, now + i * 0.09, 0.25, 0.04, stingerBus);
+    }
+  } else {
+    // Quick 3-note chime
+    const notes = [523.25, 659.26, 783.99];
+    for (let i = 0; i < notes.length; i++) {
+      playNote(notes[i]!, now + i * 0.07, 0.15, 0.025, stingerBus);
     }
   }
 }
 
-/** Heartbeat bass pulse for all-in tension */
 function startHeartbeat(): () => void {
-  if (!running || !stingerGain) return () => {};
+  if (!running || !dryBus) return () => {};
   const c = ac();
   let active = true;
+  let speed = 800;
 
   const beat = () => {
-    if (!active || !stingerGain) return;
+    if (!active || !dryBus) return;
     const now = c.currentTime;
 
-    // Double-thump heartbeat
-    for (const offset of [0, 0.15]) {
+    // Lub-dub
+    for (const [offset, freq, vel] of [[0, 55, 0.1], [0.12, 45, 0.07]] as [number, number, number][]) {
       const o = c.createOscillator();
       const g = c.createGain();
       o.type = "sine";
-      o.frequency.setValueAtTime(50, now + offset);
-      o.frequency.exponentialRampToValueAtTime(30, now + offset + 0.2);
+      o.frequency.setValueAtTime(freq, now + offset);
+      o.frequency.exponentialRampToValueAtTime(25, now + offset + 0.18);
       g.gain.setValueAtTime(0, now + offset);
-      g.gain.linearRampToValueAtTime(0.08, now + offset + 0.02);
+      g.gain.linearRampToValueAtTime(vel, now + offset + 0.008);
       g.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.2);
-      o.connect(g);
-      g.connect(stingerGain!);
-      o.start(now + offset);
-      o.stop(now + offset + 0.3);
+      o.connect(g); g.connect(dryBus);
+      o.start(now + offset); o.stop(now + offset + 0.25);
     }
 
-    if (active) setTimeout(beat, 800);
+    // Gradually speed up for tension
+    speed = Math.max(400, speed - 15);
+    if (active) setTimeout(beat, speed);
   };
 
   beat();
   return () => { active = false; };
 }
 
-/** Brief moment of near-silence after big win, then rebuild */
 function dramaticPause() {
   if (!running || !master) return;
   const c = ac();
   const now = c.currentTime;
-  // Quick dip
   master.gain.cancelScheduledValues(now);
   master.gain.setValueAtTime(master.gain.value, now);
-  master.gain.linearRampToValueAtTime(0.05, now + 0.3);
-  // Rebuild
-  master.gain.linearRampToValueAtTime(0.25, now + 2.5);
+  // Quick dip to near silence
+  master.gain.linearRampToValueAtTime(0.03, now + 0.2);
+  // Hold silence briefly
+  master.gain.setValueAtTime(0.03, now + 0.8);
+  // Slowly rebuild with swell
+  master.gain.linearRampToValueAtTime(0.15, now + 2.0);
+  master.gain.linearRampToValueAtTime(0.30, now + 3.5);
 }
 
 // ══════════════════════════════════════════════
 // PUBLIC API
 // ══════════════════════════════════════════════
 
+let decayTimer: any = null;
+
 export const casinoMusic = {
   get isPlaying() { return running; },
   get intensity() { return currentIntensity; },
 
-  /** Start the adaptive music system */
   start() {
     if (running) return;
     running = true;
     currentIntensity = "chill";
     comboLevel = 0;
+    chordIndex = 0;
+    beatCount = 0;
 
-    buildChillLayer();
-    buildActiveLayer();
-    buildIntenseLayer();
-    buildStingerBus();
-    scheduleArpeggios();
+    ac(); // ensure chain is built
+    buildPadLayer();
+    buildAmbientBed();
+    startRhythm();
+    scheduleArpeggio();
   },
 
-  /** Stop all music */
   stop() {
     running = false;
-    if (arpeggioTimer) { clearTimeout(arpeggioTimer); arpeggioTimer = null; }
-    if (pulseTimer) { clearTimeout(pulseTimer); pulseTimer = null; }
-    for (const n of allNodes) try { n.stop(); } catch {}
-    allNodes = [];
-    allGains = [];
-    chillGain = null;
-    activeGain = null;
-    intenseGain = null;
-    stingerGain = null;
+    for (const t of timers) clearTimeout(t);
+    timers = [];
+    if (rhythmTimer) { clearTimeout(rhythmTimer); rhythmTimer = null; }
+    if (arpTimer) { clearTimeout(arpTimer); arpTimer = null; }
+    if (decayTimer) { clearTimeout(decayTimer); decayTimer = null; }
+    for (const n of managedNodes) try { n.stop(); } catch {}
+    managedNodes = [];
+    padOscillators = [];
   },
 
-  /** Set master volume (0-1) */
   setVolume(v: number) {
     if (master) {
       const c = ac();
       master.gain.cancelScheduledValues(c.currentTime);
-      master.gain.setValueAtTime(master.gain.value, c.currentTime);
       master.gain.linearRampToValueAtTime(Math.max(0, Math.min(1, v)), c.currentTime + 0.1);
     }
   },
 
-  /** Manually set intensity */
-  setIntensity(level: Intensity) {
-    setIntensity(level);
-  },
+  setIntensity(level: Intensity) { setIntensity(level); },
 
-  /** Called on every game result — drives automatic intensity */
   onGameResult(won: boolean, profit: number) {
     if (!running) return;
 
     if (won) {
       comboLevel++;
-      if (profit >= 200) {
-        playWinStinger("big");
-        dramaticPause();
-      } else if (profit >= 50) {
-        playWinStinger("medium");
-      } else {
-        playWinStinger("small");
-      }
+      if (profit >= 200) { playWinStinger("big"); dramaticPause(); }
+      else if (profit >= 50) playWinStinger("medium");
+      else playWinStinger("small");
 
-      // Auto intensity based on combo
       if (comboLevel >= 8) setIntensity("intense", 1.5);
       else if (comboLevel >= 4) setIntensity("active", 2);
       else setIntensity("active", 3);
 
-      // Decay back to chill after inactivity
-      if (pulseTimer) clearTimeout(pulseTimer);
-      pulseTimer = setTimeout(() => {
-        if (comboLevel < 4) setIntensity("chill", 5);
-      }, 15000);
+      if (decayTimer) clearTimeout(decayTimer);
+      decayTimer = setTimeout(() => {
+        if (comboLevel < 4) setIntensity("chill", 6);
+      }, 20000);
     } else {
       comboLevel = 0;
-      // On loss, gradually wind down
-      if (pulseTimer) clearTimeout(pulseTimer);
-      pulseTimer = setTimeout(() => setIntensity("chill", 4), 5000);
+      if (decayTimer) clearTimeout(decayTimer);
+      decayTimer = setTimeout(() => setIntensity("chill", 5), 6000);
     }
   },
 
-  /** Start heartbeat for all-in, returns stop function */
   startHeartbeat,
 
-  /** Trigger for all-in start — ramps to intense */
   onAllInStart() {
     if (!running) return;
-    setIntensity("intense", 1);
+    setIntensity("intense", 0.8);
   },
 
-  /** Trigger for all-in end */
   onAllInEnd(won: boolean) {
     if (!running) return;
-    if (won) {
-      playWinStinger("big");
-      dramaticPause();
-    }
-    setTimeout(() => setIntensity("chill", 3), 3000);
+    if (won) { playWinStinger("big"); dramaticPause(); }
+    setTimeout(() => setIntensity("chill", 4), 4000);
   },
 };

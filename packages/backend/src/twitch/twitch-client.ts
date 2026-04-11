@@ -68,9 +68,28 @@ export async function initTwitchClient(): Promise<void> {
     await handleMessage(channel, user, message, msg);
   });
 
-  chatClient.onConnect(() => {
+  chatClient.onConnect(async () => {
     markActivity();
     logger.info("Twitch chat connected");
+
+    // Re-join all botJoined channels every time we connect.
+    // chatClient.reconnect() does NOT preserve channel JOINs — if we don't
+    // rejoin here the bot sits on an empty connection and receives zero messages
+    // until the next watchdog-forced reconnect. That's how sound commands break.
+    try {
+      const channels = await prisma.channel.findMany({ where: { botJoined: true } });
+      for (const ch of channels) {
+        try {
+          await chatClient!.join(ch.displayName.toLowerCase());
+          logger.info({ channel: ch.displayName }, "Joined channel");
+        } catch (err) {
+          logger.error({ err, channel: ch.displayName }, "Failed to join channel");
+        }
+      }
+    } catch (err) {
+      logger.error({ err }, "Failed to enumerate channels on connect");
+    }
+
     emitEvent("bot:status", {
       connected: true,
       channels: chatClient?.currentChannels?.map((c) => c.replace("#", "")) ?? [],
@@ -86,17 +105,6 @@ export async function initTwitchClient(): Promise<void> {
 
   // Start connection watchdog
   startWatchdog();
-
-  // Join channels that have botJoined = true
-  const channels = await prisma.channel.findMany({ where: { botJoined: true } });
-  for (const ch of channels) {
-    try {
-      await chatClient.join(ch.displayName.toLowerCase());
-      logger.info({ channel: ch.displayName }, "Joined channel");
-    } catch (err) {
-      logger.error({ err, channel: ch.displayName }, "Failed to join channel");
-    }
-  }
 }
 
 export async function joinChannel(channelName: string): Promise<void> {
@@ -125,21 +133,23 @@ function startWatchdog() {
     if (silentMs > WATCHDOG_TIMEOUT_MS) {
       logger.warn(
         { silentMs, isConnected: chatClient.isConnected },
-        "Twitch chat watchdog: no activity detected, forcing reconnect"
+        "Twitch chat watchdog: no activity detected, forcing full reconnect"
       );
 
+      // Full reconnect: quit + connect. The onConnect handler re-joins channels.
+      // We reset activity to a partial value so the watchdog doesn't hammer
+      // reconnects, but won't stay silent forever if messages don't return.
       try {
-        chatClient.reconnect();
-        markActivity();
+        chatClient.quit();
       } catch (err) {
-        logger.error({ err }, "Watchdog: reconnect() failed, trying quit+connect");
-        try {
-          chatClient.quit();
-          chatClient.connect();
-          markActivity();
-        } catch (err2) {
-          logger.error({ err: err2 }, "Watchdog: full reconnect failed");
-        }
+        logger.error({ err }, "Watchdog: quit() failed");
+      }
+      try {
+        chatClient.connect();
+        // Give the connection + rejoins ~3 minutes grace period before next check
+        lastActivityTime = Date.now() - (WATCHDOG_TIMEOUT_MS - 3 * 60 * 1000);
+      } catch (err) {
+        logger.error({ err }, "Watchdog: connect() failed");
       }
     }
   }, WATCHDOG_CHECK_INTERVAL_MS);

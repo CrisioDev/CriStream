@@ -21,6 +21,7 @@ export function SettingsPage() {
       <Tabs
         tabs={[
           { key: "channel", label: "Channel" },
+          { key: "casino", label: "Casino" },
           { key: "editors", label: "Editors" },
           { key: "account", label: "Account" },
         ]}
@@ -29,6 +30,7 @@ export function SettingsPage() {
       />
 
       {activeTab === "channel" && <ChannelSettingsTab />}
+      {activeTab === "casino" && channel && <CasinoSettingsTab channelId={channel.id} channelName={channel.displayName} />}
       {activeTab === "editors" && channel && <EditorsTab channelId={channel.id} />}
       {activeTab === "account" && <AccountTab />}
     </div>
@@ -168,6 +170,88 @@ function EditorsTab({ channelId }: { channelId: string }) {
             </p>
           )}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+const CASINO_FEATURES: { key: string; label: string; desc: string }[] = [
+  { key: "casino", label: "Casino (Master)", desc: "Deaktiviert die gesamte Casino-Seite für Viewer" },
+  { key: "gambling", label: "Gambling", desc: "Flip, Slots, Scratch, All-In, Glücksrad" },
+  { key: "minigames", label: "Minigames", desc: "Snake, Connect4, Memory, Sudoku, Roulette, Poker, Dice, Over/Under" },
+  { key: "casinoRun", label: "Casino Run", desc: "Endlos-Roguelike-Modus" },
+  { key: "pets", label: "Pets", desc: "Pet-System, Breeding, Battles" },
+  { key: "story", label: "Story Mode", desc: "Visual Novel mit 40 Kapiteln" },
+  { key: "social", label: "Social", desc: "Gilden, Heist, Guild War" },
+  { key: "progression", label: "Progression", desc: "Quests, Achievements, Battle Pass, Skill Tree" },
+  { key: "dailyChallenge", label: "Daily Challenge", desc: "Tägliche Community-Challenge" },
+  { key: "jackpot", label: "Jackpot", desc: "Progressiver Community-Jackpot" },
+  { key: "luckyHour", label: "Lucky Hour", desc: "Zufällige Bonus-Events" },
+  { key: "music", label: "Musik", desc: "Adaptive Musik-Button sichtbar" },
+];
+
+function CasinoSettingsTab({ channelId, channelName }: { channelId: string; channelName: string }) {
+  const [settings, setSettings] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get<any>(`/channels/${channelId}/casino-settings`) as any;
+        // Fallback: try viewer endpoint if channel endpoint doesn't exist
+        if (res.data) {
+          setSettings(res.data);
+        } else {
+          // Use the viewer/public endpoint
+          const res2 = await api.get<any>(`/viewer/${channelName}/casino/features`) as any;
+          if (res2.data) setSettings(res2.data);
+        }
+      } catch {
+        try {
+          const res2 = await api.get<any>(`/viewer/${channelName}/casino/features`) as any;
+          if (res2.data) setSettings(res2.data);
+        } catch {}
+      }
+      setLoading(false);
+    })();
+  }, [channelId, channelName]);
+
+  const toggle = async (key: string) => {
+    const newVal = !settings[key];
+    setSettings(prev => ({ ...prev, [key]: newVal }));
+    setSaving(key);
+    try {
+      await api.patch(`/viewer/${channelName}/casino/settings`, { [key]: newVal });
+    } catch {}
+    setSaving(null);
+  };
+
+  if (loading) return <Card><CardContent className="p-6 text-muted-foreground">Laden...</CardContent></Card>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Casino Features</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-sm text-muted-foreground mb-4">
+          Aktiviere oder deaktiviere einzelne Casino-Features für deinen Channel.
+          Änderungen wirken sofort für alle Viewer.
+        </p>
+        {CASINO_FEATURES.map(f => (
+          <div key={f.key} className="flex items-center justify-between py-2 border-b last:border-0">
+            <div>
+              <div className="text-sm font-medium">{f.label}</div>
+              <div className="text-xs text-muted-foreground">{f.desc}</div>
+            </div>
+            <button onClick={() => toggle(f.key)}
+              className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${settings[f.key] !== false ? "bg-green-500" : "bg-zinc-700"}`}
+              disabled={saving === f.key}>
+              <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${settings[f.key] !== false ? "left-[22px]" : "left-0.5"}`} />
+            </button>
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

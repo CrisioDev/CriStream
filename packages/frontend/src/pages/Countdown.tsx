@@ -65,7 +65,38 @@ export function CountdownPage() {
 
   useEffect(() => { fetchTimers(); }, [channelId]);
 
-  const createTimer = async () => {
+  const resetForm = () => {
+    setName("Neuer Timer"); setMode("duration"); setDurationMin(5); setDurationSec(0);
+    setTargetDate(""); setTargetTime(""); setFontSize(72); setColor("#ffffff");
+    setBgColor("transparent"); setShowLabels(true); setSeparator(":"); setCompletedText("TIME'S UP!");
+  };
+
+  const loadTimerIntoForm = (timer: CountdownTimer) => {
+    setName(timer.name);
+    setMode(timer.mode);
+    if (timer.durationSeconds) { setDurationMin(Math.floor(timer.durationSeconds / 60)); setDurationSec(timer.durationSeconds % 60); }
+    if (timer.targetDate) {
+      const d = new Date(timer.targetDate);
+      setTargetDate(d.toISOString().slice(0, 10));
+      setTargetTime(d.toTimeString().slice(0, 5));
+    }
+    if (timer.style) {
+      setFontSize(timer.style.fontSize ?? 72);
+      setColor(timer.style.color ?? "#ffffff");
+      setBgColor(timer.style.backgroundColor ?? "transparent");
+      setShowLabels(timer.style.showLabels ?? true);
+      setSeparator(timer.style.separator ?? ":");
+      setCompletedText(timer.style.completedText ?? "TIME'S UP!");
+    }
+  };
+
+  const startEdit = (timer: CountdownTimer) => {
+    setEditingId(timer.id);
+    loadTimerIntoForm(timer);
+    setShowCreate(true);
+  };
+
+  const saveTimer = async () => {
     if (!channelId) return;
     const totalSeconds = durationMin * 60 + durationSec;
     const data: any = {
@@ -77,11 +108,12 @@ export function CountdownPage() {
     if (mode === "target" && targetDate) data.targetDate = new Date(`${targetDate}T${targetTime || "00:00"}`).toISOString();
 
     try {
-      const res = await api.post<any>(`/channels/${channelId}/countdown`, data) as any;
-      if (res.success) {
-        setShowCreate(false);
-        setName("Neuer Timer");
-        fetchTimers();
+      if (editingId) {
+        const res = await api.patch<any>(`/channels/${channelId}/countdown/${editingId}`, data) as any;
+        if (res.success) { setShowCreate(false); setEditingId(null); resetForm(); fetchTimers(); }
+      } else {
+        const res = await api.post<any>(`/channels/${channelId}/countdown`, data) as any;
+        if (res.success) { setShowCreate(false); resetForm(); fetchTimers(); }
       }
     } catch {}
   };
@@ -126,7 +158,7 @@ export function CountdownPage() {
       {/* Create form */}
       {showCreate && (
         <div className="rounded-xl border bg-card p-5 mb-6 space-y-4">
-          <h3 className="font-bold text-lg">Timer erstellen</h3>
+          <h3 className="font-bold text-lg">{editingId ? "Timer bearbeiten" : "Timer erstellen"}</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -217,10 +249,12 @@ export function CountdownPage() {
           </details>
 
           <div className="flex justify-end gap-2">
-            <button onClick={() => setShowCreate(false)}
+            <button onClick={() => { setShowCreate(false); setEditingId(null); resetForm(); }}
               className="px-4 py-2 rounded-lg border text-sm">Abbrechen</button>
-            <button onClick={createTimer}
-              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium">Erstellen</button>
+            <button onClick={saveTimer}
+              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium">
+              {editingId ? "Speichern" : "Erstellen"}
+            </button>
           </div>
         </div>
       )}
@@ -259,6 +293,10 @@ export function CountdownPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button onClick={() => startEdit(timer)} title="Bearbeiten"
+                    className="p-2 rounded-lg hover:bg-muted transition-colors">
+                    <Pencil className="w-4 h-4 text-muted-foreground" />
+                  </button>
                   <button onClick={() => copyUrl(timer)} title="URL kopieren"
                     className="p-2 rounded-lg hover:bg-muted transition-colors">
                     {copied === timer.id ? <span className="text-green-400 text-xs font-bold">Kopiert!</span> : <Copy className="w-4 h-4 text-muted-foreground" />}

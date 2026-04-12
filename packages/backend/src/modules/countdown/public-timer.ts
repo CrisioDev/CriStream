@@ -125,7 +125,7 @@ ${opts.fontUrl ? `<link rel="stylesheet" href="${escapeHtml(opts.fontUrl)}">` : 
     font-size: ${size}px;
     font-weight: 900;
     color: #${color};
-    opacity: 0.7;
+    opacity: 1;
     line-height: 1;
   }
   #completed {

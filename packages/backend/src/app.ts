@@ -32,6 +32,7 @@ import { counterRoutes } from "./modules/counters/routes.js";
 import { lootboxRoutes } from "./modules/lootbox/routes.js";
 import { viewerRoutes } from "./modules/viewer/routes.js";
 import { stopwatchRoutes } from "./modules/stopwatch/routes.js";
+import { countdownRoutes, countdownOverlayRoutes } from "./modules/countdown/routes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -65,6 +66,7 @@ export async function buildApp() {
 
   // Public routes (no JWT)
   await app.register(overlayRoutes);
+  await app.register(countdownOverlayRoutes);
   await app.register(eventsubWebhookRoute);
   await app.register(publicRequestRoutes);
 
@@ -89,6 +91,7 @@ export async function buildApp() {
   await app.register(viewerRoutes, { prefix: "/api/viewer" });
   await app.register(stopwatchRoutes, { prefix: "/api/channels" });
   await app.register(pollPredictionRoutes, { prefix: "/api/channels" });
+  await app.register(countdownRoutes, { prefix: "/api/channels" });
 
   // Health check (used by Docker healthcheck)
   app.get("/api/health", async () => {

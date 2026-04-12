@@ -17,6 +17,7 @@ import {
   Hash,
   Package,
   Timer,
+  Hourglass,
   Bot,
   Layers,
   ChevronDown,
@@ -42,6 +43,7 @@ const navItems = [
   { to: "/overlay", icon: Monitor, label: "Overlay" },
   { to: "/sandbox", icon: Layers, label: "Sandbox" },
   { to: "/stopwatch", icon: Timer, label: "Stopwatch" },
+  { to: "/countdown", icon: Hourglass, label: "Countdown" },
   { to: "/discord", icon: Bot, label: "Discord" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];

@@ -33,6 +33,7 @@ import { lootboxRoutes } from "./modules/lootbox/routes.js";
 import { viewerRoutes } from "./modules/viewer/routes.js";
 import { stopwatchRoutes } from "./modules/stopwatch/routes.js";
 import { countdownRoutes, countdownOverlayRoutes } from "./modules/countdown/routes.js";
+import { publicTimerRoutes } from "./modules/countdown/public-timer.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -67,6 +68,7 @@ export async function buildApp() {
   // Public routes (no JWT)
   await app.register(overlayRoutes);
   await app.register(countdownOverlayRoutes);
+  await app.register(publicTimerRoutes);
   await app.register(eventsubWebhookRoute);
   await app.register(publicRequestRoutes);
 

@@ -58,6 +58,7 @@ function generatePublicTimerHtml(opts: {
   bg: string;
   size: number;
   font: string;
+  fontUrl?: string;
   labels: boolean;
   sep: string;
   completedText: string;
@@ -71,6 +72,7 @@ function generatePublicTimerHtml(opts: {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title ? escapeHtml(title) + " — " : ""}Countdown Timer</title>
+${opts.fontUrl ? `<link rel="stylesheet" href="${escapeHtml(opts.fontUrl)}">` : ""}
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -237,6 +239,16 @@ export async function publicTimerRoutes(app: FastifyInstance) {
         );
       }
 
+      // Resolve font URL — supports explicit fonturl param, or auto-tries CDNFonts/Google Fonts
+      const fontName = q.font ?? "Segoe UI";
+      let fontUrl = q.fonturl ?? undefined;
+      if (!fontUrl && fontName !== "Segoe UI" && fontName !== "Arial" && fontName !== "monospace") {
+        // Try CDNFonts first (works for Valken, etc.), then Google Fonts
+        const encoded = encodeURIComponent(fontName);
+        const cdnName = fontName.toLowerCase().replace(/\s+/g, "-");
+        fontUrl = `https://fonts.cdnfonts.com/css/${cdnName}`;
+      }
+
       const html = generatePublicTimerHtml({
         mode: duration ? "duration" : "target",
         durationSeconds: duration ?? undefined,
@@ -244,7 +256,8 @@ export async function publicTimerRoutes(app: FastifyInstance) {
         color: (q.color ?? "ffffff").replace(/^#/, ""),
         bg: (q.bg ?? "transparent").replace(/^#/, ""),
         size: Math.min(300, Math.max(16, parseInt(q.size ?? "72") || 72)),
-        font: q.font ?? "Segoe UI",
+        font: fontName,
+        fontUrl,
         labels: q.labels !== "0",
         sep: q.sep ?? ":",
         completedText: q.text ?? "TIME'S UP!",

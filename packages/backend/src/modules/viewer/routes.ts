@@ -1966,6 +1966,43 @@ export async function viewerRoutes(app: FastifyInstance) {
     return { success: true };
   });
 
+  // ── Casino Feature Settings ──
+
+  app.get("/:channelName/casino/settings", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const { getCasinoSettings } = await import("../casino/settings.js");
+    const settings = await getCasinoSettings(channel.id);
+    return { success: true, data: settings };
+  });
+
+  app.patch("/:channelName/casino/settings", { preHandler: [jwtAuth] }, async (request: any, reply) => {
+    const user = request.user!;
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const dbUser = await prisma.user.findUnique({ where: { id: user.sub } });
+    if (!dbUser?.isAdmin && channel.ownerId !== user.sub) {
+      return reply.status(403).send({ success: false, error: "Nicht berechtigt!" });
+    }
+    const { updateCasinoSettings } = await import("../casino/settings.js");
+    const settings = await updateCasinoSettings(channel.id, request.body);
+    return { success: true, data: settings };
+  });
+
+  // Public endpoint: viewers need to check which features are available
+  app.get("/:channelName/casino/features", async (request: any, reply) => {
+    const channel = await viewerService.resolveChannel(request.params.channelName);
+    if (!channel) return reply.status(404).send({ success: false, error: "Channel not found" });
+    const { getCasinoSettings } = await import("../casino/settings.js");
+    const settings = await getCasinoSettings(channel.id);
+    return { success: true, data: settings };
+  });
+
   // ── Story Mode ──
   app.get("/:channelName/casino/story", async (request: any, reply) => {
     const user = getUser(request);

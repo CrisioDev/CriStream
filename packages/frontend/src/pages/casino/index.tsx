@@ -298,6 +298,14 @@ export function CasinoPage() {
   const [ambientOn, setAmbientOn] = useState(false);
   const { toasts, addToast, removeToast } = useToasts();
 
+  // Feature settings (what's enabled/disabled)
+  const [featureSettings, setFeatureSettings] = useState<Record<string, boolean>>({
+    casino: true, gambling: true, minigames: true, casinoRun: true, pets: true,
+    story: true, social: true, progression: true, dailyChallenge: true,
+    jackpot: true, luckyHour: true, music: true,
+  });
+  const [showSettings, setShowSettings] = useState(false);
+
   // Animated points counter
   const [displayPoints, setDisplayPoints] = useState<number>(0);
   const displayPointsRef = useRef(0);
@@ -581,6 +589,7 @@ export function CasinoPage() {
       if (data.jackpot) setJackpot(data.jackpot);
       if (data.combo) setCombo(data.combo);
       if (data.luckyHour) setLuckyHour(data.luckyHour);
+      if (data.featureSettings) setFeatureSettings(data.featureSettings);
       fetchTierSlots();
       // Welcome back toast
       if (data.loginStreak?.streak > 1) {
@@ -954,7 +963,7 @@ export function CasinoPage() {
       <div ref={confettiRef} className="fixed inset-0 pointer-events-none overflow-hidden z-[60]" />
 
       {/* Adaptive Music Toggle */}
-      <button
+      {featureSettings.music && <button
         onClick={() => setAmbientOn(a => !a)}
         className={`fixed ${(autoFlip as any)?.active ? "bottom-40" : "bottom-16"} left-4 z-[60] w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110`}
         style={{
@@ -966,7 +975,7 @@ export function CasinoPage() {
         title={ambientOn ? "Adaptive Musik aus" : "Adaptive Musik an"}
       >
         {ambientOn ? "🎵" : "🎶"}
-      </button>
+      </button>}
 
       <CasinoOverlays
         sirenActive={sirenActive} petWalkAnim={petWalkAnim} pet={pet}
@@ -992,6 +1001,16 @@ export function CasinoPage() {
         loginStreak={loginStreak} streak={streak} maxStreak={maxStreak}
         totalWon={totalWon} totalLost={totalLost} message={message}
       />
+
+      {/* Settings button — visible to channel owner */}
+      {user && (
+        <button onClick={() => setShowSettings(true)}
+          className="fixed top-20 right-4 z-20 w-9 h-9 rounded-full flex items-center justify-center text-sm transition-all hover:scale-110"
+          style={{ background: "rgba(20,20,40,0.85)", border: "1px solid rgba(168,85,247,0.3)", color: "#9ca3af" }}
+          title="Casino Features verwalten">
+          ⚙️
+        </button>
+      )}
 
       {/* GOTY: Lucky Hour Banner */}
       {luckyHour?.active && (
@@ -1053,7 +1072,64 @@ export function CasinoPage() {
 
       <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {activeTab === "play" && (
+      {/* ── Feature Settings Panel (channel owner only) ── */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)" }}>
+          <div className="rounded-2xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto" style={{ background: "linear-gradient(180deg, #1a1a2e, #0a0a14)", border: "2px solid rgba(168,85,247,0.4)" }}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-black text-lg text-purple-300">Casino Features</h3>
+              <button onClick={() => setShowSettings(false)} className="text-gray-500 hover:text-white text-xl">✕</button>
+            </div>
+            <div className="space-y-2">
+              {([
+                ["casino", "Casino (Master)", "Deaktiviert die gesamte Casino-Seite"],
+                ["gambling", "Gambling (Flip/Slots/Scratch)", "Hauptspiele im Play-Tab"],
+                ["minigames", "Minigames", "Snake, Connect4, Memory, Sudoku, etc."],
+                ["casinoRun", "Casino Run", "Endlos-Roguelike-Modus"],
+                ["pets", "Pet-System", "Pets, Breeding, Battles"],
+                ["story", "Story Mode", "Visual Novel Story"],
+                ["social", "Social (Gilden/Heist)", "Gilden, Heist, Guild War"],
+                ["progression", "Progression", "Quests, Achievements, Battle Pass"],
+                ["dailyChallenge", "Daily Challenge", "Tägliche Community-Challenge"],
+                ["jackpot", "Jackpot", "Progressiver Community-Jackpot"],
+                ["luckyHour", "Lucky Hour", "Zufällige Bonus-Events"],
+                ["music", "Musik-Button", "Adaptive Musik Toggle sichtbar"],
+              ] as [string, string, string][]).map(([key, label, desc]) => (
+                <div key={key} className="flex items-center justify-between rounded-xl px-4 py-3" style={{
+                  background: featureSettings[key] ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                  border: `1px solid ${featureSettings[key] ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+                }}>
+                  <div className="min-w-0 mr-3">
+                    <div className="text-sm font-bold text-white">{label}</div>
+                    <div className="text-[10px] text-gray-500">{desc}</div>
+                  </div>
+                  <button onClick={async () => {
+                    const newVal = !featureSettings[key];
+                    setFeatureSettings(prev => ({ ...prev, [key]: newVal }));
+                    try {
+                      await api.patch(`/viewer/${channelName}/casino/settings`, { [key]: newVal });
+                    } catch {}
+                  }} className={`w-12 h-6 rounded-full relative transition-all flex-shrink-0 ${featureSettings[key] ? "bg-green-500" : "bg-gray-700"}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${featureSettings[key] ? "left-6" : "left-0.5"}`} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-600 mt-3 text-center">Änderungen wirken sofort für alle Viewer.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Master toggle: if casino is off, show disabled message */}
+      {!featureSettings.casino ? (
+        <div className="max-w-lg mx-auto px-6 py-20 text-center">
+          <div className="text-6xl mb-4">🚫</div>
+          <h2 className="text-2xl font-black text-gray-400 mb-2">Casino deaktiviert</h2>
+          <p className="text-gray-600">Das Casino ist für diesen Channel momentan ausgeschaltet.</p>
+        </div>
+      ) : <>
+
+      {activeTab === "play" && featureSettings.gambling && (
         <PlayTab
           user={user} points={points} freePlays={freePlays}
           slotReels={slotReels} slotSpinning={slotSpinning} slotResult={slotResult}
@@ -1070,11 +1146,18 @@ export function CasinoPage() {
         />
       )}
 
-      {activeTab === "minigames" && (
-        <MinigamesTab user={user} channelName={channelName} fetchPoints={fetchPoints} />
+      {activeTab === "play" && !featureSettings.gambling && (
+        <div className="text-center py-12 text-gray-600">Gambling ist für diesen Channel deaktiviert.</div>
       )}
 
-      {activeTab === "pets" && (
+      {activeTab === "minigames" && featureSettings.minigames && (
+        <MinigamesTab user={user} channelName={channelName} fetchPoints={fetchPoints} />
+      )}
+      {activeTab === "minigames" && !featureSettings.minigames && (
+        <div className="text-center py-12 text-gray-600">Minigames sind für diesen Channel deaktiviert.</div>
+      )}
+
+      {activeTab === "pets" && featureSettings.pets && (
         <PetsTab
           user={user} channelName={channelName} pet={pet} setPet={setPet}
           shop={shop} setShop={setShop} showShop={showShop} setShowShop={setShowShop}
@@ -1092,7 +1175,11 @@ export function CasinoPage() {
         />
       )}
 
-      {activeTab === "progress" && (
+      {activeTab === "pets" && !featureSettings.pets && (
+        <div className="text-center py-12 text-gray-600">Das Pet-System ist für diesen Channel deaktiviert.</div>
+      )}
+
+      {activeTab === "progress" && featureSettings.progression && (
         <ProgressTab
           user={user} channelName={channelName}
           quests={quests} achievements={achievements} achievementStats={achievementStats}
@@ -1114,7 +1201,11 @@ export function CasinoPage() {
         />
       )}
 
-      {activeTab === "social" && (
+      {activeTab === "progress" && !featureSettings.progression && (
+        <div className="text-center py-12 text-gray-600">Progression ist für diesen Channel deaktiviert.</div>
+      )}
+
+      {activeTab === "social" && featureSettings.social && (
         <SocialTab
           user={user} channelName={channelName}
           guilds={guilds} myGuild={myGuild}
@@ -1127,6 +1218,9 @@ export function CasinoPage() {
           createHeist={createHeist} joinHeist={joinHeist}
           playHeistRound={playHeistRound} heistBetray={heistBetray} heistFinish={heistFinish}
         />
+      )}
+      {activeTab === "social" && !featureSettings.social && (
+        <div className="text-center py-12 text-gray-600">Social Features sind für diesen Channel deaktiviert.</div>
       )}
 
       {/* ── Double or Nothing Overlay ── */}
@@ -1153,9 +1247,14 @@ export function CasinoPage() {
         </div>
       )}
 
-      {activeTab === "story" && (
+      {activeTab === "story" && featureSettings.story && (
         <StoryTab user={user} channelName={channelName} />
       )}
+      {activeTab === "story" && !featureSettings.story && (
+        <div className="text-center py-12 text-gray-600">Story Mode ist für diesen Channel deaktiviert.</div>
+      )}
+
+      </> /* end of featureSettings.casino fragment */}
 
       {/* ── Session Stats Bar ── */}
       {user && (totalWon > 0 || totalLost > 0) && (

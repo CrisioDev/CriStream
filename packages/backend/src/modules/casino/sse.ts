@@ -129,6 +129,7 @@ export async function getInitialState(channelId: string, userId: string): Promis
   const { getJackpot } = await import("./jackpot.js");
   const { getCombo } = await import("./combo.js");
   const { getLuckyHour } = await import("./lucky-hour.js");
+  const { getCasinoSettings } = await import("./settings.js");
 
   const [
     feed, leaderboard, boss, heist, freePlays, tickets, autoflip,
@@ -136,7 +137,7 @@ export async function getInitialState(channelId: string, userId: string): Promis
     seasonLb, tournament, tournamentLb, guilds, myGuild, bonuses,
     loginStreak, battleData, breed, points,
     dailyChallenge, casinoRun, runLeaderboard, weeklyRanking, guildWarData,
-    jackpotData, comboData, luckyHourData,
+    jackpotData, comboData, luckyHourData, casinoSettingsData,
   ] = await Promise.all([
     getFeed(channelId).catch(() => []),
     getLeaderboard(channelId).catch(() => []),
@@ -200,6 +201,7 @@ export async function getInitialState(channelId: string, userId: string): Promis
     getJackpot(channelId).catch(() => ({ amount: 100, lastWinner: null })),
     getCombo(channelId, userId).catch(() => null),
     getLuckyHour(channelId).catch(() => null),
+    getCasinoSettings(channelId).catch(() => null),
   ]);
 
   // Retroactive achievement check — silently unlock any achievements the user qualifies for
@@ -233,6 +235,7 @@ export async function getInitialState(channelId: string, userId: string): Promis
     jackpot: jackpotData,
     combo: comboData,
     luckyHour: luckyHourData,
+    featureSettings: casinoSettingsData,
   };
 }
 

@@ -1,7 +1,9 @@
 # ── Build Stage ──
 FROM node:20-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Pin pnpm to a Node 20-compatible release. pnpm@latest now requires
+# Node >=22.13 and silently breaks builds on this image.
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 WORKDIR /app
 
 COPY pnpm-workspace.yaml pnpm-lock.yaml* package.json tsconfig.base.json ./

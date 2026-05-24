@@ -4,6 +4,7 @@ import { handleMessage } from "./message-handler.js";
 import { prisma } from "../lib/prisma.js";
 import { logger } from "../lib/logger.js";
 import { emitEvent } from "../lib/socket.js";
+import { config } from "../config/index.js";
 
 // Import handlers to register them (priority order: spam=5, moderation=10, soundalerts=43, songrequests=45, commands=50, points=90, chatlog=99)
 import "../modules/moderation/spam-handler.js";
@@ -45,15 +46,30 @@ export function getTwitchClient(): TwitchClientInfo {
 }
 
 export async function initTwitchClient(): Promise<void> {
-  // Find first user with tokens (bot account)
-  const botUser = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
+  // Bot account selection:
+  //   - If TWITCH_BOT_USERNAME is set, look up that user by displayName (case-insensitive).
+  //     Refuse to start if not found — silently falling back to a different account would
+  //     reintroduce the "wrong bot" bug.
+  //   - Otherwise, fall back to the oldest user in the DB.
+  const botUser = config.twitchBotUsername
+    ? await prisma.user.findFirst({
+        where: { displayName: { equals: config.twitchBotUsername, mode: "insensitive" } },
+      })
+    : await prisma.user.findFirst({ orderBy: { createdAt: "asc" } });
 
   if (!botUser) {
-    logger.warn("No bot user found - Twitch client not started");
+    if (config.twitchBotUsername) {
+      logger.error(
+        { configured: config.twitchBotUsername },
+        "TWITCH_BOT_USERNAME is set but no matching user is logged in - Twitch client not started"
+      );
+    } else {
+      logger.warn("No bot user found - Twitch client not started");
+    }
     return;
   }
+
+  logger.info({ botUser: botUser.displayName, twitchId: botUser.twitchId }, "Starting Twitch chat as bot");
 
   await addUserToAuthProvider(botUser.twitchId);
 

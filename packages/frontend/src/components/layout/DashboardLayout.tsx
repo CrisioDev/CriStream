@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { useAuthStore } from "@/stores/authStore";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const ROUTE_TITLES: Record<string, string> = {
   "/": "Dashboard",
@@ -43,7 +44,12 @@ export function DashboardLayout() {
           </span>
         </div>
         <div className="p-6">
-          <Outlet />
+          {/* Keyed on pathname so a broken page's boundary resets when the
+              user clicks another sidebar item — instead of staying stuck on
+              the fallback. */}
+          <ErrorBoundary key={location.pathname} scope={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
     </div>

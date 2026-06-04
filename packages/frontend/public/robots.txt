@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+Allow: /casino
+Allow: /viewer/
+
+# Dashboard, auth endpoints, and uploads are not for crawlers
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /commands
+Disallow: /timers
+Disallow: /moderation
+Disallow: /chatlogs
+Disallow: /points
+Disallow: /songrequests
+Disallow: /alerts
+Disallow: /channelpoints
+Disallow: /counters
+Disallow: /lootbox
+Disallow: /requests
+Disallow: /overlay
+Disallow: /sandbox
+Disallow: /stopwatch
+Disallow: /countdown
+Disallow: /discord
+Disallow: /settings
+Disallow: /admin/
+
+Sitemap: https://streambotcrisio.duckdns.org/sitemap.xml

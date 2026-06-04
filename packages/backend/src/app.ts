@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
-import { join, dirname } from "node:path";
+import { join, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { config } from "./config/index.js";
@@ -177,10 +177,25 @@ export async function buildApp() {
       root: frontendDist,
       prefix: "/",
       wildcard: false,
+      setHeaders: (res, filePath) => {
+        // Vite emits content-hashed filenames into /assets/* — those are safe
+        // to cache forever. index.html must always revalidate so a new deploy
+        // reaches users on the next page load. Everything else gets a short
+        // cache so static assets like icons aren't re-fetched on every visit.
+        if (filePath.includes(`${sep}assets${sep}`) || filePath.includes("/assets/")) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        } else if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        } else {
+          res.setHeader("Cache-Control", "public, max-age=86400");
+        }
+      },
     });
   }
 
-  // Serve uploaded files (second registration, no decorate)
+  // Serve uploaded files (second registration, no decorate). Upload filenames
+  // are UUIDs from uploadService so the URL never changes for a given file —
+  // immutable is safe and removes a roundtrip on every alert/CPR replay.
   const uploadsDir = config.uploadsDir.startsWith("/")
     ? config.uploadsDir
     : join(process.cwd(), config.uploadsDir);
@@ -188,6 +203,9 @@ export async function buildApp() {
     root: uploadsDir,
     prefix: "/uploads/",
     decorateReply: false,
+    setHeaders: (res) => {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    },
   });
 
   // SPA fallback
@@ -203,6 +221,8 @@ export async function buildApp() {
       ) {
         return reply.status(404).send({ success: false, error: "Not found" });
       }
+      // index.html drives the SPA — always revalidate.
+      reply.header("Cache-Control", "no-cache");
       return reply.sendFile("index.html");
     });
   }

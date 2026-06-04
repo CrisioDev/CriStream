@@ -66,10 +66,6 @@ export function ChannelPointsPage() {
 
   const deleteReward = async (id: string) => {
     if (!channel) return;
-    const reward = rewards.find((r) => r.id === id);
-    if (reward?.isSynced) {
-      if (!confirm("Belohnung ist auf Twitch aktiv. Lokale Konfiguration wirklich löschen?\n(Die Twitch-Belohnung bleibt bestehen)")) return;
-    }
     await api.delete(`/channels/${channel.id}/channelpoints/${id}`);
     setRewards((prev) => prev.filter((r) => r.id !== id));
   };
@@ -161,7 +157,7 @@ export function ChannelPointsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Channel Points</h1>
+          <h1 className="text-2xl font-semibold">Channel Points</h1>
           <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
             {syncedCount} auf Twitch
           </span>
@@ -230,21 +226,39 @@ export function ChannelPointsPage() {
                 </div>
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   {reward.isSynced ? (
-                    <Button size="sm" variant="outline" onClick={() => pullFromTwitch(reward.id)} title="Von Twitch entfernen">
-                      <Download className="h-3 w-3 mr-1" /> Pull
+                    <Button size="sm" variant="outline" onClick={() => pullFromTwitch(reward.id)} title="Twitch-Verknüpfung lösen, lokal behalten">
+                      <Download className="h-3 w-3 mr-1" /> Von Twitch lösen
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => pushToTwitch(reward.id)} title="Zu Twitch senden" disabled={twitchCount >= 50}>
-                      <Upload className="h-3 w-3 mr-1" /> Push
+                    <Button size="sm" variant="outline" onClick={() => pushToTwitch(reward.id)} title="Belohnung auf Twitch veröffentlichen" disabled={twitchCount >= 50}>
+                      <Upload className="h-3 w-3 mr-1" /> Auf Twitch
                     </Button>
                   )}
                   {actionCount > 0 && (
-                    <Button size="sm" variant="outline" onClick={() => testReward(reward.id)}><Play className="h-3 w-3 mr-1" /> Test</Button>
+                    <Button size="sm" variant="outline" onClick={() => testReward(reward.id)} aria-label={`Belohnung ${reward.rewardTitle} testen`}><Play className="h-3 w-3 mr-1" /> Test</Button>
                   )}
-                  <Switch checked={reward.enabled} onCheckedChange={(checked) => updateReward(reward.id, { enabled: checked })} />
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteReward(reward.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  <Switch
+                    checked={reward.enabled}
+                    onCheckedChange={(checked) => updateReward(reward.id, { enabled: checked })}
+                    aria-label={`Belohnung ${reward.rewardTitle} ${reward.enabled ? "deaktivieren" : "aktivieren"}`}
+                  />
+                  {/* Spatial + visual separator before the destructive delete. */}
+                  <div className="ml-2 border-l pl-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive"
+                      onClick={() => {
+                        const msg = reward.isSynced
+                          ? `Belohnung "${reward.rewardTitle}" lokal löschen?\n(Die Belohnung bleibt auf Twitch bestehen — Lösung wäre vorher "Von Twitch lösen".)`
+                          : `Belohnung "${reward.rewardTitle}" wirklich löschen?`;
+                        if (confirm(msg)) deleteReward(reward.id);
+                      }}
+                      aria-label={`Belohnung ${reward.rewardTitle} löschen`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
 

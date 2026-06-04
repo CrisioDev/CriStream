@@ -22,13 +22,29 @@ import type {
   OverlayLayoutConfig,
 } from "@cristream/shared";
 
+/** Variables vary by alert type — show only the ones the backend actually
+ * substitutes for the chosen event. Prevents users from typing
+ * `{amount}` into a `follow` template and silently getting nothing. */
+function alertVarHint(alertType: string): string {
+  const map: Record<string, string> = {
+    follow: "Variablen: {user}",
+    sub: "Variablen: {user}",
+    giftsub: "Variablen: {user}, {amount}",
+    raid: "Variablen: {user}, {amount}",
+    hypetrain: "Variablen: {amount}",
+    sound: "Variablen: {user}, {sound}",
+    command: "Variablen: {user}, {reward}, {input}",
+  };
+  return map[alertType] ?? "Variablen: {user}, {amount}, {reward}";
+}
+
 export function AlertsPage() {
   const { activeChannel: channel } = useAuthStore();
   const [activeTab, setActiveTab] = useState("settings");
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Alerts</h1>
+      <h1 className="text-2xl font-semibold">Alerts</h1>
       <Tabs
         tabs={[
           { key: "settings", label: "Alert Settings" },
@@ -140,6 +156,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
               <Switch
                 checked={alert.enabled}
                 onCheckedChange={(checked) => updateAlert(alert.alertType, { enabled: checked })}
+                aria-label={`${alert.alertType}-Alert ${alert.enabled ? "deaktivieren" : "aktivieren"}`}
               />
             </div>
           </CardHeader>
@@ -152,7 +169,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                 placeholder="{user} just followed!"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Variables: {"{user}"}, {"{amount}"}, {"{reward}"}
+                {alertVarHint(alert.alertType)}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">

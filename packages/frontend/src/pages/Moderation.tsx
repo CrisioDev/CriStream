@@ -117,7 +117,7 @@ export function ModerationPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Moderation</h1>
+      <h1 className="text-2xl font-semibold">Moderation</h1>
 
       <div className="grid gap-4 md:grid-cols-2">
         {filters.map((filter) => (
@@ -129,9 +129,14 @@ export function ModerationPage() {
                 onCheckedChange={(checked) =>
                   update({ [`${filter.key}Enabled`]: checked } as any)
                 }
+                aria-label={`${filter.title} ${filter.enabled ? "deaktivieren" : "aktivieren"}`}
               />
             </CardHeader>
-            <CardContent className="space-y-3">
+            {/* When the filter is off the fields are dimmed and disabled —
+                stops users from tuning a filter that isn't running. */}
+            <CardContent
+              className={`space-y-3 transition-opacity ${filter.enabled ? "" : "opacity-50"}`}
+            >
               {filter.fields.map((field) => (
                 <div key={field.key} className="flex items-center gap-3">
                   <Label className="w-32 text-sm">{field.label}</Label>
@@ -139,6 +144,7 @@ export function ModerationPage() {
                     type="number"
                     value={field.value}
                     className="w-24"
+                    disabled={!filter.enabled}
                     onChange={(e) =>
                       update({ [field.key]: parseInt(e.target.value) } as any)
                     }
@@ -156,15 +162,17 @@ export function ModerationPage() {
             <Switch
               checked={settings.spamEnabled}
               onCheckedChange={(checked) => update({ spamEnabled: checked })}
+              aria-label={`Spam-Filter ${settings.spamEnabled ? "deaktivieren" : "aktivieren"}`}
             />
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className={`space-y-3 transition-opacity ${settings.spamEnabled ? "" : "opacity-50"}`}>
             <div className="flex items-center gap-3">
               <Label className="w-32 text-sm">Max Repeats</Label>
               <Input
                 type="number"
                 value={settings.spamMaxRepeat}
                 className="w-24"
+                disabled={!settings.spamEnabled}
                 onChange={(e) => update({ spamMaxRepeat: parseInt(e.target.value) })}
               />
             </div>
@@ -174,6 +182,7 @@ export function ModerationPage() {
                 type="number"
                 value={settings.spamWindowSeconds}
                 className="w-24"
+                disabled={!settings.spamEnabled}
                 onChange={(e) => update({ spamWindowSeconds: parseInt(e.target.value) })}
               />
             </div>
@@ -183,6 +192,7 @@ export function ModerationPage() {
                 type="number"
                 value={settings.spamTimeoutDuration}
                 className="w-24"
+                disabled={!settings.spamEnabled}
                 onChange={(e) => update({ spamTimeoutDuration: parseInt(e.target.value) })}
               />
             </div>
@@ -196,15 +206,17 @@ export function ModerationPage() {
             <Switch
               checked={settings.bannedWordsEnabled}
               onCheckedChange={(checked) => update({ bannedWordsEnabled: checked })}
+              aria-label={`Banned-Words-Filter ${settings.bannedWordsEnabled ? "deaktivieren" : "aktivieren"}`}
             />
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className={`space-y-3 transition-opacity ${settings.bannedWordsEnabled ? "" : "opacity-50"}`}>
             <div className="flex items-center gap-3">
               <Label className="w-32 text-sm">Timeout (sec)</Label>
               <Input
                 type="number"
                 value={settings.bannedWordsTimeoutDuration}
                 className="w-24"
+                disabled={!settings.bannedWordsEnabled}
                 onChange={(e) => update({ bannedWordsTimeoutDuration: parseInt(e.target.value) })}
               />
             </div>

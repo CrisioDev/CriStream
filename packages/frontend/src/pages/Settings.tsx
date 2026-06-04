@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
@@ -17,7 +18,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-semibold">Settings</h1>
       <Tabs
         tabs={[
           { key: "channel", label: "Channel" },
@@ -38,20 +39,36 @@ export function SettingsPage() {
 }
 
 function ChannelSettingsTab() {
-  const { activeChannel: channel } = useAuthStore();
+  const { activeChannel: channel, refreshChannels } = useAuthStore();
   const [prefix, setPrefix] = useState(channel?.commandPrefix ?? "!");
-  const [saved, setSaved] = useState(false);
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     if (channel) setPrefix(channel.commandPrefix);
   }, [channel]);
 
+  const isDirty = !!channel && prefix !== channel.commandPrefix;
+
   const handleSave = async () => {
-    if (!channel) return;
-    await api.patch(`/channels/${channel.id}`, { commandPrefix: prefix });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (!channel || !isDirty) return;
+    setState("saving");
+    try {
+      const res = await api.patch(`/channels/${channel.id}`, { commandPrefix: prefix });
+      if (res.error) throw new Error(res.error);
+      setState("saved");
+      await refreshChannels();
+      setTimeout(() => setState("idle"), 2000);
+    } catch {
+      setState("error");
+      setTimeout(() => setState("idle"), 3000);
+    }
   };
+
+  const label =
+    state === "saving" ? "Speichere..." :
+    state === "saved"  ? "Gespeichert ✓" :
+    state === "error"  ? "Fehler — erneut versuchen" :
+    "Speichern";
 
   return (
     <Card>
@@ -68,8 +85,12 @@ function ChannelSettingsTab() {
               className="w-24"
               maxLength={3}
             />
-            <Button onClick={handleSave}>
-              {saved ? "Saved!" : "Save"}
+            <Button
+              onClick={handleSave}
+              disabled={!isDirty || state === "saving"}
+              className={state === "error" ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              {label}
             </Button>
           </div>
         </div>
@@ -245,11 +266,12 @@ function CasinoSettingsTab({ channelId, channelName }: { channelId: string; chan
               <div className="text-sm font-medium">{f.label}</div>
               <div className="text-xs text-muted-foreground">{f.desc}</div>
             </div>
-            <button onClick={() => toggle(f.key)}
-              className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ${settings[f.key] !== false ? "bg-green-500" : "bg-zinc-700"}`}
-              disabled={saving === f.key}>
-              <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${settings[f.key] !== false ? "left-[22px]" : "left-0.5"}`} />
-            </button>
+            <Switch
+              checked={settings[f.key] !== false}
+              onCheckedChange={() => toggle(f.key)}
+              disabled={saving === f.key}
+              aria-label={`${f.label} ${settings[f.key] !== false ? "deaktivieren" : "aktivieren"}`}
+            />
           </div>
         ))}
       </CardContent>

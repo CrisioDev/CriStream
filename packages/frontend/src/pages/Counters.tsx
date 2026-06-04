@@ -55,7 +55,7 @@ export function CountersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Counters</h1>
+      <h1 className="text-2xl font-semibold">Counters</h1>
 
       <Card>
         <CardHeader>

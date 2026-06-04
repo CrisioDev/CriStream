@@ -59,7 +59,7 @@ export function StopwatchPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Stopwatch</h1>
+      <h1 className="text-2xl font-semibold">Stopwatch</h1>
 
       <Card>
         <CardHeader><CardTitle>Neue Stoppuhr</CardTitle></CardHeader>

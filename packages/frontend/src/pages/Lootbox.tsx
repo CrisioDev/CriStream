@@ -44,7 +44,7 @@ export function LootboxPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Lootbox</h1>
+      <h1 className="text-2xl font-semibold">Lootbox</h1>
       <Tabs
         tabs={[
           { key: "settings", label: "Settings" },

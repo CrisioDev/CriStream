@@ -45,7 +45,7 @@ export function OverlayPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">OBS Overlay</h1>
+      <h1 className="text-2xl font-semibold">OBS Overlay</h1>
 
       <Card>
         <CardHeader>

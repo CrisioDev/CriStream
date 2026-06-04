@@ -6,14 +6,19 @@ interface SwitchProps {
   onCheckedChange: (checked: boolean) => void;
   className?: string;
   disabled?: boolean;
+  /** Required for screen-reader users — describes WHAT is being toggled. */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
 }
 
 const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  ({ checked, onCheckedChange, className, disabled }, ref) => (
+  ({ checked, onCheckedChange, className, disabled, ...ariaProps }, ref) => (
     <button
       ref={ref}
       role="switch"
       aria-checked={checked}
+      aria-label={ariaProps["aria-label"]}
+      aria-labelledby={ariaProps["aria-labelledby"]}
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(

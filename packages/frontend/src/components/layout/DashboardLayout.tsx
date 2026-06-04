@@ -1,9 +1,35 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { useAuthStore } from "@/stores/authStore";
+import { usePageTitle } from "@/hooks/usePageTitle";
+
+const ROUTE_TITLES: Record<string, string> = {
+  "/": "Dashboard",
+  "/commands": "Commands",
+  "/timers": "Timers",
+  "/moderation": "Moderation",
+  "/chatlogs": "Chat Logs",
+  "/points": "Points",
+  "/songrequests": "Song Requests",
+  "/alerts": "Alerts",
+  "/channelpoints": "Channel Points",
+  "/counters": "Counters",
+  "/lootbox": "Lootbox",
+  "/requests": "Requests",
+  "/overlay": "Overlay",
+  "/sandbox": "Sandbox",
+  "/stopwatch": "Stopwatch",
+  "/countdown": "Countdown",
+  "/discord": "Discord",
+  "/settings": "Settings",
+  "/admin/casino": "Casino Admin",
+};
 
 export function DashboardLayout() {
   const activeChannel = useAuthStore((s) => s.activeChannel);
+  const location = useLocation();
+  usePageTitle(ROUTE_TITLES[location.pathname] ?? "Dashboard");
+
   return (
     <div className="flex h-screen dark bg-background text-foreground">
       <Sidebar />

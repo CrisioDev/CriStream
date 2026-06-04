@@ -253,7 +253,7 @@ export function CommandsPage() {
                       at a glance — controls stay full-opacity and clickable. */}
                   <div className={`flex-1 ${cmd.enabled ? "" : "opacity-50"}`}>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <code className="font-mono text-primary font-semibold">!{cmd.trigger}</code>
+                      <code className="font-mono text-violet-300 font-semibold">!{cmd.trigger}</code>
                       <Badge variant="secondary">{cmd.userLevel}</Badge>
                       <span className="text-xs text-muted-foreground">{cmd.useCount} uses</span>
                       {cmd.perUserCooldown && (

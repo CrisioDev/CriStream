@@ -235,7 +235,7 @@ export function ChannelPointsPage() {
                     <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded flex items-center gap-1"><CloudOff className="h-3 w-3" /> Lokal</span>
                   )}
                   {actionCount > 0 && (
-                    <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">{actionCount} Action{actionCount !== 1 ? "s" : ""}</span>
+                    <span className="text-xs bg-violet-500/20 text-violet-300 px-2 py-0.5 rounded">{actionCount} Action{actionCount !== 1 ? "s" : ""}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>

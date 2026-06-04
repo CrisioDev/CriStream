@@ -221,7 +221,7 @@ export function SongRequestsPage() {
                       href={song.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
+                      className="text-xs text-violet-300 hover:underline"
                     >
                       {song.url}
                     </a>

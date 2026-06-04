@@ -124,7 +124,7 @@ export function ChatLogsPage() {
                   <Badge variant="outline" className={`w-16 shrink-0 text-center text-xs ${log.platform === "discord" ? "text-indigo-400 border-indigo-400/50" : "text-purple-400 border-purple-400/50"}`}>
                     {log.platform}
                   </Badge>
-                  <span className="font-medium text-primary w-32 shrink-0 truncate">
+                  <span className="font-medium text-violet-300 w-32 shrink-0 truncate">
                     {log.displayName}
                   </span>
                   <span className="text-foreground break-all">{log.message}</span>

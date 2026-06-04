@@ -437,7 +437,7 @@ function SoundAlertsTab({ channelId }: { channelId: string }) {
             <CardContent className="space-y-3 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <code className="font-mono text-primary font-semibold">!sound {sound.name}</code>
+                  <code className="font-mono text-violet-300 font-semibold">!sound {sound.name}</code>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="ghost" onClick={() => new Audio(sound.fileUrl).play()} aria-label={`Sound !sound ${sound.name} abspielen`}>

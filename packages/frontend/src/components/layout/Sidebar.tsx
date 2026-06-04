@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Terminal,
@@ -21,31 +21,53 @@ import {
   Bot,
   Layers,
   ChevronDown,
+  ChevronRight,
   Plus,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/utils";
 import { api } from "@/api/client";
 
-const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/commands", icon: Terminal, label: "Commands" },
-  { to: "/timers", icon: Clock, label: "Timers" },
-  { to: "/moderation", icon: Shield, label: "Moderation" },
-  { to: "/chatlogs", icon: MessageSquare, label: "Chat Logs" },
-  { to: "/points", icon: Trophy, label: "Points" },
-  { to: "/songrequests", icon: Music, label: "Song Requests" },
-  { to: "/alerts", icon: Bell, label: "Alerts" },
-  { to: "/channelpoints", icon: Gift, label: "Channel Points" },
-  { to: "/counters", icon: Hash, label: "Counters" },
-  { to: "/lootbox", icon: Package, label: "Lootbox" },
-  { to: "/requests", icon: ListTodo, label: "Requests" },
-  { to: "/overlay", icon: Monitor, label: "Overlay" },
-  { to: "/sandbox", icon: Layers, label: "Sandbox" },
-  { to: "/stopwatch", icon: Timer, label: "Stopwatch" },
-  { to: "/countdown", icon: Hourglass, label: "Countdown" },
-  { to: "/discord", icon: Bot, label: "Discord" },
-  { to: "/settings", icon: Settings, label: "Settings" },
+const HOME_ITEM = { to: "/", icon: LayoutDashboard, label: "Dashboard" };
+
+const NAV_GROUPS = [
+  {
+    label: "Chat & Engagement",
+    items: [
+      { to: "/commands", icon: Terminal, label: "Commands" },
+      { to: "/timers", icon: Clock, label: "Timers" },
+      { to: "/alerts", icon: Bell, label: "Alerts" },
+      { to: "/moderation", icon: Shield, label: "Moderation" },
+      { to: "/chatlogs", icon: MessageSquare, label: "Chat Logs" },
+    ],
+  },
+  {
+    label: "Viewer-Mechaniken",
+    items: [
+      { to: "/points", icon: Trophy, label: "Points" },
+      { to: "/channelpoints", icon: Gift, label: "Channel Points" },
+      { to: "/lootbox", icon: Package, label: "Lootbox" },
+      { to: "/songrequests", icon: Music, label: "Song Requests" },
+      { to: "/requests", icon: ListTodo, label: "Requests" },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      { to: "/counters", icon: Hash, label: "Counters" },
+      { to: "/stopwatch", icon: Timer, label: "Stopwatch" },
+      { to: "/countdown", icon: Hourglass, label: "Countdown" },
+      { to: "/sandbox", icon: Layers, label: "Sandbox" },
+    ],
+  },
+  {
+    label: "Setup",
+    items: [
+      { to: "/overlay", icon: Monitor, label: "Overlay" },
+      { to: "/discord", icon: Bot, label: "Discord" },
+      { to: "/settings", icon: Settings, label: "Settings" },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -53,6 +75,33 @@ export function Sidebar() {
   const [showChannelDropdown, setShowChannelDropdown] = useState(false);
   const [showAddChannel, setShowAddChannel] = useState(false);
   const [newChannelName, setNewChannelName] = useState("");
+
+  const location = useLocation();
+  // Default-expanded: the group containing the current route, so the user always
+  // sees the section they're in. Other groups stay collapsed to reduce visual
+  // noise from 17 flat items down to ~5 groups.
+  const activeGroupLabel = NAV_GROUPS.find((g) =>
+    g.items.some((i) => location.pathname === i.to)
+  )?.label;
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(activeGroupLabel ? [activeGroupLabel] : [NAV_GROUPS[0]!.label])
+  );
+
+  const toggleGroup = (label: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(label) ? next.delete(label) : next.add(label);
+      return next;
+    });
+  };
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+      isActive
+        ? "bg-primary text-primary-foreground"
+        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+    );
 
   const handleAddChannel = async () => {
     if (!newChannelName.trim()) return;
@@ -136,24 +185,39 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === "/"}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )
-            }
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </NavLink>
-        ))}
+        <NavLink to={HOME_ITEM.to} end className={navLinkClass}>
+          <HOME_ITEM.icon className="h-4 w-4" />
+          {HOME_ITEM.label}
+        </NavLink>
+
+        {NAV_GROUPS.map((group) => {
+          const isExpanded = expandedGroups.has(group.label);
+          return (
+            <div key={group.label} className="pt-2">
+              <button
+                onClick={() => toggleGroup(group.label)}
+                className="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+              >
+                <span>{group.label}</span>
+                {isExpanded ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+              </button>
+              {isExpanded && (
+                <div className="mt-1 space-y-1">
+                  {group.items.map(({ to, icon: Icon, label }) => (
+                    <NavLink key={to} to={to} className={navLinkClass}>
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="border-t p-3">

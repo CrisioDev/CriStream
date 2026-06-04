@@ -139,8 +139,9 @@ export function ModerationPage() {
             >
               {filter.fields.map((field) => (
                 <div key={field.key} className="flex items-center gap-3">
-                  <Label className="w-32 text-sm">{field.label}</Label>
+                  <Label htmlFor={`mod-${filter.key}-${field.key}`} className="w-32 text-sm">{field.label}</Label>
                   <Input
+                    id={`mod-${filter.key}-${field.key}`}
                     type="number"
                     value={field.value}
                     className="w-24"
@@ -167,8 +168,9 @@ export function ModerationPage() {
           </CardHeader>
           <CardContent className={`space-y-3 transition-opacity ${settings.spamEnabled ? "" : "opacity-50"}`}>
             <div className="flex items-center gap-3">
-              <Label className="w-32 text-sm">Max Repeats</Label>
+              <Label htmlFor="spam-max-repeats" className="w-32 text-sm">Max Repeats</Label>
               <Input
+                id="spam-max-repeats"
                 type="number"
                 value={settings.spamMaxRepeat}
                 className="w-24"
@@ -177,8 +179,9 @@ export function ModerationPage() {
               />
             </div>
             <div className="flex items-center gap-3">
-              <Label className="w-32 text-sm">Window (sec)</Label>
+              <Label htmlFor="spam-window" className="w-32 text-sm">Window (sec)</Label>
               <Input
+                id="spam-window"
                 type="number"
                 value={settings.spamWindowSeconds}
                 className="w-24"
@@ -187,8 +190,9 @@ export function ModerationPage() {
               />
             </div>
             <div className="flex items-center gap-3">
-              <Label className="w-32 text-sm">Timeout (sec)</Label>
+              <Label htmlFor="spam-timeout" className="w-32 text-sm">Timeout (sec)</Label>
               <Input
+                id="spam-timeout"
                 type="number"
                 value={settings.spamTimeoutDuration}
                 className="w-24"
@@ -211,8 +215,9 @@ export function ModerationPage() {
           </CardHeader>
           <CardContent className={`space-y-3 transition-opacity ${settings.bannedWordsEnabled ? "" : "opacity-50"}`}>
             <div className="flex items-center gap-3">
-              <Label className="w-32 text-sm">Timeout (sec)</Label>
+              <Label htmlFor="bw-timeout" className="w-32 text-sm">Timeout (sec)</Label>
               <Input
+                id="bw-timeout"
                 type="number"
                 value={settings.bannedWordsTimeoutDuration}
                 className="w-24"

@@ -77,9 +77,10 @@ function ChannelSettingsTab() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label>Command Prefix</Label>
+          <Label htmlFor="command-prefix">Command Prefix</Label>
           <div className="flex gap-2 mt-1">
             <Input
+              id="command-prefix"
               value={prefix}
               onChange={(e) => setPrefix(e.target.value)}
               className="w-24"

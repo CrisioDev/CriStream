@@ -66,24 +66,27 @@ export function PointsPage() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label>Points per Message</Label>
+              <Label htmlFor="points-per-msg">Points per Message</Label>
               <Input
+                id="points-per-msg"
                 type="number"
                 value={settings.pointsPerMessage}
                 onChange={(e) => update({ pointsPerMessage: parseInt(e.target.value) })}
               />
             </div>
             <div>
-              <Label>Points per Interval</Label>
+              <Label htmlFor="points-per-interval">Points per Interval</Label>
               <Input
+                id="points-per-interval"
                 type="number"
                 value={settings.pointsPerInterval}
                 onChange={(e) => update({ pointsPerInterval: parseInt(e.target.value) })}
               />
             </div>
             <div>
-              <Label>Interval (minutes)</Label>
+              <Label htmlFor="points-interval-mins">Interval (minutes)</Label>
               <Input
+                id="points-interval-mins"
                 type="number"
                 value={settings.intervalMinutes}
                 onChange={(e) => update({ intervalMinutes: parseInt(e.target.value) })}

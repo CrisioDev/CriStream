@@ -247,6 +247,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                   <Switch
                     checked={alert.videoMuted}
                     onCheckedChange={(checked) => updateAlert(alert.alertType, { videoMuted: checked })}
+                    aria-label={`${alert.alertType} Video-Ton stummschalten`}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -254,14 +255,16 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                   <Switch
                     checked={alert.videoLoop}
                     onCheckedChange={(checked) => updateAlert(alert.alertType, { videoLoop: checked })}
+                    aria-label={`${alert.alertType} Video wiederholen`}
                   />
                 </div>
               </div>
             )}
             {(alert.alertType === "giftsub" || alert.alertType === "raid") && (
               <div>
-                <Label>Min Amount</Label>
+                <Label htmlFor={`min-amount-${alert.alertType}`}>Min Amount</Label>
                 <Input
+                  id={`min-amount-${alert.alertType}`}
                   type="number"
                   value={alert.minAmount}
                   onChange={(e) => updateAlert(alert.alertType, { minAmount: parseInt(e.target.value) })}
@@ -274,13 +277,15 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                 <Switch
                   checked={alert.ttsEnabled}
                   onCheckedChange={(checked) => updateAlert(alert.alertType, { ttsEnabled: checked })}
+                  aria-label={`${alert.alertType} Text-to-Speech ${alert.ttsEnabled ? "deaktivieren" : "aktivieren"}`}
                 />
               </div>
               {alert.ttsEnabled && (
                 <>
                   <div>
-                    <Label>Voice</Label>
+                    <Label htmlFor={`tts-voice-${alert.alertType}`}>Voice</Label>
                     <Input
+                      id={`tts-voice-${alert.alertType}`}
                       value={alert.ttsVoice}
                       onChange={(e) => updateAlert(alert.alertType, { ttsVoice: e.target.value })}
                       placeholder="e.g. Google Deutsch, Microsoft Katja"

@@ -177,6 +177,9 @@ export async function buildApp() {
       root: frontendDist,
       prefix: "/",
       wildcard: false,
+      // Disable the built-in cacheControl (defaults to "public, max-age=0")
+      // so our setHeaders below is what actually reaches the wire.
+      cacheControl: false,
       setHeaders: (res, filePath) => {
         // Vite emits content-hashed filenames into /assets/* — those are safe
         // to cache forever. index.html must always revalidate so a new deploy
@@ -203,6 +206,7 @@ export async function buildApp() {
     root: uploadsDir,
     prefix: "/uploads/",
     decorateReply: false,
+    cacheControl: false,
     setHeaders: (res) => {
       res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     },

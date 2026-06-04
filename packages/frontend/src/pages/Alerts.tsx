@@ -180,6 +180,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                   onChange={(v) => updateAlert(alert.alertType, { duration: v })}
                   min={1}
                   max={30}
+                  aria-label={`${alert.alertType} Dauer in Sekunden`}
                 />
               </div>
               <div>
@@ -187,6 +188,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                 <Slider
                   value={alert.volume}
                   onChange={(v) => updateAlert(alert.alertType, { volume: v })}
+                  aria-label={`${alert.alertType} Lautstärke in Prozent`}
                 />
               </div>
             </div>
@@ -195,6 +197,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
               <Select
                 value={alert.animationType}
                 onChange={(e) => updateAlert(alert.alertType, { animationType: e.target.value as any })}
+                aria-label={`${alert.alertType} Animation`}
               >
                 {ANIMATION_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -207,7 +210,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                 {alert.soundFileUrl ? (
                   <div className="flex items-center gap-2 text-xs">
                     <Badge variant="outline" className="truncate max-w-[150px]">{alert.soundFileUrl.split("/").pop()}</Badge>
-                    <Button size="sm" variant="ghost" onClick={() => updateAlert(alert.alertType, { soundFileUrl: "" })}>
+                    <Button size="sm" variant="ghost" aria-label={`${alert.alertType} Sound entfernen`} onClick={() => updateAlert(alert.alertType, { soundFileUrl: "" })}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
@@ -224,7 +227,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                 {alert.imageFileUrl ? (
                   <div className="flex items-center gap-2 text-xs">
                     <Badge variant="outline" className="truncate max-w-[150px]">{alert.imageFileUrl.split("/").pop()}</Badge>
-                    <Button size="sm" variant="ghost" onClick={() => updateAlert(alert.alertType, { imageFileUrl: "" })}>
+                    <Button size="sm" variant="ghost" aria-label={`${alert.alertType} Bild/Video entfernen`} onClick={() => updateAlert(alert.alertType, { imageFileUrl: "" })}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
@@ -294,6 +297,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                         onChange={(v) => updateAlert(alert.alertType, { ttsRate: v / 10 })}
                         min={5}
                         max={20}
+                        aria-label={`${alert.alertType} Sprachgeschwindigkeit`}
                       />
                     </div>
                     <div>
@@ -301,6 +305,7 @@ function AlertSettingsTab({ channelId }: { channelId: string }) {
                       <Slider
                         value={alert.ttsVolume}
                         onChange={(v) => updateAlert(alert.alertType, { ttsVolume: v })}
+                        aria-label={`${alert.alertType} TTS-Lautstärke`}
                       />
                     </div>
                   </div>
@@ -524,6 +529,7 @@ function SoundAlertsTab({ channelId }: { channelId: string }) {
                   <Slider
                     value={sound.volume}
                     onChange={(v) => updateSound(sound.id, { volume: v })}
+                    aria-label={`Sound !sound ${sound.name} Lautstärke`}
                   />
                 </div>
               </div>
@@ -577,11 +583,11 @@ function EventHistoryTab({ channelId }: { channelId: string }) {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Events ({result.total})</CardTitle>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => loadEvents(page - 1)}>
+              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => loadEvents(page - 1)} aria-label="Vorherige Seite">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm text-muted-foreground">{page} / {result.totalPages || 1}</span>
-              <Button size="sm" variant="outline" disabled={page >= result.totalPages} onClick={() => loadEvents(page + 1)}>
+              <Button size="sm" variant="outline" disabled={page >= result.totalPages} onClick={() => loadEvents(page + 1)} aria-label="Nächste Seite">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

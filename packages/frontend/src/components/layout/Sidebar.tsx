@@ -228,7 +228,7 @@ export function Sidebar() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.displayName}</p>
           </div>
-          <button onClick={logout} className="text-muted-foreground hover:text-foreground">
+          <button onClick={logout} className="text-muted-foreground hover:text-foreground" aria-label="Abmelden">
             <LogOut className="h-4 w-4" />
           </button>
         </div>

@@ -36,7 +36,9 @@ export function DashboardLayout() {
       <main className="flex-1 overflow-auto">
         <div className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/95 px-6 py-2 text-xs backdrop-blur">
           <span className="text-muted-foreground">Aktiver Channel:</span>
-          <span className="rounded-md bg-primary/15 px-2 py-0.5 font-semibold text-primary">
+          {/* Solid primary background ensures contrast ratio passes WCAG AA —
+              the previous bg-primary/15 + text-primary combo was ~2.5:1. */}
+          <span className="rounded-md bg-primary px-2 py-0.5 font-semibold text-primary-foreground">
             {activeChannel?.displayName ?? "—"}
           </span>
         </div>

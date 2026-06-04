@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -79,18 +79,45 @@ export function Sidebar() {
   const location = useLocation();
   // Default-expanded: the group containing the current route, so the user always
   // sees the section they're in. Other groups stay collapsed to reduce visual
-  // noise from 17 flat items down to ~5 groups.
+  // noise from 17 flat items down to ~5 groups. State persists across reloads
+  // via localStorage so a user who expanded "Tools" keeps it expanded later.
   const activeGroupLabel = NAV_GROUPS.find((g) =>
     g.items.some((i) => location.pathname === i.to)
   )?.label;
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(activeGroupLabel ? [activeGroupLabel] : [NAV_GROUPS[0]!.label])
-  );
+
+  const STORAGE_KEY = "cristream:sidebar-expanded-groups";
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
+    let stored: Set<string>;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      stored = raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+    } catch {
+      stored = new Set<string>();
+    }
+    if (activeGroupLabel) stored.add(activeGroupLabel);
+    if (stored.size === 0) stored.add(NAV_GROUPS[0]!.label);
+    return stored;
+  });
+
+  // Always ensure the active route's group is expanded, even when the user
+  // navigates from a deep-link to a route in another group.
+  useEffect(() => {
+    if (!activeGroupLabel) return;
+    setExpandedGroups((prev) => {
+      if (prev.has(activeGroupLabel)) return prev;
+      const next = new Set(prev);
+      next.add(activeGroupLabel);
+      return next;
+    });
+  }, [activeGroupLabel]);
 
   const toggleGroup = (label: string) => {
     setExpandedGroups((prev) => {
       const next = new Set(prev);
       next.has(label) ? next.delete(label) : next.add(label);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+      } catch {}
       return next;
     });
   };

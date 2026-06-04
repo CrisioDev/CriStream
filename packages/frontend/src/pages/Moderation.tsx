@@ -244,7 +244,7 @@ export function ModerationPage() {
                 />
                 Regex
               </label>
-              <Button size="sm" onClick={addBannedWord}>
+              <Button size="sm" onClick={addBannedWord} aria-label="Banned-Word hinzufügen">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { ToastProvider } from "@/components/ui/toast";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { LoginPage } from "@/pages/Login";
 import { DashboardPage } from "@/pages/Dashboard";
@@ -45,6 +46,7 @@ export function App() {
   }
 
   return (
+    <ToastProvider>
     <Routes>
       {/* Public pages */}
       <Route path="/status" element={<StatusPage />} />
@@ -88,5 +90,6 @@ export function App() {
         </>
       )}
     </Routes>
+    </ToastProvider>
   );
 }

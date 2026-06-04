@@ -3,15 +3,16 @@ import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/components/ui/toast";
 import type { DiscordSettingsDto, UpdateDiscordSettingsDto } from "@cristream/shared";
 
 export function DiscordPage() {
   const { activeChannel } = useAuthStore();
+  const { show: toast } = useToast();
   const [settings, setSettings] = useState<DiscordSettingsDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     if (!activeChannel) return;
@@ -30,10 +31,11 @@ export function DiscordPage() {
     const res = await api.patch<DiscordSettingsDto>(`/channels/${activeChannel.id}/discord`, updates);
     if (res.success && res.data) {
       setSettings(res.data);
-      setMessage("Settings saved!");
+      toast("success", "Discord-Einstellungen gespeichert");
+    } else {
+      toast("error", "Speichern fehlgeschlagen");
     }
     setSaving(false);
-    setTimeout(() => setMessage(""), 3000);
   };
 
   const saveAll = () => {
@@ -63,9 +65,8 @@ export function DiscordPage() {
     if (!activeChannel) return;
     setSyncing(true);
     const res = await api.post(`/channels/${activeChannel.id}/discord/sync-commands`);
-    setMessage(res.success ? "Slash commands synced!" : "Sync failed");
+    toast(res.success ? "success" : "error", res.success ? "Slash Commands synchronisiert" : "Sync fehlgeschlagen");
     setSyncing(false);
-    setTimeout(() => setMessage(""), 3000);
   };
 
   if (!activeChannel) {
@@ -103,7 +104,6 @@ export function DiscordPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Discord Integration</h1>
-        {message && <span className="text-sm text-green-400">{message}</span>}
       </div>
 
       {/* Guild Config */}

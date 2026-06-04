@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/components/ui/toast";
 import { Trash2, Plus } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
@@ -40,8 +41,9 @@ export function SettingsPage() {
 
 function ChannelSettingsTab() {
   const { activeChannel: channel, refreshChannels } = useAuthStore();
+  const { show: toast } = useToast();
   const [prefix, setPrefix] = useState(channel?.commandPrefix ?? "!");
-  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [state, setState] = useState<"idle" | "saving">("idle");
 
   useEffect(() => {
     if (channel) setPrefix(channel.commandPrefix);
@@ -55,20 +57,16 @@ function ChannelSettingsTab() {
     try {
       const res = await api.patch(`/channels/${channel.id}`, { commandPrefix: prefix });
       if (res.error) throw new Error(res.error);
-      setState("saved");
       await refreshChannels();
-      setTimeout(() => setState("idle"), 2000);
+      toast("success", "Command-Prefix gespeichert");
     } catch {
-      setState("error");
-      setTimeout(() => setState("idle"), 3000);
+      toast("error", "Speichern fehlgeschlagen");
+    } finally {
+      setState("idle");
     }
   };
 
-  const label =
-    state === "saving" ? "Speichere..." :
-    state === "saved"  ? "Gespeichert ✓" :
-    state === "error"  ? "Fehler — erneut versuchen" :
-    "Speichern";
+  const label = state === "saving" ? "Speichere..." : "Speichern";
 
   return (
     <Card>
@@ -86,11 +84,7 @@ function ChannelSettingsTab() {
               className="w-24"
               maxLength={3}
             />
-            <Button
-              onClick={handleSave}
-              disabled={!isDirty || state === "saving"}
-              className={state === "error" ? "bg-destructive hover:bg-destructive/90" : ""}
-            >
+            <Button onClick={handleSave} disabled={!isDirty || state === "saving"}>
               {label}
             </Button>
           </div>

@@ -430,13 +430,26 @@ function SoundAlertsTab({ channelId }: { channelId: string }) {
                   <code className="font-mono text-primary font-semibold">!sound {sound.name}</code>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => new Audio(sound.fileUrl).play()}>
+                  <Button size="sm" variant="ghost" onClick={() => new Audio(sound.fileUrl).play()} aria-label={`Sound !sound ${sound.name} abspielen`}>
                     <Play className="h-3 w-3" />
                   </Button>
-                  <Switch checked={sound.enabled} onCheckedChange={(v) => updateSound(sound.id, { enabled: v })} />
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(sound.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <Switch
+                    checked={sound.enabled}
+                    onCheckedChange={(v) => updateSound(sound.id, { enabled: v })}
+                    aria-label={`Sound !sound ${sound.name} ${sound.enabled ? "deaktivieren" : "aktivieren"}`}
+                  />
+                  <div className="ml-2 border-l pl-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={`Sound !sound ${sound.name} löschen`}
+                      onClick={() => {
+                        if (confirm(`Sound "!sound ${sound.name}" wirklich löschen?`)) handleDelete(sound.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

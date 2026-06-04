@@ -8,6 +8,16 @@ import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 import type { PointsSettingsDto, UpdatePointsSettingsDto, LeaderboardEntry } from "@cristream/shared";
 
+/** Compact representation for the leaderboard column — once viewers cross the
+ * billions threshold, "16,596,999,702,601" stops being readable. Exact value
+ * stays available via the title tooltip. */
+function formatPointsCompact(n: number): string {
+  if (n < 1e6) return n.toLocaleString("de-DE");
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + " Bio.";
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + " Mrd.";
+  return (n / 1e6).toFixed(2) + " Mio.";
+}
+
 export function PointsPage() {
   const { activeChannel: channel } = useAuthStore();
   const [settings, setSettings] = useState<PointsSettingsDto | null>(null);
@@ -50,6 +60,7 @@ export function PointsPage() {
           <Switch
             checked={settings.enabled}
             onCheckedChange={(checked) => update({ enabled: checked })}
+            aria-label={`Punkte-System ${settings.enabled ? "deaktivieren" : "aktivieren"}`}
           />
         </CardHeader>
         <CardContent className="space-y-4">
@@ -104,7 +115,9 @@ export function PointsPage() {
               <div key={entry.twitchUserId} className="grid grid-cols-4 text-sm py-1.5 border-b">
                 <span className="font-mono text-muted-foreground">#{entry.rank}</span>
                 <span className="font-medium truncate">{entry.displayName}</span>
-                <span className="text-right font-mono">{entry.points.toLocaleString()}</span>
+                <span className="text-right font-mono" title={entry.points.toLocaleString("de-DE")}>
+                  {formatPointsCompact(entry.points)}
+                </span>
                 <span className="text-right text-muted-foreground">
                   {Math.floor(entry.watchMinutes / 60)}h {entry.watchMinutes % 60}m
                 </span>

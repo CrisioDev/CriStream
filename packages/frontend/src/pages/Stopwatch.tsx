@@ -151,7 +151,14 @@ function StopwatchCard({
             </h3>
             {sw.game && <p className="text-xs text-muted-foreground">{sw.game}</p>}
           </div>
-          <Button variant="ghost" size="sm" onClick={onDelete}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Stoppuhr ${sw.name} löschen`}
+            onClick={() => {
+              if (confirm(`Stoppuhr "${sw.name}" wirklich löschen?`)) onDelete();
+            }}
+          >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>

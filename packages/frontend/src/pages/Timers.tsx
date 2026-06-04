@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import { Trash2, Plus, Pencil, X, Check } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
@@ -13,6 +14,7 @@ import type { TimerDto, CreateTimerDto, UpdateTimerDto } from "@cristream/shared
 export function TimersPage() {
   const { activeChannel: channel } = useAuthStore();
   const [timers, setTimers] = useState<TimerDto[]>([]);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<CreateTimerDto>({
@@ -27,13 +29,21 @@ export function TimersPage() {
   const [editForm, setEditForm] = useState<UpdateTimerDto>({});
 
   useEffect(() => {
-    if (channel) loadTimers();
-  }, [channel]);
+    if (channel) {
+      setTimers([]);
+      loadTimers();
+    }
+  }, [channel?.id]);
 
   const loadTimers = async () => {
     if (!channel) return;
-    const res = await api.get<TimerDto[]>(`/channels/${channel.id}/timers`);
-    if (res.data) setTimers(res.data);
+    setLoading(true);
+    try {
+      const res = await api.get<TimerDto[]>(`/channels/${channel.id}/timers`);
+      if (res.data) setTimers(res.data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreate = async () => {
@@ -176,14 +186,12 @@ export function TimersPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                  {/* Body dimmed when disabled — consistent with Commands page. */}
+                  <div className={`flex-1 ${timer.enabled ? "" : "opacity-50"}`}>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{timer.name}</span>
                       <Badge variant="secondary">Every {timer.intervalMinutes}m</Badge>
                       <Badge variant="outline">Min {timer.minChatLines} lines</Badge>
-                      <Badge variant={timer.enabled ? "default" : "outline"}>
-                        {timer.enabled ? "Active" : "Paused"}
-                      </Badge>
                       {timer.twitchEnabled && <Badge variant="secondary">Twitch</Badge>}
                       {timer.discordEnabled && <Badge variant="secondary">Discord</Badge>}
                     </div>
@@ -193,20 +201,32 @@ export function TimersPage() {
                     <Switch
                       checked={timer.enabled}
                       onCheckedChange={(checked) => handleUpdate(timer.id, { enabled: checked })}
+                      aria-label={`Timer ${timer.name} ${timer.enabled ? "deaktivieren" : "aktivieren"}`}
                     />
-                    <Button size="icon" variant="ghost" onClick={() => startEdit(timer)}>
+                    <Button size="icon" variant="ghost" onClick={() => startEdit(timer)} aria-label={`Timer ${timer.name} bearbeiten`}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDelete(timer.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {/* Spatial separator before destructive delete (Fitt's Law). */}
+                    <div className="ml-2 border-l pl-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm(`Timer "${timer.name}" wirklich löschen?`)) handleDelete(timer.id);
+                        }}
+                        aria-label={`Timer ${timer.name} löschen`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
         ))}
-        {timers.length === 0 && (
+        {loading && timers.length === 0 && <ListSkeleton rows={3} />}
+        {!loading && timers.length === 0 && (
           <p className="text-center text-muted-foreground py-8">No timers yet. Click "Add Timer" to get started.</p>
         )}
       </div>

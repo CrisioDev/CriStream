@@ -144,22 +144,33 @@ export function RequestsPage() {
                 <div className="flex items-center gap-1 shrink-0">
                   {req.status === "open" && (
                     <>
-                      <Button size="icon" variant="ghost" onClick={() => updateStatus(req.id, "done")} title="Done">
+                      <Button size="icon" variant="ghost" onClick={() => updateStatus(req.id, "done")} title="Als erledigt markieren" aria-label={`Request von ${req.displayName} als erledigt markieren`}>
                         <Check className="h-4 w-4 text-green-500" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => updateStatus(req.id, "rejected")} title="Reject">
+                      <Button size="icon" variant="ghost" onClick={() => updateStatus(req.id, "rejected")} title="Ablehnen" aria-label={`Request von ${req.displayName} ablehnen`}>
                         <X className="h-4 w-4 text-destructive" />
                       </Button>
                     </>
                   )}
                   {req.status !== "open" && (
-                    <Button size="icon" variant="ghost" onClick={() => updateStatus(req.id, "open")} title="Reopen">
+                    <Button size="icon" variant="ghost" onClick={() => updateStatus(req.id, "open")} title="Wieder öffnen" aria-label={`Request von ${req.displayName} wieder öffnen`}>
                       <Badge variant="outline" className="text-xs cursor-pointer">Reopen</Badge>
                     </Button>
                   )}
-                  <Button size="icon" variant="ghost" onClick={() => deleteRequest(req.id)}>
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
+                  {/* Separator before destructive delete. */}
+                  <div className="ml-1 border-l pl-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm(`Request von ${req.displayName} löschen?`)) deleteRequest(req.id);
+                      }}
+                      title="Löschen"
+                      aria-label={`Request von ${req.displayName} löschen`}
+                    >
+                      <Trash2 className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

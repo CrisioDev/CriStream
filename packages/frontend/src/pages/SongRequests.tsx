@@ -230,7 +230,12 @@ export function SongRequestsPage() {
                 <span className="text-xs text-muted-foreground shrink-0">
                   by {song.requestedBy}
                 </span>
-                <Button size="icon" variant="ghost" onClick={() => remove(song.id)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Song "${song.title}" aus Queue entfernen`}
+                  onClick={() => remove(song.id)}
+                >
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
               </div>

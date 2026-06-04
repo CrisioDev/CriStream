@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import type { DiscordSettingsDto, UpdateDiscordSettingsDto } from "@cristream/shared";
 
 export function DiscordPage() {
@@ -129,15 +130,11 @@ export function DiscordPage() {
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Commands</h2>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.commandsEnabled}
-              onChange={(e) => setSettings({ ...settings, commandsEnabled: e.target.checked })}
-              className="rounded border-input"
-            />
-            <span className="text-sm">Enabled</span>
-          </label>
+          <Switch
+            checked={settings.commandsEnabled}
+            onCheckedChange={(v) => setSettings({ ...settings, commandsEnabled: v })}
+            aria-label={`Discord-Commands ${settings.commandsEnabled ? "deaktivieren" : "aktivieren"}`}
+          />
         </div>
         <p className="text-sm text-muted-foreground">
           Allow your Twitch commands to work in Discord (text commands with prefix and slash commands).
@@ -180,15 +177,11 @@ export function DiscordPage() {
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Timers</h2>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.timersEnabled}
-              onChange={(e) => setSettings({ ...settings, timersEnabled: e.target.checked })}
-              className="rounded border-input"
-            />
-            <span className="text-sm">Enabled</span>
-          </label>
+          <Switch
+            checked={settings.timersEnabled}
+            onCheckedChange={(v) => setSettings({ ...settings, timersEnabled: v })}
+            aria-label={`Discord-Timers ${settings.timersEnabled ? "deaktivieren" : "aktivieren"}`}
+          />
         </div>
         <p className="text-sm text-muted-foreground">
           Send timer messages to a Discord channel in addition to Twitch chat.
@@ -207,15 +200,11 @@ export function DiscordPage() {
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Stream Summaries</h2>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.summariesEnabled}
-              onChange={(e) => setSettings({ ...settings, summariesEnabled: e.target.checked })}
-              className="rounded border-input"
-            />
-            <span className="text-sm">Enabled</span>
-          </label>
+          <Switch
+            checked={settings.summariesEnabled}
+            onCheckedChange={(v) => setSettings({ ...settings, summariesEnabled: v })}
+            aria-label={`Stream Summaries ${settings.summariesEnabled ? "deaktivieren" : "aktivieren"}`}
+          />
         </div>
         <p className="text-sm text-muted-foreground">
           Post stream summaries when a stream ends and daily at 00:00 UTC with chat stats, events, and top commands.
@@ -234,15 +223,11 @@ export function DiscordPage() {
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Event Notifications</h2>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={settings.notificationsEnabled}
-              onChange={(e) => setSettings({ ...settings, notificationsEnabled: e.target.checked })}
-              className="rounded border-input"
-            />
-            <span className="text-sm">Enabled</span>
-          </label>
+          <Switch
+            checked={settings.notificationsEnabled}
+            onCheckedChange={(v) => setSettings({ ...settings, notificationsEnabled: v })}
+            aria-label={`Event Notifications ${settings.notificationsEnabled ? "deaktivieren" : "aktivieren"}`}
+          />
         </div>
         <p className="text-sm text-muted-foreground">
           Send Discord notifications for Twitch events. Enable/disable individual event types below.

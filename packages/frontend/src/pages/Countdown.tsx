@@ -293,22 +293,31 @@ export function CountdownPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => startEdit(timer)} title="Bearbeiten"
+                  <button onClick={() => startEdit(timer)} title="Bearbeiten" aria-label={`Timer ${timer.name} bearbeiten`}
                     className="p-2 rounded-lg hover:bg-muted transition-colors">
                     <Pencil className="w-4 h-4 text-muted-foreground" />
                   </button>
-                  <button onClick={() => copyUrl(timer)} title="URL kopieren"
+                  <button onClick={() => copyUrl(timer)} title="URL kopieren" aria-label={`URL für Timer ${timer.name} kopieren`}
                     className="p-2 rounded-lg hover:bg-muted transition-colors">
                     {copied === timer.id ? <span className="text-green-400 text-xs font-bold">Kopiert!</span> : <Copy className="w-4 h-4 text-muted-foreground" />}
                   </button>
-                  <a href={getOverlayUrl(timer)} target="_blank" title="Vorschau"
+                  <a href={getOverlayUrl(timer)} target="_blank" title="Vorschau" aria-label={`Vorschau für Timer ${timer.name} öffnen`}
                     className="p-2 rounded-lg hover:bg-muted transition-colors">
                     <ExternalLink className="w-4 h-4 text-muted-foreground" />
                   </a>
-                  <button onClick={() => deleteTimer(timer.id)} title="Löschen"
-                    className="p-2 rounded-lg hover:bg-red-500/10 transition-colors">
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
+                  {/* Separator before destructive action — same pattern as Commands/Timers. */}
+                  <div className="ml-1 border-l pl-1">
+                    <button
+                      onClick={() => {
+                        if (confirm(`Timer "${timer.name}" wirklich löschen?`)) deleteTimer(timer.id);
+                      }}
+                      title="Löschen"
+                      aria-label={`Timer ${timer.name} löschen`}
+                      className="p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
                 </div>
               </div>
               {/* Overlay URL */}

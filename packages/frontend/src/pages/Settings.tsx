@@ -179,7 +179,14 @@ function EditorsTab({ channelId }: { channelId: string }) {
                   <option value="editor">Editor</option>
                   <option value="viewer">Viewer</option>
                 </Select>
-                <Button size="icon" variant="ghost" onClick={() => handleRemove(editor.id)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`${editor.displayName} aus den Editoren entfernen`}
+                  onClick={() => {
+                    if (confirm(`${editor.displayName} wirklich als ${editor.role} entfernen?`)) handleRemove(editor.id);
+                  }}
+                >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>

@@ -286,10 +286,23 @@ function ItemsTab({ channelId }: { channelId: string }) {
                   </div>
                   {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
                 </div>
-                <Switch checked={item.enabled} onCheckedChange={(v) => toggleItem(item.id, v)} />
-                <Button variant="ghost" size="sm" onClick={() => deleteItem(item.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <Switch
+                  checked={item.enabled}
+                  onCheckedChange={(v) => toggleItem(item.id, v)}
+                  aria-label={`Item ${item.name} ${item.enabled ? "deaktivieren" : "aktivieren"}`}
+                />
+                <div className="ml-2 border-l pl-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Item ${item.name} löschen`}
+                    onClick={() => {
+                      if (confirm(`Item "${item.name}" wirklich löschen?`)) deleteItem(item.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

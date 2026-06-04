@@ -250,7 +250,14 @@ export function ModerationPage() {
                     <code className="text-xs">{word.pattern}</code>
                     {word.isRegex && <Badge variant="outline">Regex</Badge>}
                   </div>
-                  <Button size="icon" variant="ghost" onClick={() => deleteBannedWord(word.id)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Banned-Word "${word.pattern}" entfernen`}
+                    onClick={() => {
+                      if (confirm(`"${word.pattern}" aus der Banned-Words-Liste entfernen?`)) deleteBannedWord(word.id);
+                    }}
+                  >
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
                 </div>

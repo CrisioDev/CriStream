@@ -90,7 +90,14 @@ export function CountersPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-lg">{counter.name}</h3>
-                  <Button variant="ghost" size="sm" onClick={() => deleteCounter(counter.id)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Counter ${counter.name} löschen`}
+                    onClick={() => {
+                      if (confirm(`Counter "${counter.name}" wirklich löschen?`)) deleteCounter(counter.id);
+                    }}
+                  >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>

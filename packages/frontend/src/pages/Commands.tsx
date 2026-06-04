@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import { Trash2, Plus, Pencil, X, Check } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/api/client";
@@ -15,6 +16,7 @@ import { USER_LEVELS } from "@cristream/shared";
 export function CommandsPage() {
   const { activeChannel } = useAuthStore();
   const [commands, setCommands] = useState<CommandDto[]>([]);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<CreateCommandDto & { aliasesStr: string; chainStr: string }>({
@@ -35,13 +37,23 @@ export function CommandsPage() {
   });
 
   useEffect(() => {
-    if (activeChannel) loadCommands();
-  }, [activeChannel]);
+    if (activeChannel) {
+      // Clear stale rows immediately so the user doesn't see the previous
+      // channel's commands during the fetch.
+      setCommands([]);
+      loadCommands();
+    }
+  }, [activeChannel?.id]);
 
   const loadCommands = async () => {
     if (!activeChannel) return;
-    const res = await api.get<CommandDto[]>(`/channels/${activeChannel.id}/commands`);
-    if (res.data) setCommands(res.data);
+    setLoading(true);
+    try {
+      const res = await api.get<CommandDto[]>(`/channels/${activeChannel.id}/commands`);
+      if (res.data) setCommands(res.data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const parseList = (str: string): string[] =>
@@ -237,19 +249,22 @@ export function CommandsPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                  {/* Body dimmed when disabled so the row's status is readable
+                      at a glance — controls stay full-opacity and clickable. */}
+                  <div className={`flex-1 ${cmd.enabled ? "" : "opacity-50"}`}>
                     <div className="flex items-center gap-2 flex-wrap">
                       <code className="font-mono text-primary font-semibold">!{cmd.trigger}</code>
                       <Badge variant="secondary">{cmd.userLevel}</Badge>
-                      <Badge variant={cmd.enabled ? "default" : "outline"}>
-                        {cmd.enabled ? "Enabled" : "Disabled"}
-                      </Badge>
                       <span className="text-xs text-muted-foreground">{cmd.useCount} uses</span>
                       {cmd.perUserCooldown && (
                         <Badge variant="outline">Per-User CD</Badge>
                       )}
                       {cmd.aliases.length > 0 && (
-                        <Badge variant="outline">Aliases: {cmd.aliases.join(", ")}</Badge>
+                        <Badge variant="outline" title={`Aliases: ${cmd.aliases.join(", ")}`}>
+                          {cmd.aliases.length <= 3
+                            ? `Aliases: ${cmd.aliases.join(", ")}`
+                            : `Aliases: ${cmd.aliases.slice(0, 3).join(", ")} +${cmd.aliases.length - 3}`}
+                        </Badge>
                       )}
                       {cmd.chain.length > 0 && (
                         <Badge variant="outline">Chain: {cmd.chain.join(" → ")}</Badge>
@@ -286,7 +301,8 @@ export function CommandsPage() {
             </CardContent>
           </Card>
         ))}
-        {commands.length === 0 && (
+        {loading && commands.length === 0 && <ListSkeleton rows={4} />}
+        {!loading && commands.length === 0 && (
           <p className="text-center text-muted-foreground py-8">No commands yet. Click "Add Command" to get started.</p>
         )}
       </div>

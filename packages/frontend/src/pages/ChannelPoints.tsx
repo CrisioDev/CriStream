@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { FileUpload } from "@/components/FileUpload";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import { OverlayEditor } from "@/components/overlay-editor/OverlayEditor";
 import {
   Trash2, Plus, Play, ChevronDown, ChevronUp, Paintbrush,
@@ -30,7 +31,15 @@ export function ChannelPointsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editorReward, setEditorReward] = useState<{ rewardId: string; actionIdx: number } | null>(null);
 
-  useEffect(() => { if (channel) { loadAll(); loadCommands(); } }, [channel?.id]);
+  useEffect(() => {
+    if (channel) {
+      // Clear stale rows so the previous channel's rewards don't flash before
+      // the new ones load.
+      setRewards([]);
+      loadAll();
+      loadCommands();
+    }
+  }, [channel?.id]);
 
   const loadAll = async () => {
     if (!channel) return;
@@ -212,7 +221,12 @@ export function ChannelPointsPage() {
               >
                 <div className="flex items-center gap-3">
                   {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  <div className="h-4 w-4 rounded shrink-0" style={{ backgroundColor: reward.backgroundColor }} />
+                  <div
+                    className="h-4 w-4 rounded shrink-0"
+                    style={{ backgroundColor: reward.backgroundColor }}
+                    title={`Twitch-Hintergrundfarbe: ${reward.backgroundColor}`}
+                    aria-hidden="true"
+                  />
                   <CardTitle className="text-base">{reward.rewardTitle}</CardTitle>
                   <span className="text-sm text-muted-foreground">{reward.cost} Punkte</span>
                   {reward.isSynced ? (
@@ -225,18 +239,23 @@ export function ChannelPointsPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {/* Fixed widths keep Switch + Delete in the same x-position
+                      regardless of which sync button is shown or whether the
+                      Test button is rendered. */}
                   {reward.isSynced ? (
-                    <Button size="sm" variant="outline" onClick={() => pullFromTwitch(reward.id)} title="Twitch-Verknüpfung lösen, lokal behalten">
+                    <Button size="sm" variant="outline" className="w-[150px] justify-center" onClick={() => pullFromTwitch(reward.id)} title="Twitch-Verknüpfung lösen, lokal behalten">
                       <Download className="h-3 w-3 mr-1" /> Von Twitch lösen
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => pushToTwitch(reward.id)} title="Belohnung auf Twitch veröffentlichen" disabled={twitchCount >= 50}>
+                    <Button size="sm" variant="outline" className="w-[150px] justify-center" onClick={() => pushToTwitch(reward.id)} title="Belohnung auf Twitch veröffentlichen" disabled={twitchCount >= 50}>
                       <Upload className="h-3 w-3 mr-1" /> Auf Twitch
                     </Button>
                   )}
-                  {actionCount > 0 && (
-                    <Button size="sm" variant="outline" onClick={() => testReward(reward.id)} aria-label={`Belohnung ${reward.rewardTitle} testen`}><Play className="h-3 w-3 mr-1" /> Test</Button>
-                  )}
+                  <div className={`w-[80px] ${actionCount > 0 ? "" : "invisible"}`}>
+                    <Button size="sm" variant="outline" className="w-full justify-center" onClick={() => testReward(reward.id)} aria-label={`Belohnung ${reward.rewardTitle} testen`}>
+                      <Play className="h-3 w-3 mr-1" /> Test
+                    </Button>
+                  </div>
                   <Switch
                     checked={reward.enabled}
                     onCheckedChange={(checked) => updateReward(reward.id, { enabled: checked })}
@@ -314,7 +333,7 @@ export function ChannelPointsPage() {
         {rewards.length === 0 && !loading && (
           <Card><CardContent className="py-8 text-center text-muted-foreground">Keine Belohnungen. Klicke "Aktualisieren" um Twitch-Rewards zu importieren oder erstelle eine neue.</CardContent></Card>
         )}
-        {loading && <Card><CardContent className="py-8 text-center text-muted-foreground">Lade...</CardContent></Card>}
+        {loading && rewards.length === 0 && <ListSkeleton rows={5} />}
       </div>
     </div>
   );

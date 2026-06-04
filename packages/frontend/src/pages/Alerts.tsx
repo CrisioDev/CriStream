@@ -423,14 +423,11 @@ function SoundAlertsTab({ channelId }: { channelId: string }) {
 
       <div className="space-y-2">
         {sounds.map((sound) => (
-          <Card key={sound.id}>
+          <Card key={sound.id} className={sound.enabled ? "" : "opacity-60"}>
             <CardContent className="space-y-3 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <code className="font-mono text-primary font-semibold">!sound {sound.name}</code>
-                  <Badge variant={sound.enabled ? "default" : "outline"}>
-                    {sound.enabled ? "Enabled" : "Disabled"}
-                  </Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="ghost" onClick={() => new Audio(sound.fileUrl).play()}>

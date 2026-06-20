@@ -61,6 +61,32 @@ model Channel {
   achievements             ViewerAchievement[]
   seasons                  Season[]
   casinoProfiles           CasinoProfile[]
+  sceneSettings            SceneSettings?
+}
+
+model SceneSettings {
+  id               String   @id @default(uuid())
+  // Default handle shown on all scenes (e.g. "@thecrisio").
+  handle           String   @default("")
+  // Per-platform display strings — kept as free text so users can use whatever
+  // format fits their brand (handle, URL, or "—" to hide).
+  twitchHandle     String   @default("")
+  youtubeHandle    String   @default("")
+  discordHandle    String   @default("")
+  instagramHandle  String   @default("")
+  // Short note shown on the BRB scene under the heading.
+  brbNote          String   @default("Bin gleich zurück.")
+  // Caption above the countdown on the Starting Soon scene.
+  startingToday    String   @default("Heute live")
+  // Default game name + sub-mode shown on the in-game HUD.
+  defaultGame      String   @default("")
+  defaultMode      String   @default("")
+  // Array of {day, time, title} entries shown on the Offline scene.
+  streamPlan       Json     @default("[]")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  channelId        String   @unique
+  channel          Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
 }
 
 model Command {

@@ -24,6 +24,7 @@ import { eventsubRoutes } from "./modules/eventsub/routes.js";
 import { alertRoutes } from "./modules/alerts/routes.js";
 import { channelPointRoutes } from "./modules/channelpoints/routes.js";
 import { overlayRoutes } from "./modules/overlay/routes.js";
+import { sceneRoutes } from "./modules/scenes/routes.js";
 import { eventsubWebhookRoute } from "./modules/eventsub/listener.js";
 import { requestRoutes, publicRequestRoutes } from "./modules/requests/routes.js";
 import { discordRoutes } from "./modules/discord/routes.js";
@@ -67,6 +68,7 @@ export async function buildApp() {
 
   // Public routes (no JWT)
   await app.register(overlayRoutes);
+  await app.register(sceneRoutes);
   await app.register(countdownOverlayRoutes);
   await app.register(publicTimerRoutes);
   await app.register(eventsubWebhookRoute);

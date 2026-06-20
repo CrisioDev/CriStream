@@ -5,7 +5,7 @@ import fastifyStatic from "@fastify/static";
 import { prisma } from "../../lib/prisma.js";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
 import { getChannelAccess, canEdit } from "../../middleware/channel-access.js";
-import { getSceneData, updateSceneSettings } from "./service.js";
+import { getSceneData, updateSceneSettings, getLiveTwitchState } from "./service.js";
 import {
   generateStartingHtml,
   generateBrbHtml,
@@ -41,6 +41,23 @@ export async function sceneRoutes(app: FastifyInstance) {
     },
   });
 
+  // Live Twitch state for the scenes — polled by the ingame scene to keep
+  // the "NOW PLAYING" line synced to whatever category is currently set on
+  // Twitch. Channel-overlay-token gated so no auth flow needed in the browser
+  // source. JSON, no-cache (the redis layer handles dedup).
+  app.get<{ Params: { overlayToken: string } }>(
+    "/overlay/:overlayToken/scene/state",
+    async (request, reply) => {
+      const channel = await prisma.channel.findUnique({
+        where: { overlayToken: request.params.overlayToken },
+      });
+      if (!channel) return reply.status(404).send({ error: "Invalid overlay token" });
+      const state = await getLiveTwitchState(channel.twitchId);
+      reply.header("Cache-Control", "no-store");
+      return state;
+    },
+  );
+
   // Dynamic scene HTML.
   app.get<{ Params: { overlayToken: string; name: string }; Querystring: Record<string, string> }>(
     "/overlay/:overlayToken/scene/:name",
@@ -61,7 +78,7 @@ export async function sceneRoutes(app: FastifyInstance) {
         case "starting": html = generateStartingHtml(data, query); break;
         case "brb":      html = generateBrbHtml(data, query); break;
         case "offline":  html = generateOfflineHtml(data, query); break;
-        case "ingame":   html = generateIngameHtml(data, query); break;
+        case "ingame":   html = generateIngameHtml(data, query, overlayToken); break;
         case "alerts":   html = generateAlertsHtml(overlayToken, data); break;
       }
       return reply.type("text/html").header("Cache-Control", "no-cache").send(html);

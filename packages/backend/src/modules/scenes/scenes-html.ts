@@ -30,7 +30,7 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function head(title: string): string {
+function head(title: string, extraStyle = ""): string {
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -39,9 +39,28 @@ function head(title: string): string {
 <title>${esc(title)}</title>
 <link rel="stylesheet" href="/scene-assets/fonts.css">
 <link rel="stylesheet" href="/scene-assets/overlay.css">
+${extraStyle ? `<style>${extraStyle}</style>` : ""}
 </head>
 <body>`;
 }
+
+// Cam-cutout CSS: makes the placeholder area transparent so an OBS camera
+// source layered UNDER the browser source shows through, while keeping the
+// outline visible so the streamer knows where to drag the cam to. The original
+// "CAM 1280×720" label shrinks into a corner badge.
+const CAM_CUTOUT_CSS = `
+.k-ph{background:transparent !important;background-image:none !important;}
+.k-ph-label{
+  position:absolute; top:8px; left:12px;
+  font-size:11px !important; letter-spacing:.18em !important;
+  color:rgba(255,255,255,.55) !important;
+  background:rgba(0,0,0,.45); padding:3px 8px; border-radius:4px;
+  pointer-events:none;
+}
+.ss-cam, .ig-cam-ph{position:relative;}
+/* When the cam is OFF (no source layered under) the empty area can show the
+   page background through — that's fine, the outline still marks the slot. */
+`;
 
 function socialBlock(d: SceneData): string {
   const items: Array<[string, string]> = [
@@ -63,7 +82,10 @@ function socialBlock(d: SceneData): string {
 export function generateStartingHtml(d: SceneData, query: Record<string, string | undefined>): string {
   const today = query.today ?? d.startingToday;
   const handle = query.handle ?? d.handle;
-  return `${head("CRISIO · Starting Soon")}
+  // ?cam=guide reverts to the original opaque striped placeholder for users
+  // who want to preview the layout without rigging a real cam source.
+  const camCss = query.cam === "guide" ? "" : CAM_CUTOUT_CSS;
+  return `${head("CRISIO · Starting Soon", camCss)}
 <div class="k-ov">
   <div class="ss-stripe" aria-hidden="true"></div>
   <div class="k-pad ss">
@@ -163,11 +185,19 @@ export function generateOfflineHtml(d: SceneData, query: Record<string, string |
 }
 
 // ── In-Game HUD ──────────────────────────────────────────────────────────────
-export function generateIngameHtml(d: SceneData, query: Record<string, string | undefined>): string {
+export function generateIngameHtml(
+  d: SceneData,
+  query: Record<string, string | undefined>,
+  overlayToken: string,
+): string {
   const handle = query.handle ?? d.handle;
+  // game/mode: URL params win, else DB defaults. The Twitch poller below
+  // updates #game live unless the URL provided a game (manual override mode).
   const game = query.game ?? d.defaultGame;
   const mode = query.mode ?? d.defaultMode;
-  return `${head("CRISIO · In-Game")}
+  const camCss = query.cam === "guide" ? "" : CAM_CUTOUT_CSS;
+  const gameLocked = !!query.game; // when user explicitly set ?game=, don't auto-update.
+  return `${head("CRISIO · In-Game", camCss)}
 <div class="k-ov ig">
   <div class="ig-now">
     <span class="ig-now-lbl">NOW PLAYING</span>
@@ -187,6 +217,27 @@ export function generateIngameHtml(d: SceneData, query: Record<string, string | 
 
   <div class="ig-soc"><span class="ig-soc-han">${esc(handle)}</span><span class="ig-soc-net">· TWITCH · YT · DISCORD</span></div>
 </div>
+<script>
+  // Auto-pull current category from Twitch (cached 60s server-side) so the
+  // NOW PLAYING line follows whatever the streamer set as the channel game.
+  // Skipped when ?game= is on the URL (manual override mode).
+  const LOCKED = ${JSON.stringify(gameLocked)};
+  const TOKEN  = ${JSON.stringify(overlayToken)};
+  async function syncGame() {
+    if (LOCKED) return;
+    try {
+      const r = await fetch('/overlay/' + TOKEN + '/scene/state', { cache: 'no-store' });
+      if (!r.ok) return;
+      const s = await r.json();
+      if (s && typeof s.game === 'string' && s.game.length > 0) {
+        const el = document.getElementById('game');
+        if (el && el.textContent !== s.game) el.textContent = s.game;
+      }
+    } catch (_) { /* offline / network blip — keep last value */ }
+  }
+  syncGame();
+  setInterval(syncGame, 30000);
+</script>
 </body></html>`;
 }
 

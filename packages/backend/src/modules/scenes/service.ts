@@ -1,4 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
+import { redis } from "../../lib/redis.js";
+import { logger } from "../../lib/logger.js";
 import type { SceneData } from "./scenes-html.js";
 
 const DEFAULTS = {
@@ -61,6 +63,54 @@ export async function updateSceneSettings(
   if (patch.streamPlan !== undefined) data.streamPlan = normalizePlan(patch.streamPlan);
   await prisma.sceneSettings.update({ where: { channelId }, data });
   return getSceneData(channelId);
+}
+
+export interface LiveTwitchState {
+  game: string;
+  title: string;
+  viewers: number;
+  live: boolean;
+}
+
+/**
+ * Live Twitch state for a channel — game category, stream title, viewers.
+ * 60s Redis cache so a scene that polls every 30s doesn't hammer Helix.
+ * Returns empty values + live:false when offline or on any API failure;
+ * scenes will keep showing the DB-default values in that case.
+ */
+export async function getLiveTwitchState(channelTwitchId: string): Promise<LiveTwitchState> {
+  const cacheKey = `scene:state:${channelTwitchId}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    try {
+      return JSON.parse(cached) as LiveTwitchState;
+    } catch {
+      // Fall through and refetch on parse error.
+    }
+  }
+
+  const empty: LiveTwitchState = { game: "", title: "", viewers: 0, live: false };
+  try {
+    const { getTwitchApi } = await import("../../twitch/twitch-api.js");
+    const api = getTwitchApi();
+    const [stream, channelInfo] = await Promise.all([
+      api.streams.getStreamByUserId(channelTwitchId).catch(() => null),
+      api.channels.getChannelInfoById(channelTwitchId).catch(() => null),
+    ]);
+    const state: LiveTwitchState = {
+      // Prefer live stream's gameName (= category currently played); fall back
+      // to channelInfo's stored category for the offline case.
+      game: stream?.gameName ?? channelInfo?.gameName ?? "",
+      title: stream?.title ?? channelInfo?.title ?? "",
+      viewers: stream?.viewers ?? 0,
+      live: !!stream,
+    };
+    await redis.set(cacheKey, JSON.stringify(state), "EX", 60);
+    return state;
+  } catch (err) {
+    logger.warn({ err, channelTwitchId }, "getLiveTwitchState failed");
+    return empty;
+  }
 }
 
 function normalizePlan(raw: unknown): Array<{ day: string; time: string; title: string }> {

@@ -44,23 +44,71 @@ ${extraStyle ? `<style>${extraStyle}</style>` : ""}
 <body>`;
 }
 
-// Cam-cutout CSS: makes the placeholder area transparent so an OBS camera
-// source layered UNDER the browser source shows through, while keeping the
-// outline visible so the streamer knows where to drag the cam to. The original
-// "CAM 1280×720" label shrinks into a corner badge.
+// Cam-cutout CSS: cuts a real hole through every opaque parent so an OBS
+// camera source layered UNDER the browser source shines through. The hole
+// position is set by JS at runtime via CSS variables, measured from the
+// actual .ss-cam (Starting) / .ig-cam-ph (Ingame) bounding rect — works
+// regardless of viewport scaling and stays correct if the layout changes.
+//
+// mask-composite: subtract means "destination layer (full mask) minus source
+// layer (hole rect)" → full mask everywhere except the cam region. The
+// -webkit-mask-composite equivalent is destination-out.
+//
+// We mask both .k-ov (the cream-painted container) AND .ss-stripe (the
+// pink stripes overlay on the Starting scene's right column).
 const CAM_CUTOUT_CSS = `
+:root {
+  --cam-x: 0px; --cam-y: 0px; --cam-w: 0px; --cam-h: 0px;
+}
 .k-ph{background:transparent !important;background-image:none !important;}
 .k-ph-label{
   position:absolute; top:8px; left:12px;
   font-size:11px !important; letter-spacing:.18em !important;
   color:rgba(255,255,255,.55) !important;
   background:rgba(0,0,0,.45); padding:3px 8px; border-radius:4px;
-  pointer-events:none;
+  pointer-events:none; z-index:5;
 }
 .ss-cam, .ig-cam-ph{position:relative;}
-/* When the cam is OFF (no source layered under) the empty area can show the
-   page background through — that's fine, the outline still marks the slot. */
+
+.k-ov, .ss-stripe {
+  -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+  -webkit-mask-position: var(--cam-x) var(--cam-y), 0 0;
+  -webkit-mask-size: var(--cam-w) var(--cam-h), 100% 100%;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  -webkit-mask-composite: destination-out;
+          mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+          mask-position: var(--cam-x) var(--cam-y), 0 0;
+          mask-size: var(--cam-w) var(--cam-h), 100% 100%;
+          mask-repeat: no-repeat, no-repeat;
+          mask-composite: subtract;
+}
 `;
+
+// Runtime: measure the cam slot's pixel rect and feed it to the CSS mask vars.
+// Re-measures on resize so OBS's preview/fullscreen scaling stays correct.
+const CAM_CUTOUT_JS = `
+<script>
+(function() {
+  function setCamHole() {
+    const el = document.querySelector('.ss-cam') || document.querySelector('.ig-cam-ph');
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const s = document.documentElement.style;
+    s.setProperty('--cam-x', r.left   + 'px');
+    s.setProperty('--cam-y', r.top    + 'px');
+    s.setProperty('--cam-w', r.width  + 'px');
+    s.setProperty('--cam-h', r.height + 'px');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setCamHole);
+  } else {
+    setCamHole();
+  }
+  window.addEventListener('resize', setCamHole);
+  // Run once more after fonts/layout settle so a late layout shift gets picked up.
+  setTimeout(setCamHole, 500);
+})();
+</script>`;
 
 function socialBlock(d: SceneData): string {
   const items: Array<[string, string]> = [
@@ -112,6 +160,7 @@ export function generateStartingHtml(d: SceneData, query: Record<string, string 
     </div>
   </div>
 </div>
+${camCss ? CAM_CUTOUT_JS : ""}
 <script>
   const p = new URLSearchParams(location.search);
   let total = Math.max(0, Math.round((parseFloat(p.get('min')) || 5) * 60));
@@ -217,6 +266,7 @@ export function generateIngameHtml(
 
   <div class="ig-soc"><span class="ig-soc-han">${esc(handle)}</span><span class="ig-soc-net">· TWITCH · YT · DISCORD</span></div>
 </div>
+${camCss ? CAM_CUTOUT_JS : ""}
 <script>
   // Auto-pull current category from Twitch (cached 60s server-side) so the
   // NOW PLAYING line follows whatever the streamer set as the channel game.

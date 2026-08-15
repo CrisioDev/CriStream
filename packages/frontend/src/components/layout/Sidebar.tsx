@@ -23,14 +23,18 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
+  Sparkles,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/utils";
 import { api } from "@/api/client";
 
 const HOME_ITEM = { to: "/", icon: LayoutDashboard, label: "Dashboard" };
 
-const NAV_GROUPS = [
+type NavItem = { to: string; icon: LucideIcon; label: string; external?: boolean };
+
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Chat & Engagement",
     items: [
@@ -65,6 +69,7 @@ const NAV_GROUPS = [
     items: [
       { to: "/overlay", icon: Monitor, label: "Overlay" },
       { to: "/discord", icon: Bot, label: "Discord" },
+      { to: "/claude/", icon: Sparkles, label: "Claude Console", external: true },
       { to: "/settings", icon: Settings, label: "Settings" },
     ],
   },
@@ -234,12 +239,25 @@ export function Sidebar() {
               </button>
               {isExpanded && (
                 <div className="mt-1 space-y-1">
-                  {group.items.map(({ to, icon: Icon, label }) => (
-                    <NavLink key={to} to={to} className={navLinkClass}>
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </NavLink>
-                  ))}
+                  {group.items.map(({ to, icon: Icon, label, external }) =>
+                    external ? (
+                      <a
+                        key={to}
+                        href={to}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={navLinkClass({ isActive: false })}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </a>
+                    ) : (
+                      <NavLink key={to} to={to} className={navLinkClass}>
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </NavLink>
+                    )
+                  )}
                 </div>
               )}
             </div>

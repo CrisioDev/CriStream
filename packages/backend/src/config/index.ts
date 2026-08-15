@@ -42,6 +42,9 @@ export const config = {
   // Anthropic (for AI summaries)
   anthropicApiKey: env("ANTHROPIC_API_KEY", ""),
 
+  // Claude web terminal (ttyd on the docker host; empty = disabled)
+  claudeTerminalTarget: env("CLAUDE_TERMINAL_TARGET", ""),
+
   // EventSub
   eventsubSecret: env("EVENTSUB_SECRET", "cristream-eventsub-secret"),
   eventsubCallbackUrl: env("EVENTSUB_CALLBACK_URL", "http://localhost:3000/api/eventsub/webhook"),

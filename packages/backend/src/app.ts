@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
+import httpProxy from "@fastify/http-proxy";
 import { join, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
@@ -63,6 +64,18 @@ export async function buildApp() {
       fileSize: 100 * 1024 * 1024, // 100MB max (videos)
     },
   });
+
+  // Claude web terminal: proxy /claude/* (incl. WebSocket) to ttyd on the
+  // docker host. Auth happens at ttyd itself (HTTP basic auth); only active
+  // where CLAUDE_TERMINAL_TARGET is set (production VM).
+  if (config.claudeTerminalTarget) {
+    await app.register(httpProxy, {
+      upstream: config.claudeTerminalTarget,
+      prefix: "/claude",
+      rewritePrefix: "/claude",
+      websocket: true,
+    });
+  }
 
   app.setErrorHandler(errorHandler);
 

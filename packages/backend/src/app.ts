@@ -7,6 +7,8 @@ import httpProxy from "@fastify/http-proxy";
 import { join, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
+import { request as httpUpgradeRequest } from "node:http";
+import type { Server as NodeHttpServer } from "node:http";
 import { config } from "./config/index.js";
 import { prisma } from "./lib/prisma.js";
 import { errorHandler } from "./middleware/error-handler.js";
@@ -65,16 +67,17 @@ export async function buildApp() {
     },
   });
 
-  // Claude web terminal: proxy /claude/* (incl. WebSocket) to ttyd on the
-  // docker host. Auth happens at ttyd itself (HTTP basic auth); only active
-  // where CLAUDE_TERMINAL_TARGET is set (production VM).
+  // Claude web terminal: proxy /claude/* to ttyd on the docker host. Auth
+  // happens at ttyd itself (HTTP basic auth); only active where
+  // CLAUDE_TERMINAL_TARGET is set (production VM). Plain HTTP goes through
+  // @fastify/http-proxy; the WebSocket upgrade is proxied by hand below.
   if (config.claudeTerminalTarget) {
     await app.register(httpProxy, {
       upstream: config.claudeTerminalTarget,
       prefix: "/claude",
       rewritePrefix: "/claude",
-      websocket: true,
     });
+    setupClaudeTerminalUpgrade(app.server, config.claudeTerminalTarget);
   }
 
   app.setErrorHandler(errorHandler);
@@ -247,4 +250,49 @@ export async function buildApp() {
   }
 
   return app;
+}
+
+// Proxies WebSocket upgrades for the Claude web terminal to ttyd by hand.
+// Deliberately NOT @fastify/http-proxy's websocket mode: that installs a
+// server-wide upgrade listener which re-routes ALL upgrades (including
+// socket.io's /ws) through the fastify router, where they 404.
+function setupClaudeTerminalUpgrade(server: NodeHttpServer, targetUrl: string) {
+  const target = new URL(targetUrl);
+
+  server.on("upgrade", (req, socket, head) => {
+    // socket.io (/ws) and anything else keep their own upgrade handling
+    if (!req.url?.startsWith("/claude/")) return;
+
+    const upstreamReq = httpUpgradeRequest({
+      host: target.hostname,
+      port: target.port || "80",
+      path: req.url,
+      method: req.method,
+      headers: req.headers,
+    });
+
+    upstreamReq.on("upgrade", (res, upstream, upstreamHead) => {
+      const lines = ["HTTP/1.1 101 Switching Protocols"];
+      for (let i = 0; i < res.rawHeaders.length; i += 2) {
+        lines.push(`${res.rawHeaders[i]}: ${res.rawHeaders[i + 1]}`);
+      }
+      socket.write(lines.join("\r\n") + "\r\n\r\n");
+      if (upstreamHead.length) socket.write(upstreamHead);
+      if (head.length) upstream.write(head);
+      upstream.pipe(socket);
+      socket.pipe(upstream);
+      upstream.on("error", () => socket.destroy());
+      socket.on("error", () => upstream.destroy());
+      upstream.on("close", () => socket.destroy());
+      socket.on("close", () => upstream.destroy());
+    });
+
+    // Upstream answered with a normal response (e.g. 401) instead of upgrading
+    upstreamReq.on("response", (res) => {
+      socket.end(`HTTP/1.1 ${res.statusCode} ${res.statusMessage ?? ""}\r\nconnection: close\r\n\r\n`);
+    });
+
+    upstreamReq.on("error", () => socket.destroy());
+    upstreamReq.end();
+  });
 }

@@ -13,6 +13,28 @@ import { initLottoScheduler } from "./modules/gambling/lotto.js";
 import { chatLogService } from "./modules/chatlogs/service.js";
 import { pointsService } from "./modules/points/service.js";
 
+// Last-resort safety nets: one stray socket error (e.g. a Discord websocket
+// handshake timeout) must not take down the whole bot mid-stream.
+function isTransientNetworkError(err: unknown): boolean {
+  const text = `${(err as any)?.message ?? ""} ${(err as any)?.code ?? ""}`;
+  return /handshake|websocket|socket hang up|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EPIPE|ENETUNREACH|EHOSTUNREACH|EAI_AGAIN|ENOTFOUND|UND_ERR_CONNECT_TIMEOUT/i.test(
+    text
+  );
+}
+
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection (kept alive)");
+});
+
+process.on("uncaughtException", (err) => {
+  if (isTransientNetworkError(err)) {
+    logger.error({ err }, "Uncaught network error (kept alive)");
+    return;
+  }
+  logger.fatal({ err }, "Uncaught exception — exiting for clean container restart");
+  setTimeout(() => process.exit(1), 1000);
+});
+
 async function start() {
   const app = await buildApp();
 
@@ -45,7 +67,7 @@ async function start() {
     await initDiscordClient();
     logger.info("Discord client initialized");
   } catch (err) {
-    logger.warn(err, "Discord client initialization failed — Discord features disabled");
+    logger.warn(err, "Discord client initialization failed — retrying in background");
   }
 
   // Start timer scheduler

@@ -30,6 +30,7 @@ export const TWITCH_SCOPES = [
   "user:read:moderated_channels",
   "channel:read:polls",
   "channel:read:predictions",
+  "moderator:manage:shoutouts",
 ];
 
 // Minimal scopes for viewers (just need to identify them)

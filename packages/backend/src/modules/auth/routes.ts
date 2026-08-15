@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { authService } from "./service.js";
 import { jwtAuth } from "../../middleware/jwt-auth.js";
+import { logger } from "../../lib/logger.js";
 
 export async function authRoutes(app: FastifyInstance) {
   // Redirect to Twitch OAuth (full scopes for broadcasters)
@@ -27,7 +28,13 @@ export async function authRoutes(app: FastifyInstance) {
       }
 
       const isViewer = state?.startsWith("viewer") ?? false;
-      const tokens = await authService.handleCallback(code, isViewer);
+      let tokens;
+      try {
+        tokens = await authService.handleCallback(code, isViewer);
+      } catch (err) {
+        logger.error({ err }, "Twitch OAuth callback failed");
+        return reply.redirect("/?error=auth_failed");
+      }
       // Parse redirect from state: "viewer:/casino" → /casino, "viewer" → /viewer, else /
       let redirectBase = "/";
       if (state?.startsWith("viewer:")) {
@@ -45,11 +52,16 @@ export async function authRoutes(app: FastifyInstance) {
     return { success: true, data: user };
   });
 
-  // Refresh JWT
-  app.post<{ Body: { refreshToken: string } }>("/refresh", async (request) => {
-    const { refreshToken } = request.body;
-    const tokens = await authService.refreshJwt(refreshToken);
-    return { success: true, data: tokens };
+  // Refresh JWT — expired/invalid tokens are a normal condition, answer 401 (not 500)
+  app.post<{ Body: { refreshToken: string } }>("/refresh", async (request, reply) => {
+    try {
+      const { refreshToken } = request.body;
+      const tokens = await authService.refreshJwt(refreshToken);
+      return { success: true, data: tokens };
+    } catch (err) {
+      logger.info({ reason: (err as Error)?.message }, "JWT refresh rejected");
+      return reply.code(401).send({ success: false, error: "invalid_refresh_token" });
+    }
   });
 
   // Logout

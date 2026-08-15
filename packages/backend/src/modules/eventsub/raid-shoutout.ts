@@ -1,4 +1,5 @@
 import { getTwitchApi } from "../../twitch/twitch-api.js";
+import { config } from "../../config/index.js";
 import { emitToChannel } from "../../lib/socket.js";
 import { logger } from "../../lib/logger.js";
 import type { OverlayAlertPayload } from "@cristream/shared";
@@ -25,8 +26,15 @@ export async function handleRaidShoutout(
     await api.chat.shoutoutUser(channel.twitchId, raiderUserId);
     logger.info({ channelId: channel.id, raider: raiderName }, "Auto-shoutout sent");
   } catch (err: any) {
-    // 429 = already shouted out recently, that's fine
-    if (!err?.statusCode || err.statusCode !== 429) {
+    const msg = String(err?.message ?? "");
+    if (err?.statusCode === 429) {
+      // already shouted out recently — fine
+    } else if (msg.includes("requested scopes")) {
+      logger.warn(
+        { raider: raiderName },
+        "Shoutout skipped — stored Twitch token lacks moderator:manage:shoutouts; re-connect Twitch in the dashboard to enable auto-shoutouts"
+      );
+    } else {
       logger.error({ err, raider: raiderName }, "Failed to send shoutout");
     }
   }
@@ -50,8 +58,19 @@ export async function handleRaidShoutout(
     // Sort by view count descending, pick the top one
     const bestClip = clipList.sort((a, b) => b.views - a.views)[0]!;
 
-    // Build clip embed URL for the overlay
-    const clipEmbedUrl = bestClip.embedUrl + "&parent=localhost&autoplay=true&muted=false";
+    // Build clip embed URL for the overlay.
+    // Twitch only plays embeds whose parent matches the page host, so the
+    // public host must be listed alongside localhost (dev).
+    let publicHost = "localhost";
+    try {
+      publicHost = new URL(config.publicUrl).hostname;
+    } catch {
+      // keep localhost
+    }
+    const parents = [...new Set([publicHost, "localhost"])]
+      .map((p) => `&parent=${p}`)
+      .join("");
+    const clipEmbedUrl = `${bestClip.embedUrl}${parents}&autoplay=true&muted=false`;
     const clipThumbnailUrl = bestClip.thumbnailUrl;
 
     // Emit a special raid clip alert to the overlay

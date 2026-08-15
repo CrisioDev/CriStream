@@ -28,7 +28,8 @@ apt-get install -y -qq tmux unzip >/dev/null
 echo "== Installing Claude Code (native build) =="
 mkdir -p /root/.local/bin
 if [ ! -x /root/.local/bin/claude ]; then
-  curl -fsSL https://claude.ai/install.sh | HOME=/root bash
+  # root install is intentional here — the session runs as root by design
+  curl -fsSL https://claude.ai/install.sh | CLAUDE_INSTALL_ALLOW_SUDO=1 HOME=/root bash
 fi
 if [ ! -x /root/.local/bin/claude ]; then
   ALT=$(command -v claude || true)
